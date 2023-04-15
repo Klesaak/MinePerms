@@ -1,0 +1,8 @@
+name: MinePermsBungee
+description: "Permissions plugin for BungeeCord"
+version: "1.0"
+
+author: "Klesaak"
+website: "https://t.me/klesaak"
+
+main: ua.klesaak.mineperms.bungee.MinePermsBungee
