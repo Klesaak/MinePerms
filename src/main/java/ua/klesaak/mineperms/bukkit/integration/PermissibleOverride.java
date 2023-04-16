@@ -1,6 +1,8 @@
 package ua.klesaak.mineperms.bukkit.integration;
 
 import lombok.SneakyThrows;
+import lombok.val;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissibleBase;
 import org.bukkit.permissions.Permission;
@@ -46,6 +48,13 @@ public class PermissibleOverride extends PermissibleBase {
         HUMAN_ENTITY_PERMISSIBLE_FIELD.set(player, permissibleOverride);
     }
 
+    @SneakyThrows
+    public static void unInjectPlayers() {
+        for (val onlinePlayer : Bukkit.getOnlinePlayers()) {
+            HUMAN_ENTITY_PERMISSIBLE_FIELD.set(onlinePlayer, new PermissibleBase(onlinePlayer));
+        }
+    }
+
     private final Player player;
 
     public PermissibleOverride(Player player) {
@@ -71,7 +80,7 @@ public class PermissibleOverride extends PermissibleBase {
     }
 
     public boolean hasPermission(String inName) {
-        return MinePermsBukkit.getMinePermsManager().hasPermission(this.player, inName);
+        return MinePermsBukkit.getMinePermsManager().hasPermission(this.player.getUniqueId(), inName);
     }
 
     public boolean hasPermission(Permission perm) {

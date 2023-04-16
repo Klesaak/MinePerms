@@ -1,8 +1,9 @@
 package ua.klesaak.mineperms;
 
 import lombok.Getter;
-import org.bukkit.entity.Player;
 import ua.klesaak.mineperms.command.MinePermsCommand;
+
+import java.util.UUID;
 
 @Getter
 public final class MinePermsManager {
@@ -12,7 +13,7 @@ public final class MinePermsManager {
         this.minePermsCommand = new MinePermsCommand(this);
     }
 
-    public boolean hasPermission(Player player, String permission) {
+    public boolean hasPermission(UUID playerUUID, String permission) {
         //todo логики звезды, антиправа итп.
         return false;
     }

@@ -19,13 +19,14 @@ import ua.klesaak.mineperms.bukkit.integration.PermissibleOverride;
 
 import java.util.logging.Level;
 
-
 @Plugin(name = "MinePermsBukkit", version = "1.0")
 @Author("Klesaak")
 @Dependency("Vault")
 @LoadBefore("Vault")
 @Website("https://t.me/klesaak")
-@Commands({@Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = "mineperms.admin")})
+@Commands({
+        @Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = "mineperms.admin")
+})
 
 @Description("Simple high performance permission plugin.")
 @Permissions({
@@ -45,15 +46,16 @@ public class MinePermsBukkit extends JavaPlugin {
         }
         minePermsManager = new MinePermsManager();
         this.getServer().getOperators().forEach(offlinePlayer -> offlinePlayer.setOp(false));
+        //Производим иньекцию онлайн игрокам, заменяя дефолтный оператор прав на оператор нашего плагина.
         this.getServer().getOnlinePlayers().forEach(player -> PermissibleOverride.injectPlayer(player, new PermissibleOverride(player)));
-        new MinePermsListener(this);
-        new MPBukkitCommand(this);
+        new MPBukkitListener(this);
+        //new MPBukkitCommand(this);
         this.getLogger().log(Level.INFO, "Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }
 
 
     @Override
     public void onDisable() {
-        //todo unInject PermissibleOverride
+        PermissibleOverride.unInjectPlayers(); //возвращаем дефолтный оператор прав игрокам, дабы избежать NullPointer и сервер продолжил функционировать.
     }
 }

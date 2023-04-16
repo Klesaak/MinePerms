@@ -12,9 +12,9 @@ import ua.klesaak.mineperms.bukkit.integration.PermissibleOverride;
 
 import java.util.concurrent.CompletableFuture;
 
-public class MinePermsListener implements Listener {
+public class MPBukkitListener implements Listener {
 
-    public MinePermsListener(JavaPlugin javaPlugin) {
+    public MPBukkitListener(JavaPlugin javaPlugin) {
         javaPlugin.getServer().getPluginManager().registerEvents(this, javaPlugin);
     }
 
