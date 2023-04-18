@@ -9,17 +9,17 @@ import java.util.Collections;
 import java.util.List;
 
 public class MPBukkitCommand implements CommandExecutor, TabCompleter {
-    private final MinePermsBukkit plugin;
+    private final MinePermsBukkit manager;
 
-    public MPBukkitCommand(MinePermsBukkit plugin) {
-        this.plugin = plugin;
-        this.plugin.getCommand("mineperms").setExecutor(this);
-        this.plugin.getCommand("mineperms").setTabCompleter(this);
+    public MPBukkitCommand(MinePermsBukkit manager) {
+        this.manager = manager;
+        this.manager.getCommand("mineperms").setExecutor(this);
+        this.manager.getCommand("mineperms").setTabCompleter(this);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-
+        sender.sendMessage(MinePermsBukkit.getMinePermsManager().getMinePermsCommand().invoke(args));
         return true;
     }
 

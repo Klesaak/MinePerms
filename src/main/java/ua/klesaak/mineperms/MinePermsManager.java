@@ -1,7 +1,6 @@
 package ua.klesaak.mineperms;
 
 import lombok.Getter;
-import ua.klesaak.mineperms.command.MinePermsCommand;
 
 import java.util.UUID;
 

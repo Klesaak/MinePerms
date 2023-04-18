@@ -71,18 +71,22 @@ public class PermissibleOverride extends PermissibleBase {
     public void setOp(boolean value) {
     }
 
+    @Override
     public boolean isPermissionSet(String name) {
         return this.hasPermission(name);
     }
 
+    @Override
     public boolean isPermissionSet(Permission perm) {
         return this.isPermissionSet(perm.getName());
     }
 
+    @Override
     public boolean hasPermission(String inName) {
         return MinePermsBukkit.getMinePermsManager().hasPermission(this.player.getUniqueId(), inName);
     }
 
+    @Override
     public boolean hasPermission(Permission perm) {
         return this.hasPermission(perm.getName());
     }

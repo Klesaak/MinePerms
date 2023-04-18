@@ -57,5 +57,6 @@ public class MinePermsBukkit extends JavaPlugin {
     @Override
     public void onDisable() {
         PermissibleOverride.unInjectPlayers(); //возвращаем дефолтный оператор прав игрокам, дабы избежать NullPointer и сервер продолжил функционировать.
+        //todo uninject ваульт
     }
 }

@@ -1,6 +1,7 @@
 package ua.klesaak.mineperms.bungee;
 
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 
@@ -17,7 +18,7 @@ public class MPBungeeCommand extends Command implements TabExecutor {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-
+        sender.sendMessage(TextComponent.fromLegacyText(this.manager.getMinePermsManager().getMinePermsCommand().invoke(args)));
     }
 
 
