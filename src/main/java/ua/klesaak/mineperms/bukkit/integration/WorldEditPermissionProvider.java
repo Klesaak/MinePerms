@@ -2,10 +2,10 @@ package ua.klesaak.mineperms.bukkit.integration;
 
 import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
 
-public class VaultIntegrationPermission {
+public class WorldEditPermissionProvider {
     private final MinePermsBukkit manager;
 
-    public VaultIntegrationPermission(MinePermsBukkit manager) {
+    public WorldEditPermissionProvider(MinePermsBukkit manager) {
         this.manager = manager;
     }
 }

@@ -8,6 +8,8 @@ import org.bukkit.plugin.java.annotation.command.Command;
 import org.bukkit.plugin.java.annotation.command.Commands;
 import org.bukkit.plugin.java.annotation.dependency.Dependency;
 import org.bukkit.plugin.java.annotation.dependency.LoadBefore;
+import org.bukkit.plugin.java.annotation.dependency.LoadBeforePlugins;
+import org.bukkit.plugin.java.annotation.dependency.SoftDependency;
 import org.bukkit.plugin.java.annotation.permission.Permission;
 import org.bukkit.plugin.java.annotation.permission.Permissions;
 import org.bukkit.plugin.java.annotation.plugin.Description;
@@ -16,13 +18,20 @@ import org.bukkit.plugin.java.annotation.plugin.Website;
 import org.bukkit.plugin.java.annotation.plugin.author.Author;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.bukkit.integration.PermissibleOverride;
+import ua.klesaak.mineperms.bukkit.integration.VaultIntegrationChat;
+import ua.klesaak.mineperms.bukkit.integration.VaultIntegrationPermission;
+import ua.klesaak.mineperms.bukkit.integration.WorldEditPermissionProvider;
 
 import java.util.logging.Level;
 
 @Plugin(name = "MinePermsBukkit", version = "1.0")
 @Author("Klesaak")
 @Dependency("Vault")
-@LoadBefore("Vault")
+@SoftDependency("WorldEdit")
+@LoadBeforePlugins({
+        @LoadBefore("Vault"),
+        @LoadBefore("WorldEdit")
+})
 @Website("https://t.me/klesaak")
 @Commands({
         @Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = "mineperms.admin")
@@ -30,7 +39,7 @@ import java.util.logging.Level;
 
 @Description("Simple high performance permission plugin.")
 @Permissions({
-        @Permission(name = "mineperms.admin", defaultValue = PermissionDefault.OP, desc = "Access to use admin command.")
+        @Permission(name = MinePermsManager.MAIN_PERMISSION, defaultValue = PermissionDefault.OP, desc = "Access to use admin command.")
 })
 @Getter
 public class MinePermsBukkit extends JavaPlugin {
@@ -44,6 +53,12 @@ public class MinePermsBukkit extends JavaPlugin {
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+        //регистрируем классы-интеграции
+        if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null) {
+            new WorldEditPermissionProvider(this);
+        }
+        new VaultIntegrationChat(this);
+        new VaultIntegrationPermission(this);
         minePermsManager = new MinePermsManager();
         this.getServer().getOperators().forEach(offlinePlayer -> offlinePlayer.setOp(false));
         //Производим иньекцию онлайн игрокам, заменяя дефолтный оператор прав на оператор нашего плагина.
@@ -57,6 +72,6 @@ public class MinePermsBukkit extends JavaPlugin {
     @Override
     public void onDisable() {
         PermissibleOverride.unInjectPlayers(); //возвращаем дефолтный оператор прав игрокам, дабы избежать NullPointer и сервер продолжил функционировать.
-        //todo uninject ваульт
+        //todo uninject ваульт, worldedit
     }
 }

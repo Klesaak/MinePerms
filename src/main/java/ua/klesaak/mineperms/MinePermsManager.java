@@ -6,7 +6,8 @@ import java.util.UUID;
 
 @Getter
 public final class MinePermsManager {
-    private final MinePermsCommand minePermsCommand;
+    public static final String MAIN_PERMISSION = "mineperms.admin";
+    private volatile MinePermsCommand minePermsCommand;
 
     public MinePermsManager() {
         this.minePermsCommand = new MinePermsCommand(this);

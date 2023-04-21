@@ -4,6 +4,7 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
+import ua.klesaak.mineperms.MinePermsManager;
 
 import java.util.Collections;
 
@@ -11,7 +12,7 @@ public class MPBungeeCommand extends Command implements TabExecutor {
     private final MinePermsBungee manager;
 
     public MPBungeeCommand(MinePermsBungee manager) {
-        super("bmineperms", "mineperms.admin", "bmp", "bmperms", "bperms", "perms");
+        super("bmineperms", MinePermsManager.MAIN_PERMISSION, "bmp", "bmperms", "bperms", "perms");
         this.manager = manager;
         manager.getProxy().getPluginManager().registerCommand(manager, this);
     }

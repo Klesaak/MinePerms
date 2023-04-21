@@ -6,7 +6,7 @@ import ua.klesaak.mineperms.MinePermsManager;
 
 @Getter
 public class MinePermsBungee extends Plugin {
-    private MinePermsManager minePermsManager;
+    private volatile MinePermsManager minePermsManager;
     @Override
     public void onEnable() {
         this.minePermsManager = new MinePermsManager();

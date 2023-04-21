@@ -1,5 +1,6 @@
 package ua.klesaak.mineperms.bukkit.integration;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.bukkit.Bukkit;
@@ -41,7 +42,7 @@ public class PermissibleOverride extends PermissibleBase {
     @SneakyThrows
     public static void injectPlayer(Player player, PermissibleOverride permissibleOverride) {
         PermissibleBase oldPermissible = (PermissibleBase) HUMAN_ENTITY_PERMISSIBLE_FIELD.get(player);
-        if (oldPermissible instanceof PermissibleOverride) throw new IllegalStateException("PermissibleOverride already injected into player " + player.toString());
+        if (oldPermissible instanceof PermissibleOverride) throw new IllegalStateException("PermissibleOverride already injected into player " + player.getName());
         oldPermissible.clearPermissions();
 
         // inject the new instance
@@ -72,7 +73,7 @@ public class PermissibleOverride extends PermissibleBase {
     }
 
     @Override
-    public boolean isPermissionSet(String name) {
+    public boolean isPermissionSet(@NonNull String name) {
         return this.hasPermission(name);
     }
 
@@ -82,7 +83,7 @@ public class PermissibleOverride extends PermissibleBase {
     }
 
     @Override
-    public boolean hasPermission(String inName) {
+    public boolean hasPermission(@NonNull String inName) {
         return MinePermsBukkit.getMinePermsManager().hasPermission(this.player.getUniqueId(), inName);
     }
 
@@ -91,18 +92,18 @@ public class PermissibleOverride extends PermissibleBase {
         return this.hasPermission(perm.getName());
     }
 
-    @Override
-    public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value) {
+    @Override @NonNull
+    public PermissionAttachment addAttachment(@NonNull Plugin plugin, @NonNull String name, boolean value) {
         return this.addAttachment(plugin);
     }
 
-    @Override
-    public PermissionAttachment addAttachment(Plugin plugin) {
+    @Override @NonNull
+    public PermissionAttachment addAttachment(@NonNull Plugin plugin) {
         return Objects.requireNonNull(this.addAttachment(plugin, 0));
     }
 
     @Override
-    public void removeAttachment(PermissionAttachment attachment) {
+    public void removeAttachment(@NonNull PermissionAttachment attachment) {
     }
 
     @Override
@@ -114,16 +115,16 @@ public class PermissibleOverride extends PermissibleBase {
     }
 
     @Override
-    public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value, int ticks) {
+    public PermissionAttachment addAttachment(@NonNull Plugin plugin, @NonNull String name, boolean value, int ticks) {
         return this.addAttachment(plugin, ticks);
     }
 
     @Override
-    public PermissionAttachment addAttachment(Plugin plugin, int ticks) {
+    public PermissionAttachment addAttachment(@NonNull Plugin plugin, int ticks) {
        return new PermissionAttachment(plugin, this);
     }
 
-    @Override
+    @Override @NonNull
     public Set<PermissionAttachmentInfo> getEffectivePermissions() {
         return Collections.emptySet();
     }
