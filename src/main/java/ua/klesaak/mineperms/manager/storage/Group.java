@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.storage;
+package ua.klesaak.mineperms.manager.storage;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

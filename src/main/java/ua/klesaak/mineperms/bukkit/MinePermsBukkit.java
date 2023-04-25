@@ -34,7 +34,7 @@ import java.util.logging.Level;
 })
 @Website("https://t.me/klesaak")
 @Commands({
-        @Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = "mineperms.admin")
+        @Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = MinePermsManager.MAIN_PERMISSION)
 })
 
 @Description("Simple high performance permission plugin.")

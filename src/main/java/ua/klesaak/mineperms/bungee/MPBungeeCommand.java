@@ -12,7 +12,7 @@ public class MPBungeeCommand extends Command implements TabExecutor {
     private final MinePermsBungee manager;
 
     public MPBungeeCommand(MinePermsBungee manager) {
-        super("bmineperms", MinePermsManager.MAIN_PERMISSION, "bmp", "bmperms", "bperms", "perms");
+        super("bmineperms", MinePermsManager.MAIN_PERMISSION, "bmp", "bmperms", "bperms");
         this.manager = manager;
         manager.getProxy().getPluginManager().registerCommand(manager, this);
     }

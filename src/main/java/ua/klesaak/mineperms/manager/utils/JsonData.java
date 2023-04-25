@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.utils;
+package ua.klesaak.mineperms.manager.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

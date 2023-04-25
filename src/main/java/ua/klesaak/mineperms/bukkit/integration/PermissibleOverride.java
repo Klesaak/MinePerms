@@ -11,7 +11,7 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
-import ua.klesaak.mineperms.utils.UtilityMethods;
+import ua.klesaak.mineperms.manager.utils.UtilityMethods;
 
 import java.lang.reflect.Field;
 import java.util.Collections;

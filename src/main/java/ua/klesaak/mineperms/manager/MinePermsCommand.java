@@ -1,4 +1,6 @@
-package ua.klesaak.mineperms;
+package ua.klesaak.mineperms.manager;
+
+import ua.klesaak.mineperms.MinePermsManager;
 
 import java.util.Arrays;
 import java.util.List;

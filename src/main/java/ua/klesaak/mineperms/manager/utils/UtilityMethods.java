@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.utils;
+package ua.klesaak.mineperms.manager.utils;
 
 import com.google.common.base.Preconditions;
 import lombok.experimental.UtilityClass;

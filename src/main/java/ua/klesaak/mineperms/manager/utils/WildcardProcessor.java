@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.utils;
+package ua.klesaak.mineperms.manager.utils;
 
 public class WildcardProcessor {
     public static final String WILDCARD_SUFFIX = ".*";
