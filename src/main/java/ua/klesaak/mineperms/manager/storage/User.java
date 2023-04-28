@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import ua.klesaak.mineperms.MinePermsManager;
 
 import java.util.Collections;
 import java.util.Set;
@@ -18,5 +19,22 @@ public class User {
 
     public User(UUID userUUID) {
         this.userUUID = userUUID;
+    }
+
+    private boolean hasPermission(String permission) {
+        if (this.permissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
+        String[] parts = permission.split("\\.");
+
+        StringBuilder partsBuilder = new StringBuilder();
+
+        for (int in = 0; in < parts.length; in++) {
+            partsBuilder.append(parts[0]).append(".");
+
+            if (this.permissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

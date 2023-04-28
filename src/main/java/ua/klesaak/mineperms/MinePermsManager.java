@@ -8,6 +8,10 @@ import java.util.UUID;
 @Getter
 public final class MinePermsManager {
     public static final String MAIN_PERMISSION = "mineperms.admin";
+
+    public static final String WILDCARD_SUFFIX = ".*";
+    public static final String ROOT_WILDCARD = "*";
+    public static final String ROOT_WILDCARD_WITH_QUOTES = "'*'";
     private volatile MinePermsCommand minePermsCommand;
 
     public MinePermsManager() {
@@ -15,7 +19,6 @@ public final class MinePermsManager {
     }
 
     public boolean hasPermission(UUID playerUUID, String permission) {
-        //todo логики звезды, антиправа итп.
         return false;
     }
 

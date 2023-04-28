@@ -5,10 +5,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.command.Command;
-import org.bukkit.plugin.java.annotation.command.Commands;
 import org.bukkit.plugin.java.annotation.dependency.Dependency;
 import org.bukkit.plugin.java.annotation.dependency.LoadBefore;
-import org.bukkit.plugin.java.annotation.dependency.LoadBeforePlugins;
 import org.bukkit.plugin.java.annotation.dependency.SoftDependency;
 import org.bukkit.plugin.java.annotation.permission.Permission;
 import org.bukkit.plugin.java.annotation.permission.Permissions;
@@ -28,14 +26,9 @@ import java.util.logging.Level;
 @Author("Klesaak")
 @Dependency("Vault")
 @SoftDependency("WorldEdit")
-@LoadBeforePlugins({
-        @LoadBefore("Vault"),
-        @LoadBefore("WorldEdit")
-})
+@LoadBefore("WorldEdit")
 @Website("https://t.me/klesaak")
-@Commands({
-        @Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = MinePermsManager.MAIN_PERMISSION)
-})
+@Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = MinePermsManager.MAIN_PERMISSION)
 
 @Description("Simple high performance permission plugin.")
 @Permissions({
@@ -43,7 +36,7 @@ import java.util.logging.Level;
 })
 @Getter
 public class MinePermsBukkit extends JavaPlugin {
-    @Getter private static MinePermsManager minePermsManager;
+    private volatile MinePermsManager minePermsManager;
 
     @Override
     public void onEnable() {
@@ -59,10 +52,10 @@ public class MinePermsBukkit extends JavaPlugin {
         }
         new VaultIntegrationChat(this);
         new VaultIntegrationPermission(this);
-        minePermsManager = new MinePermsManager();
+        this.minePermsManager = new MinePermsManager();
         this.getServer().getOperators().forEach(offlinePlayer -> offlinePlayer.setOp(false));
-        //Производим иньекцию онлайн игрокам, заменяя дефолтный оператор прав на оператор нашего плагина.
-        this.getServer().getOnlinePlayers().forEach(player -> PermissibleOverride.injectPlayer(player, new PermissibleOverride(player)));
+        //Производим иньекцию онлайн игрокам, заменяя дефолтный оператор прав на оператор нашего плагина. //todo так же если есть игроки онлайн - загрузить их в кеш из бд
+        this.getServer().getOnlinePlayers().forEach(player -> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.minePermsManager, player)));
         new MPBukkitListener(this);
         //new MPBukkitCommand(this);
         this.getLogger().log(Level.INFO, "Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
