@@ -14,4 +14,8 @@ public class UsersStorage {
         this.manager = manager;
         this.groups = groups;
     }
+
+    public void recalculateUsersPermissionsByGroup(String groupId) {
+
+    }
 }

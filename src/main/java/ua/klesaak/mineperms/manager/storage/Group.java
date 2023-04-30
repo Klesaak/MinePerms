@@ -12,10 +12,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Getter @Setter @EqualsAndHashCode @ToString
 public class Group {
     private final String name;
-    protected final Set<Group> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    protected final Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    protected String prefix = "";
-    protected String suffix = "";
+    private final Set<Group> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private String prefix = "";
+    private String suffix = "";
 
     public Group(String name) {
         this.name = name;
