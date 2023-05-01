@@ -1,15 +1,14 @@
 package ua.klesaak.mineperms.manager.storage;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Getter @Setter @EqualsAndHashCode @ToString
+@Getter @Setter
 public class Group {
     private final String name;
     private final Set<Group> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -56,5 +55,27 @@ public class Group {
 
     public static String getNameOrNull(Group group) {
         return group != null ? group.getName() : "null";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Group group = (Group) o;
+        return Objects.equals(name, group.name) && Objects.equals(prefix, group.prefix) && Objects.equals(suffix, group.suffix);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, prefix, suffix);
+    }
+
+    @Override
+    public String toString() {
+        return "Group{" +
+                "name='" + name + '\'' +
+                ", prefix='" + prefix + '\'' +
+                ", suffix='" + suffix + '\'' +
+                '}';
     }
 }
