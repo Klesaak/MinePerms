@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -14,16 +15,19 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
-public class JsonData {
+@Getter @Setter
+public abstract class JsonData {
     public static Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().setLenient().create();
-    private transient final File file;
+    private transient File file;
 
     @SneakyThrows
     public JsonData(File file) {
         if (!file.getParentFile().exists()) Files.createDirectory(file.getParentFile().toPath());
         if (!file.exists()) Files.createFile(file.toPath());
         this.file = file;
+    }
+
+    public JsonData() {
     }
 
     @SneakyThrows
@@ -36,12 +40,6 @@ public class JsonData {
         return GSON.fromJson(new String(Files.readAllBytes(this.file.toPath())), clazz);
     }
 
-    @SneakyThrows
-    public <T> void write(T source, boolean needTypeToken) {
-        String json = needTypeToken ? GSON.toJson(source, new TypeToken<T>(){}.getType()) : GSON.toJson(source);
-        Files.write(this.file.toPath(), json.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-    }
-
     @SafeVarargs
     public static <T, V> Map<T, V> mapOf(Pair<T, V>... pairs) {
         val map = new HashMap<T, V>();
@@ -51,8 +49,30 @@ public class JsonData {
         return map;
     }
 
+    @SneakyThrows
+    public static <T extends JsonData> T load(File file, Class<T> clazz) {
+        if (file.exists() && file.length() != 0L) {
+            T storage = GSON.fromJson(new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8), clazz);
+            storage.setFile(file);
+            return storage;
+
+        }
+        if (!file.getParentFile().exists()) Files.createDirectory(file.getParentFile().toPath());
+        if (!file.exists()) Files.createFile(file.toPath());
+        T storage = clazz.newInstance();
+        storage.setFile(file);
+        storage.write(storage, true);
+        return storage;
+    }
+
     public static <T, V> Pair<T, V> pairOf(T key, V value) {
         return new Pair<>(key, value);
+    }
+
+    @SneakyThrows
+    public <T> void write(T source, boolean needTypeToken) {
+        String json = needTypeToken ? GSON.toJson(source, new TypeToken<T>(){}.getType()) : GSON.toJson(source);
+        Files.write(this.file.toPath(), json.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     @Getter

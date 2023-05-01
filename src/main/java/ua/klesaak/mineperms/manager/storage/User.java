@@ -24,20 +24,15 @@ public class User {
     public boolean hasPermission(String permission) {
         if (this.permissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
         String[] parts = permission.toLowerCase().split("\\.");
-
         StringBuilder partsBuilder = new StringBuilder();
-
         for (String part : parts) {
             partsBuilder.append(part).append(".");
-            if (permissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) {
-                return true;
-            }
+            if (this.permissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) return true;
         }
-
         return false;
     }
 
-    public void recalculatePermissions() {
+    public void recalculatePermissions() { //todo закидывать в permissions только через .toLowerCase
 
     }
 }
