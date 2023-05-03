@@ -15,6 +15,8 @@ public final class MinePermsManager {
     public static final String WILDCARD_SUFFIX = ".*";
     public static final String ROOT_WILDCARD = "*";
     public static final String ROOT_WILDCARD_WITH_QUOTES = "'*'";
+
+    public static final String DOT_WILDCARD = ".";
     private volatile MinePermsCommand minePermsCommand;
     private ConfigFile configFile;
 

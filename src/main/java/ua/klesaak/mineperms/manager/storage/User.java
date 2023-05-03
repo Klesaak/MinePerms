@@ -22,10 +22,11 @@ public class User {
 
     public boolean hasPermission(String permission) {
         if (this.permissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
+        if (!permission.contains(MinePermsManager.DOT_WILDCARD)) return this.permissions.contains(permission);
         String[] parts = permission.toLowerCase().split("\\.");
         StringBuilder partsBuilder = new StringBuilder();
         for (String part : parts) {
-            partsBuilder.append(part).append(".");
+            partsBuilder.append(part).append(MinePermsManager.DOT_WILDCARD);
             if (this.permissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) return true;
         }
         return false;
