@@ -24,7 +24,7 @@ public class MPBungeeCommand extends Command implements TabExecutor {
 
 
     @Override
-    public Iterable<String> onTabComplete(CommandSender commandSender, String[] strings) {
+    public Iterable<String> onTabComplete(CommandSender commandSender, String[] args) {
 
 
         return Collections.emptyList();

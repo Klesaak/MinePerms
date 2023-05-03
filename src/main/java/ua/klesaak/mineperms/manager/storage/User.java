@@ -4,35 +4,36 @@ import lombok.Getter;
 import lombok.Setter;
 import ua.klesaak.mineperms.MinePermsManager;
 
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Getter @Setter
 public class User {
     private final UUID userUUID;
     private volatile String playerName, prefix, suffix, group;
-    private volatile Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private Map<String, Object> options = new HashMap<>();
+    private Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
+    ///Transient Data///
+    private transient volatile Set<String> calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public User(UUID userUUID) {
         this.userUUID = userUUID;
     }
 
     public boolean hasPermission(String permission) {
-        if (this.permissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
-        if (!permission.contains(MinePermsManager.DOT_WILDCARD)) return this.permissions.contains(permission);
+        if (this.calculatedPermissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
+        if (!permission.contains(MinePermsManager.DOT_WILDCARD)) return this.calculatedPermissions.contains(permission);
         String[] parts = permission.toLowerCase().split("\\.");
         StringBuilder partsBuilder = new StringBuilder();
         for (String part : parts) {
             partsBuilder.append(part).append(MinePermsManager.DOT_WILDCARD);
-            if (this.permissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) return true;
+            if (this.calculatedPermissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) return true;
         }
         return false;
     }
 
-    public void recalculatePermissions() { //todo закидывать в permissions только через .toLowerCase
+    public void recalculatePermissions() { //todo закидывать в calculatedPermissions только через .toLowerCase
 
     }
 
@@ -57,7 +58,7 @@ public class User {
                 ", prefix='" + prefix + '\'' +
                 ", suffix='" + suffix + '\'' +
                 ", group='" + group + '\'' +
-                ", permissions=" + permissions +
+                ", permissions=" + calculatedPermissions +
                 '}';
     }
 }
