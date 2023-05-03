@@ -33,7 +33,6 @@ public class ConfigFile extends JsonData {
                 JsonData.pairOf("password", ""),
                 JsonData.pairOf("host", "localhost"),
                 JsonData.pairOf("port", "6379"),
-                JsonData.pairOf("updateChanel", "mineperms-update"),
                 JsonData.pairOf("groups_key", "mp_groups"),
                 JsonData.pairOf("users_key", "mp_users")
         );
@@ -68,7 +67,6 @@ public class ConfigFile extends JsonData {
         return new RedisConfig(
                 (String) this.redisSettings.get("host"),
                 (String) this.redisSettings.get("password"),
-                (String) this.redisSettings.get("updateChanel"),
                 (String) this.redisSettings.get("groups_key"),
                 (String) this.redisSettings.get("users_key"),
                 Integer.parseInt((String)this.redisSettings.get("port")),
