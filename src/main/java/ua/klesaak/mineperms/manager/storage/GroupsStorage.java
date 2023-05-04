@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Getter
 public class GroupsStorage {
     protected final MinePermsManager manager;
-    protected volatile Group defaultGroup;
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
 
     public GroupsStorage(MinePermsManager manager) {
@@ -26,9 +25,9 @@ public class GroupsStorage {
     }
 
     public Group getGroupOrDefault(String name) {
-        Group group = getGroup(name);
+        Group group = this.getGroup(name);
         if (group == null) {
-            group = getDefaultGroup();
+            group = this.groups.get(this.manager.getConfigFile().getDefaultGroup());
         }
         return group;
     }

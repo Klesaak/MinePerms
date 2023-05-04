@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Getter @Setter
 public class User {
     private final UUID userUUID;
-    private volatile String playerName, prefix, suffix, group;
+    private volatile String playerName, group, prefix, suffix;
     private Map<String, Object> options = new HashMap<>();
     private Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 

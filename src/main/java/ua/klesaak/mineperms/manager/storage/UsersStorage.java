@@ -16,6 +16,9 @@ public class UsersStorage {
     }
 
     public void recalculateUsersPermissionsByGroup(String groupId) {
+        for (User user : this.users.values()) {
+            if (user.getGroup().equalsIgnoreCase(groupId)) user.recalculatePermissions();
+        }
 
     }
 }
