@@ -11,12 +11,13 @@ public class MinePermsBungee extends Plugin {
     public void onEnable() {
         this.minePermsManager = new MinePermsManager();
         this.minePermsManager.loadConfig(this.getDataFolder());
+        this.minePermsManager.initStorage();
         new MPBungeeCommand(this);
         new MPBungeeListener(this);
     }
 
     @Override
     public void onDisable() {
-
+        this.minePermsManager.getStorage().close();
     }
 }

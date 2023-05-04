@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.manager.storage;
+package ua.klesaak.mineperms.manager.config;
 
 public enum StorageType {
     FILE, MYSQL, REDIS;

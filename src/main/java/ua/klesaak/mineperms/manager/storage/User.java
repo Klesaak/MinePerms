@@ -2,6 +2,7 @@ package ua.klesaak.mineperms.manager.storage;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 
 import java.util.*;
@@ -35,6 +36,18 @@ public class User {
 
     public void recalculatePermissions() { //todo закидывать в calculatedPermissions только через .toLowerCase
 
+    }
+
+    public void addPermission(String permission) {
+        val perm = permission.toLowerCase();
+        this.permissions.add(perm);
+        this.calculatedPermissions.add(perm);
+    }
+
+    public void removePermission(String permission) {
+        val perm = permission.toLowerCase();
+        this.permissions.remove(perm);
+        this.calculatedPermissions.remove(perm);
     }
 
     @Override

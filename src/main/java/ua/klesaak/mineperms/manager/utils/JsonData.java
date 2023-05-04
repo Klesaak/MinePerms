@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Getter @Setter
-public abstract class JsonData {
+public class JsonData {
     public static Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().setLenient().create();
     private transient File file;
 

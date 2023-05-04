@@ -1,10 +1,10 @@
 package ua.klesaak.mineperms.manager.config;
 
-import ua.klesaak.mineperms.manager.storage.StorageType;
 import ua.klesaak.mineperms.manager.storage.mysql.MySQLConfig;
 import ua.klesaak.mineperms.manager.storage.redis.RedisConfig;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
+import java.io.File;
 import java.util.Map;
 
 public class ConfigFile extends JsonData {
@@ -72,5 +72,9 @@ public class ConfigFile extends JsonData {
                 Integer.parseInt((String)this.redisSettings.get("port")),
                 Integer.parseInt((String) this.redisSettings.get("database"))
         );
+    }
+
+    public File getPluginDataFolder() {
+        return this.getFile().getParentFile();
     }
 }

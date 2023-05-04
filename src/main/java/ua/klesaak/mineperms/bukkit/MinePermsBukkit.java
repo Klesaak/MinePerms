@@ -56,6 +56,7 @@ public class MinePermsBukkit extends JavaPlugin {
         new VaultIntegrationPermission(this);
         this.minePermsManager = new MinePermsManager();
         this.minePermsManager.loadConfig(this.getDataFolder());
+        this.minePermsManager.initStorage();
         this.getServer().getOperators().forEach(offlinePlayer -> offlinePlayer.setOp(false));
         //Производим иньекцию онлайн игрокам, заменяя дефолтный оператор прав на оператор нашего плагина. //todo так же если есть игроки онлайн - загрузить их в кеш из бд
         this.getServer().getOnlinePlayers().forEach(player -> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.minePermsManager, player)));
@@ -67,6 +68,7 @@ public class MinePermsBukkit extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        this.minePermsManager.getStorage().close();
         PermissibleOverride.unInjectPlayers(); //возвращаем дефолтный оператор прав игрокам, дабы избежать NullPointer и сервер продолжил функционировать.
         //todo uninject ваульт, worldedit
     }
