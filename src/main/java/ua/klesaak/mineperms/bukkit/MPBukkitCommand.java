@@ -37,8 +37,11 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             return UtilityMethods.copyPartialMatches(args[0].toLowerCase(), MinePermsCommand.SUB_COMMANDS_0, new ArrayList<>());
         }
-        if (args.length == 3 && args[2].equalsIgnoreCase("user")) {
-            return UtilityMethods.copyPartialMatches(args[2].toLowerCase(), MinePermsCommand.USER_SUB_COMMANDS_0, new ArrayList<>());
+        if (args.length == 2 && args[0].equalsIgnoreCase("user")) {
+            return UtilityMethods.copyPartialMatches(args[1].toLowerCase(), MinePermsCommand.USER_SUB_COMMANDS_0, new ArrayList<>());
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("group")) {
+            return UtilityMethods.copyPartialMatches(args[1].toLowerCase(), MinePermsCommand.GROUP_SUB_COMMANDS_0, new ArrayList<>());
         }
 
         return Collections.emptyList();

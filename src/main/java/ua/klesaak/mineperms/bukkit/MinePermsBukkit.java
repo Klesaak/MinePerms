@@ -20,6 +20,7 @@ import ua.klesaak.mineperms.bukkit.integration.PermissibleOverride;
 import ua.klesaak.mineperms.bukkit.integration.VaultIntegrationChat;
 import ua.klesaak.mineperms.bukkit.integration.VaultIntegrationPermission;
 import ua.klesaak.mineperms.bukkit.integration.WorldEditPermissionProvider;
+import ua.klesaak.mineperms.manager.MinePermsCommand;
 
 import java.util.logging.Level;
 
@@ -30,11 +31,11 @@ import java.util.logging.Level;
 @LoadBefore("WorldEdit")
 @Website("https://t.me/klesaak")
 @Commands({
-        @Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = MinePermsManager.MAIN_PERMISSION)
+        @Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = MinePermsCommand.MAIN_PERMISSION)
 })
 @Description("Simple high performance permission plugin.")
 @Permissions({
-        @Permission(name = MinePermsManager.MAIN_PERMISSION, defaultValue = PermissionDefault.OP, desc = "Access to use admin command.")
+        @Permission(name = MinePermsCommand.MAIN_PERMISSION, defaultValue = PermissionDefault.OP, desc = "Access to use admin command.")
 })
 @Getter
 public class MinePermsBukkit extends JavaPlugin {

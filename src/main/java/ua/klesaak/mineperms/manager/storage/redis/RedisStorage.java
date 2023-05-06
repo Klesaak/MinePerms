@@ -34,6 +34,11 @@ public class RedisStorage extends Storage {
     }
 
     @Override
+    public void updateUser(UUID userID) {
+
+    }
+
+    @Override
     public void close() {
 
     }

@@ -14,7 +14,6 @@ import java.util.UUID;
 
 @Getter
 public final class MinePermsManager {
-    public static final String MAIN_PERMISSION = "mineperms.admin";
 
     public static final String WILDCARD_SUFFIX = ".*";
     public static final String ROOT_WILDCARD = "*";

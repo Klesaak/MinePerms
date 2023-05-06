@@ -26,10 +26,10 @@ public class FileStorage extends Storage {
 
         if (this.groupsFile.getFile().length() > 0L) {
             Collection<Group> dataCollection = this.groupsFile.readAll(new TypeToken<Collection<Group>>() {});
-            dataCollection.forEach(group -> this.groups.put(group.getName(), group));
+            dataCollection.forEach(group -> this.groups.put(group.getGroupID(), group));
         } else {
             val defaultGroup = new Group(configFile.getDefaultGroup());
-            this.groups.put(defaultGroup.getName(), defaultGroup);
+            this.groups.put(defaultGroup.getGroupID(), defaultGroup);
             this.groupsFile.write(Collections.singletonList(defaultGroup), true);
         }
         if (this.usersFile.getFile().length() > 0L) {
@@ -59,6 +59,11 @@ public class FileStorage extends Storage {
     @Override @Synchronized
     public void saveGroup(String groupID) {
         this.groupsFile.write(this.groups.values(), true);
+    }
+
+    @Override
+    public void updateUser(UUID userID) {
+        throw new UnsupportedOperationException("Don't update user, because used FileStorage!");
     }
 
     @Override

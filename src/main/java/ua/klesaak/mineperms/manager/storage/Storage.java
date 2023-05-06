@@ -21,6 +21,7 @@ public abstract class Storage {
     public abstract void unCacheUser(UUID userID);
     public abstract void saveUser(UUID userID);
     public abstract void saveGroup(String groupID);
+    public abstract void updateUser(UUID userID);
     public abstract void close();
 
     public List<String> getGroupNames() {

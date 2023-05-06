@@ -10,14 +10,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Getter @Setter
 public class Group {
-    private final String name;
+    private final String groupID;
     private final Set<Group> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private String prefix = "";
     private String suffix = "";
 
-    public Group(String name) {
-        this.name = name;
+    public Group(String groupID) {
+        this.groupID = groupID;
     }
 
     public Set<Group> getInheritanceGroups() {
@@ -54,7 +54,7 @@ public class Group {
 
 
     public static String getNameOrNull(Group group) {
-        return group != null ? group.getName() : "null";
+        return group != null ? group.getGroupID() : "null";
     }
 
     @Override
@@ -62,18 +62,18 @@ public class Group {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Group group = (Group) o;
-        return Objects.equals(name, group.name) && Objects.equals(prefix, group.prefix) && Objects.equals(suffix, group.suffix);
+        return Objects.equals(this.groupID, group.groupID) && Objects.equals(prefix, group.prefix) && Objects.equals(suffix, group.suffix);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, prefix, suffix);
+        return Objects.hash(groupID, prefix, suffix);
     }
 
     @Override
     public String toString() {
         return "Group{" +
-                "name='" + name + '\'' +
+                "groupID='" + groupID + '\'' +
                 ", prefix='" + prefix + '\'' +
                 ", suffix='" + suffix + '\'' +
                 '}';
