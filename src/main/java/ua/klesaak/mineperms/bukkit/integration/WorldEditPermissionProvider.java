@@ -5,20 +5,20 @@ import org.bukkit.OfflinePlayer;
 import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
 
 public class WorldEditPermissionProvider implements PermissionsProvider {
-    private final MinePermsBukkit manager;
+    private final MinePermsBukkit plugin;
 
-    public WorldEditPermissionProvider(MinePermsBukkit manager) {
-        this.manager = manager;
+    public WorldEditPermissionProvider(MinePermsBukkit plugin) {
+        this.plugin = plugin;
     }
 
     @Override
     public boolean hasPermission(String name, String permission) {
-        return false;
+        return this.plugin.getMinePermsManager().hasPermission(name, permission);
     }
 
     @Override
     public boolean hasPermission(String worldName, String name, String permission) {
-        return false;
+        return this.hasPermission(name, permission);
     }
 
     @Override
@@ -33,12 +33,12 @@ public class WorldEditPermissionProvider implements PermissionsProvider {
 
     @Override
     public boolean hasPermission(OfflinePlayer player, String permission) {
-        return false;
+        return this.hasPermission(player.getName(), permission);
     }
 
     @Override
     public boolean hasPermission(String worldName, OfflinePlayer player, String permission) {
-        return false;
+        return this.hasPermission(player.getName(), permission);
     }
 
     @Override
