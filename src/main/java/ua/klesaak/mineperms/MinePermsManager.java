@@ -14,14 +14,13 @@ import java.util.UUID;
 
 @Getter
 public final class MinePermsManager {
-
     public static final String WILDCARD_SUFFIX = ".*";
     public static final String ROOT_WILDCARD = "*";
     public static final String ROOT_WILDCARD_WITH_QUOTES = "'*'";
     public static final String DOT_WILDCARD = ".";
     private final MinePermsCommand minePermsCommand;
     private volatile ConfigFile configFile;
-    private Storage storage;
+    private volatile Storage storage;
 
     public MinePermsManager() {
         this.minePermsCommand = new MinePermsCommand(this);
@@ -51,8 +50,8 @@ public final class MinePermsManager {
         }
     }
 
-    public boolean hasPermission(UUID playerUUID, String permission) {
-        return this.storage.getUser(playerUUID).hasPermission(permission);
+    public boolean hasPermission(String nickName, String permission) {
+        return this.storage.hasPermission(nickName, permission);
     }
 
     //todo метод на dump из одной базы в другую

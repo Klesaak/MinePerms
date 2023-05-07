@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+//"§f[§cPermissionsEx§f] version [§91.23.4§f]"
+
 public class MPBukkitCommand implements CommandExecutor, TabCompleter {
     private final MinePermsBukkit plugin;
 
@@ -28,7 +30,7 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§cOnly from console!");
             return true;
         }
-        sender.sendMessage(this.plugin.getMinePermsManager().getMinePermsCommand().invoke(args));
+        sender.sendMessage(this.plugin.getMinePermsManager().getMinePermsCommand().invoke(label, args));
         return true;
     }
 
@@ -43,7 +45,6 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
         if (args.length == 2 && args[0].equalsIgnoreCase("group")) {
             return UtilityMethods.copyPartialMatches(args[1].toLowerCase(), MinePermsCommand.GROUP_SUB_COMMANDS_0, new ArrayList<>());
         }
-
         return Collections.emptyList();
     }
 

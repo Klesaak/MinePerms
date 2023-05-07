@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Getter @Setter
 public class JsonData {
-    public static Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().setLenient().create();
+    public static Gson GSON = new GsonBuilder().setPrettyPrinting().serializeNulls().disableHtmlEscaping().create();
     private transient File file;
 
     @SneakyThrows

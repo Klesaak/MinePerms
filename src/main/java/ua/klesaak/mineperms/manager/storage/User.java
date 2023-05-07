@@ -10,16 +10,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Getter @Setter
 public class User {
-    private final UUID userUUID;
-    private volatile String playerName, group, prefix, suffix;
+    private final String playerName;
+    private volatile String group;
+    private volatile String prefix = "";
+    private volatile String suffix = "";
     private Map<String, Object> options = new HashMap<>();
     private Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     ///Transient Data///
     private transient volatile Set<String> calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    public User(UUID userUUID) {
-        this.userUUID = userUUID;
+    public User(String playerName, String groupID) {
+        this.playerName = playerName;
+        this.group = groupID;
     }
 
     public boolean hasPermission(String permission) {
@@ -34,8 +37,13 @@ public class User {
         return false;
     }
 
-    public void recalculatePermissions() { //todo закидывать в calculatedPermissions только через .toLowerCase
-
+    public void recalculatePermissions(ConcurrentHashMap<String, Group> groupsMap) {
+        this.calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        this.calculatedPermissions.addAll(this.permissions);
+        if (groupsMap.get(this.group) != null) {
+            this.calculatedPermissions.addAll(groupsMap.get(this.group).getPermissions());
+            groupsMap.get(this.group).getInheritanceGroups().forEach(groupID -> this.calculatedPermissions.addAll(groupsMap.get(groupID).getPermissions()));
+        }
     }
 
     public void addPermission(String permission) {
@@ -55,18 +63,17 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return userUUID.equals(user.userUUID) && playerName.equals(user.playerName);
+        return playerName.equals(user.playerName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userUUID, playerName);
+        return Objects.hash(playerName);
     }
 
     @Override
     public String toString() {
         return "User{" +
-                "userUUID=" + userUUID +
                 ", playerName='" + playerName + '\'' +
                 ", prefix='" + prefix + '\'' +
                 ", suffix='" + suffix + '\'' +

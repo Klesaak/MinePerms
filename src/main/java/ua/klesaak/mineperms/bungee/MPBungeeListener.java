@@ -28,7 +28,7 @@ public class MPBungeeListener implements Listener {
         String permission = event.getPermission();
         ProxiedPlayer player = (ProxiedPlayer) event.getSender();
 
-        event.setHasPermission(this.manager.getMinePermsManager().hasPermission(player.getUniqueId(), permission));
+        event.setHasPermission(this.manager.getMinePermsManager().hasPermission(player.getName(), permission));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

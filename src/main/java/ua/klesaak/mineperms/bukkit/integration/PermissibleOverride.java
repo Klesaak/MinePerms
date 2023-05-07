@@ -11,7 +11,7 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.utils.UtilityMethods;
+import ua.klesaak.mineperms.bukkit.utils.BukkitUtils;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -26,7 +26,7 @@ public class PermissibleOverride extends PermissibleBase {
             Field humanEntityPermissibleField;
             try {
                 // craftbukkit
-                humanEntityPermissibleField = UtilityMethods.obcClass("entity.CraftHumanEntity").getDeclaredField("perm");
+                humanEntityPermissibleField = BukkitUtils.obcClass("entity.CraftHumanEntity").getDeclaredField("perm");
                 humanEntityPermissibleField.setAccessible(true);
             } catch (Exception e) {
                 // glowstone
@@ -86,7 +86,7 @@ public class PermissibleOverride extends PermissibleBase {
 
     @Override
     public boolean hasPermission(@NonNull String inName) {
-        return this.minePermsManager.hasPermission(this.player.getUniqueId(), inName);
+        return this.minePermsManager.hasPermission(this.player.getName(), inName);
     }
 
     @Override

@@ -2,42 +2,34 @@ package ua.klesaak.mineperms.manager.storage;
 
 import lombok.Getter;
 import lombok.Setter;
+import ua.klesaak.mineperms.MinePermsManager;
 
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Getter @Setter
 public class Group {
     private final String groupID;
-    private final Set<Group> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private final Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private String prefix = "";
     private String suffix = "";
+    private final Set<String> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private Map<String, Object> options = new HashMap<>();
 
     public Group(String groupID) {
         this.groupID = groupID;
     }
 
-    public Set<Group> getInheritanceGroups() {
-        return Collections.unmodifiableSet(this.inheritanceGroups);
-    }
-
-    public boolean hasParentGroup(Group group) {
-        return inheritanceGroups.contains(group);
-    }
-
-    public void addInheritanceGroup(Group group) {
-        inheritanceGroups.add(group);
-    }
-
-    public void removeInheritanceGroup(Group group) {
-        inheritanceGroups.remove(group);
-    }
-
     public boolean hasPermission(String permission) {
-        return permissions.contains(permission);
+        if (this.permissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
+        if (!permission.contains(MinePermsManager.DOT_WILDCARD)) return this.permissions.contains(permission);
+        String[] parts = permission.toLowerCase().split("\\.");
+        StringBuilder partsBuilder = new StringBuilder();
+        for (String part : parts) {
+            partsBuilder.append(part).append(MinePermsManager.DOT_WILDCARD);
+            if (this.permissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) return true;
+        }
+        return false;
     }
 
     public Set<String> getPermissions() {
@@ -45,15 +37,23 @@ public class Group {
     }
 
     public void addPermission(String permission) {
-        permissions.add(permission);
+        permissions.add(permission.toLowerCase());
     }
 
     public void removePermission(String permission) {
-        permissions.remove(permission);
+        permissions.remove(permission.toLowerCase());
+    }
+
+    public void addInheritanceGroup(String group) {
+        inheritanceGroups.add(group.toLowerCase());
+    }
+
+    public void removeInheritanceGroup(String group) {
+        inheritanceGroups.remove(group.toLowerCase());
     }
 
 
-    public static String getNameOrNull(Group group) {
+    public static String getIDorNull(Group group) {
         return group != null ? group.getGroupID() : "null";
     }
 
