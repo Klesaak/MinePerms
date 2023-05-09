@@ -2,6 +2,7 @@ package ua.klesaak.mineperms.manager.storage;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 
 import java.util.*;
@@ -21,9 +22,11 @@ public class Group {
     }
 
     public boolean hasPermission(String permission) {
+        val permissionLowerCase = permission.toLowerCase();
         if (this.permissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
-        if (!permission.contains(MinePermsManager.DOT_WILDCARD)) return this.permissions.contains(permission);
-        String[] parts = permission.toLowerCase().split("\\.");
+        if (!permissionLowerCase.contains(MinePermsManager.DOT_WILDCARD)) return this.permissions.contains(permissionLowerCase);
+        if (this.permissions.contains(permissionLowerCase)) return true;
+        String[] parts = permissionLowerCase.toLowerCase().split("\\.");
         StringBuilder partsBuilder = new StringBuilder();
         for (String part : parts) {
             partsBuilder.append(part).append(MinePermsManager.DOT_WILDCARD);

@@ -1,7 +1,10 @@
 package ua.klesaak.mineperms.manager.storage;
 
+import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,7 +54,7 @@ public abstract class Storage {
     public abstract void close();
 
     public List<String> getGroupNames() {
-        return Collections.list(groups.keys());
+        return Collections.list(this.groups.keys());
     }
 
     public boolean hasPermission(String nickName, String permission) {
@@ -74,6 +77,14 @@ public abstract class Storage {
 
     public Group getDefaultGroup() {
         return this.groups.get(this.manager.getConfigFile().getDefaultGroup());
+    }
+
+    public Collection<String> getUserInheritedGroups(String nickName) {
+        val list = new ArrayList<String>();
+        val playerMainGroupID = this.getUser(nickName).getGroup();
+        list.add(playerMainGroupID);
+        list.addAll(this.getGroup(playerMainGroupID).getInheritanceGroups());
+        return Collections.unmodifiableCollection(list);
     }
 
     public void recalculateUsersPermissionsByGroup(String groupId) {

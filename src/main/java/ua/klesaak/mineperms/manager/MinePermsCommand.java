@@ -31,9 +31,8 @@ public class MinePermsCommand {
                     "",
                     "§6/" + label + " user - user operations command.",
                     "§6/" + label + " group - group operations command.",
-                    "§6/" + label +" bulkupdate - bulkupdate operations command.",
-                    "§6/" + label +" find <permission/groupID> - find all users with a specify perm or group.",
-                    "§6/" + label +" export <from> <to> - export data from another backend."
+                    "§6/" + label + " bulkupdate - bulkupdate operations command.",
+                    "§6/" + label + " export <from> <to> - export data from another backend."
             );
         }
         Storage storage = this.manager.getStorage();
@@ -75,14 +74,14 @@ public class MinePermsCommand {
                         String nickName = args[2];
                         String permission = args[3];
                         storage.addUserPermission(nickName, permission);
-                        return "§6Permission " + permission + " §6added to §a" + nickName;
+                        return "§6Permission §c" + permission + " §6added to §a" + nickName;
                     }
                     case "removeperm": {
-                        if (args.length != 4) return "§6/" + label +" user removeperm <nickname> <permission> - add a specify permission.";
+                        if (args.length != 4) return "§6/" + label +" user removeperm <nickname> <permission> - remove a specify permission.";
                         String nickName = args[2];
                         String permission = args[3];
                         storage.removeUserPermission(nickName, permission);
-                        return "§6Permission " + permission + " §6removed from  §a" + nickName;
+                        return "§6Permission §c" + permission + " §6removed from §a" + nickName;
                     }
                     case "setgroup": {
                         if (args.length != 4) return "§6/" + label +" user setgroup <nickname> <groupID> - set a specify group.";
@@ -91,7 +90,7 @@ public class MinePermsCommand {
                         Group group = storage.getGroup(groupID);
                         if (group == null) return "§cGroup not found!";
                         storage.setUserGroup(nickName, groupID);
-                        return "§6Group " + groupID + " §6set to §a" + nickName;
+                        return "§6Group §c" + groupID + " §6set to §a" + nickName;
                     }
                     case "delete": {
                         if (args.length != 3) return "§6/" + label +" user delete <nickname> - delete specify group.";
@@ -161,16 +160,16 @@ public class MinePermsCommand {
                         Group group = storage.getGroup(groupID);
                         if (group == null) return "§cGroup not found!";
                         storage.addGroupPermission(groupID, permission);
-                        return "§6Permission " + permission + " §6added to group §a" + groupID;
+                        return "§6Permission §c" + permission + " §6added to group §a" + groupID;
                     }
                     case "removeperm": {
-                        if (args.length != 4) return "§6/" + label +" group removeperm <groupID> <permission> - add a specify permission.";
+                        if (args.length != 4) return "§6/" + label +" group removeperm <groupID> <permission> - remove a specify permission.";
                         String groupID = args[2].toLowerCase();
                         String permission = args[3];
                         Group group = storage.getGroup(groupID);
                         if (group == null) return "§cGroup not found!";
                         storage.removeGroupPermission(groupID, permission);
-                        return "§6Permission " + permission + " §6removed from group §a" + groupID;
+                        return "§6Permission §c" + permission + " §6removed from group §a" + groupID;
                     }
                     case "add-parent": {
                         if (args.length != 4) return "§6/" + label +" group add-parent <groupID> <parentGroupID> - add a specify parent group.";
@@ -181,7 +180,7 @@ public class MinePermsCommand {
                         Group parentGroup = storage.getGroup(parent);
                         if (parentGroup == null) return "§cParent group not found!";
                         storage.addGroupParent(groupID, parent);
-                        return "§6Parent group " + parent + " §6added to group §a" + groupID;
+                        return "§6Parent group §c" + parent + " §6added to group §a" + groupID;
                     }
                     case "remove-parent": {
                         if (args.length != 4) return "§6/" + label +" group remove-parent <groupID> <parentGroupID> - remove a specify parent group.";
@@ -190,7 +189,7 @@ public class MinePermsCommand {
                         Group group = storage.getGroup(groupID);
                         if (group == null) return "§cGroup not found!";
                         storage.removeGroupParent(groupID, parent);
-                        return "§6Parent group " + parent + " §6removed from group §a" + groupID;
+                        return "§6Parent group §c" + parent + " §6removed from group §a" + groupID;
                     }
                     case "delete": {
                         if (args.length != 3) return "§6/" + label +" group delete <groupID> - delete specify group.";
@@ -198,7 +197,7 @@ public class MinePermsCommand {
                         Group group = storage.getGroup(groupID);
                         if (group == null) return "§cGroup not found!";
                         storage.deleteGroup(groupID);
-                        return "§6Group §a" + groupID + " §6deleted!";
+                        return "§6Group §c" + groupID + " §6deleted!";
                     }
                     case "create": {
                         if (args.length != 3) return "§6/" + label +" group create <groupID> - create specify group.";
@@ -206,7 +205,7 @@ public class MinePermsCommand {
                         Group group = storage.getGroup(groupID);
                         if (group != null) return "§cGroup is already exist!";
                         storage.createGroup(groupID);
-                        return "§6Group §a" + groupID + " §6created!";
+                        return "§6Group §c" + groupID + " §6created!";
                     }
                     case "prefix": {
                         if (args.length != 4) return "§6/" + label +" group prefix <groupID> <prefix> - set group prefix.";
@@ -237,13 +236,11 @@ public class MinePermsCommand {
                 return "§aMinePerms reload successful!";
             }
             case "bulkupdate": {
-                break;
-            }
-            case "find": {
-                break;
+                return "§cTODO bulka help";
             }
             case "export": {
-                break;
+                if (args.length != 4) return "§6/" + label +" export <from> <to> - export data from another backend.";
+
             }
         }
         return "§cUnknown operation.";

@@ -26,9 +26,11 @@ public class User {
     }
 
     public boolean hasPermission(String permission) {
+        val permissionLowerCase = permission.toLowerCase();
         if (this.calculatedPermissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
-        if (!permission.contains(MinePermsManager.DOT_WILDCARD)) return this.calculatedPermissions.contains(permission);
-        String[] parts = permission.toLowerCase().split("\\.");
+        if (!permissionLowerCase.contains(MinePermsManager.DOT_WILDCARD)) return this.calculatedPermissions.contains(permissionLowerCase);
+        if (this.calculatedPermissions.contains(permissionLowerCase)) return true;
+        String[] parts = permissionLowerCase.toLowerCase().split("\\.");
         StringBuilder partsBuilder = new StringBuilder();
         for (String part : parts) {
             partsBuilder.append(part).append(MinePermsManager.DOT_WILDCARD);
