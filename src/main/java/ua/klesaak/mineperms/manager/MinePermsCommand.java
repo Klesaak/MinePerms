@@ -12,11 +12,11 @@ import java.util.List;
 public class MinePermsCommand {
     public static final String MAIN_PERMISSION = "mineperms.admin";
 
-    public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "bulkupdate", "find", "export");
+    public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "bulkupdate", "export");
     public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("addperm", "removeperm", "info", "setgroup", "delete", "prefix",
-            "suffix", "clear-prefix", "clear-suffix", "setoption", "removeoption", "getoption");
+            "suffix", "clear-prefix", "clear-suffix");
     public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("addperm", "removeperm", "info", "delete", "prefix",
-            "suffix", "clear-prefix", "clear-suffix", "setoption", "create", "add-parent", "remove-parent", "removeoption", "getoption");
+            "suffix", "clear-prefix", "clear-suffix", "create", "add-parent", "remove-parent");
     private final MinePermsManager manager;
 
     public MinePermsCommand(MinePermsManager manager) {
@@ -49,10 +49,7 @@ public class MinePermsCommand {
                             "§6/" + label +" user prefix <nickname> <prefix> - set user prefix.",
                             "§6/" + label +" user suffix <nickname> <suffix> - set user suffix.",
                             "§6/" + label +" user clear-prefix <nickname> - clear user prefix.",
-                            "§6/" + label +" user clear-suffix <nickname> - clear user suffix.",
-                            "§6/" + label +" user setoption <nickname> <option> - set specify user option.",
-                            "§6/" + label +" user removeoption <nickname> <option> - remove specify user option.",
-                            "§6/" + label +" user getoption <nickname> <option> - get specify user option."
+                            "§6/" + label +" user clear-suffix <nickname> - clear user suffix."
                     );
                 }
                 switch (args[1].toLowerCase()) {
@@ -65,11 +62,10 @@ public class MinePermsCommand {
                         return this.listMessages(
                                 "",
                                 "§aUser " + nickName + " info:",
-                                " §aPermissions: " + perms,
                                 " §aGroup: §6" + user.getGroup(),
                                 " §aPrefix: §6" + (user.getPrefix().isEmpty() ? "§cNot set." : user.getPrefix()),
                                 " §aSuffix: §6" + (user.getSuffix().isEmpty() ? "§cNot set." : user.getSuffix()),
-                                " §aOptions: TODO");
+                                " §aPermissions: " + perms);
                     }
                     case "addperm": {
                         if (args.length != 4) return "§6/" + label +" user addperm <nickname> <permission> - add a specify permission.";
@@ -124,19 +120,6 @@ public class MinePermsCommand {
                         storage.setUserSuffix(nickName, "");
                         return "§6Suffix remove from §a" + nickName;
                     }
-                    case "setoption": {
-                        if (args.length != 4) return "§6/" + label +" user setoption <nickname> <option> - set specify group option.";
-                        return "§cTODO setoption method";
-                    }
-                    case "removeoption": {
-                        if (args.length != 4) return "§6/" + label +" user removeoption <nickname> <option> - remove specify group option.";
-                        return "§cTODO removeoption method";
-                    }
-                    case "getoption": {
-                        if (args.length != 4) return "§6/" + label +" user getoption <nickname> <option> - get specify group option.";
-
-                        return "§cTODO getoption method";
-                    }
                 }
                 break;
             }
@@ -154,10 +137,7 @@ public class MinePermsCommand {
                             "§6/" + label +" group prefix <groupID> <prefix> - set group prefix.",
                             "§6/" + label +" group suffix <groupID> <suffix> - set group suffix.",
                             "§6/" + label +" group clear-prefix <groupID> - clear group prefix.",
-                            "§6/" + label +" group clear-suffix <groupID> - clear group suffix.",
-                            "§6/" + label +" group setoption <groupID> <option> - set specify group option.",
-                            "§6/" + label +" group removeoption <groupID> <option> - remove specify group option.",
-                            "§6/" + label +" group getoption <groupID> <option> - get specify group option."
+                            "§6/" + label +" group clear-suffix <groupID> - clear group suffix."
                     );
                 }
                 switch (args[1].toLowerCase()) {
@@ -170,10 +150,9 @@ public class MinePermsCommand {
                         return this.listMessages(
                                 "",
                                 "§aGroup " + groupID + " info:",
-                                " §aPermissions: " + perms,
                                 " §aPrefix: §6" + (group.getPrefix().isEmpty() ? "§cNot set." : group.getPrefix()),
                                 " §aSuffix: §6" + (group.getSuffix().isEmpty() ? "§cNot set." : group.getSuffix()),
-                                " §aOptions: TODO");
+                                " §aPermissions: " + perms);
                     }
                     case "addperm": {
                         if (args.length != 4) return "§6/" + label +" group addperm <groupID> <permission> - add a specify permission.";
@@ -262,19 +241,6 @@ public class MinePermsCommand {
                         if (group == null) return "§cGroup not found!";
                         storage.setGroupSuffix(groupID, "");
                         return "§6Suffix remove from group §a" + groupID;
-                    }
-                    case "setoption": {
-                        if (args.length != 4) return "§6/" + label +" group setoption <groupID> <option> - set specify group option.";
-                        return "§cTODO setoption method";
-                    }
-                    case "removeoption": {
-                        if (args.length != 4) return "§6/" + label +" group removeoption <groupID> <option> - remove specify group option.";
-                        return "§cTODO removeoption method";
-                    }
-                    case "getoption": {
-                        if (args.length != 4) return "§6/" + label +" group getoption <groupID> <option> - get specify group option.";
-
-                        return "§cTODO getoption method";
                     }
                 }
                 break;

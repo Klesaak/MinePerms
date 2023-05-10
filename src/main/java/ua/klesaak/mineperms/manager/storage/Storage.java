@@ -32,9 +32,6 @@ public abstract class Storage {
     public abstract void setUserPrefix(String nickName, String prefix);
     public abstract void setUserSuffix(String nickName, String suffix);
     public abstract void setUserGroup(String nickName, String groupID);
-    public abstract void setUserOption(String nickName, String optionKey, String stringOption);
-    public abstract void setUserOption(String nickName, String optionKey, boolean booleanOption);
-    public abstract void setUserOption(String nickName, String optionKey, int integerOption);
     public abstract void deleteUser(String nickName);
     public abstract void updateUser(String nickName);
     //////Group operations//////
@@ -44,9 +41,6 @@ public abstract class Storage {
     public abstract void removeGroupParent(String groupID, String parentID);
     public abstract void setGroupPrefix(String groupID, String prefix);
     public abstract void setGroupSuffix(String groupID, String suffix);
-    public abstract void setGroupOption(String groupID, String optionKey, String stringOption);
-    public abstract void setGroupOption(String groupID, String optionKey, boolean booleanOption);
-    public abstract void setGroupOption(String groupID, String optionKey, int integerOption);
     public abstract void deleteGroup(String groupID);
     public abstract void createGroup(String groupID);
     public abstract void updateGroup(String groupID);

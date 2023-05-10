@@ -15,7 +15,6 @@ public class Group {
     private String suffix = "";
     private final Set<String> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private Map<String, Object> options = new HashMap<>();
 
     public Group(String groupID) {
         this.groupID = groupID;

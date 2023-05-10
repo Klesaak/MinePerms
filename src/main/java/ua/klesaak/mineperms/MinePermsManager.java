@@ -1,6 +1,7 @@
 package ua.klesaak.mineperms;
 
 import lombok.Getter;
+import ua.klesaak.mineperms.api.MinePermsAPI;
 import ua.klesaak.mineperms.manager.MinePermsCommand;
 import ua.klesaak.mineperms.manager.config.ConfigFile;
 import ua.klesaak.mineperms.manager.storage.Storage;
@@ -10,7 +11,6 @@ import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.io.File;
-import java.util.UUID;
 
 @Getter
 public final class MinePermsManager {
@@ -24,6 +24,7 @@ public final class MinePermsManager {
 
     public MinePermsManager() {
         this.minePermsCommand = new MinePermsCommand(this);
+        MinePermsAPI.register(this);
     }
 
     public void loadConfig(File pluginDataFolder) {

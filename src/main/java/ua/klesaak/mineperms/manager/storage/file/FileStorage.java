@@ -137,21 +137,6 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public void setUserOption(String nickName, String optionKey, String stringOption) {
-
-    }
-
-    @Override
-    public void setUserOption(String nickName, String optionKey, boolean booleanOption) {
-
-    }
-
-    @Override
-    public void setUserOption(String nickName, String optionKey, int integerOption) {
-
-    }
-
-    @Override
     public void deleteUser(String nickName) {
         User user = this.getUser(nickName);
         if (user != null) {
@@ -203,21 +188,6 @@ public class FileStorage extends Storage {
     public void setGroupSuffix(String groupID, String suffix) {
         this.getGroup(groupID.toLowerCase()).setSuffix(suffix);
         this.saveGroup(groupID);
-    }
-
-    @Override
-    public void setGroupOption(String groupID, String optionKey, String stringOption) {
-
-    }
-
-    @Override
-    public void setGroupOption(String groupID, String optionKey, boolean booleanOption) {
-
-    }
-
-    @Override
-    public void setGroupOption(String groupID, String optionKey, int integerOption) {
-
     }
 
     @Override

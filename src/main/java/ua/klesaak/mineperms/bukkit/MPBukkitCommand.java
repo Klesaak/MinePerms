@@ -5,7 +5,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
 import ua.klesaak.mineperms.manager.MinePermsCommand;
 import ua.klesaak.mineperms.manager.utils.UtilityMethods;
 
@@ -26,10 +25,10 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
-        if (sender instanceof Player) {
+        /* if (sender instanceof Player) {
             sender.sendMessage("§cOnly from console!");
             return true;
-        }
+        }*/
         sender.sendMessage(this.plugin.getMinePermsManager().getMinePermsCommand().invoke(label, args));
         return true;
     }

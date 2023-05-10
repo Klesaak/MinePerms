@@ -14,7 +14,6 @@ public class User {
     private volatile String group;
     private volatile String prefix = "";
     private volatile String suffix = "";
-    private Map<String, Object> options = new HashMap<>();
     private Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     ///Transient Data///

@@ -78,21 +78,6 @@ public class RedisStorage extends Storage {
     }
 
     @Override
-    public void setUserOption(String nickName, String optionKey, String stringOption) {
-
-    }
-
-    @Override
-    public void setUserOption(String nickName, String optionKey, boolean booleanOption) {
-
-    }
-
-    @Override
-    public void setUserOption(String nickName, String optionKey, int integerOption) {
-
-    }
-
-    @Override
     public void deleteUser(String nickName) {
 
     }
@@ -129,21 +114,6 @@ public class RedisStorage extends Storage {
 
     @Override
     public void setGroupSuffix(String groupID, String suffix) {
-
-    }
-
-    @Override
-    public void setGroupOption(String groupID, String optionKey, String stringOption) {
-
-    }
-
-    @Override
-    public void setGroupOption(String groupID, String optionKey, boolean booleanOption) {
-
-    }
-
-    @Override
-    public void setGroupOption(String groupID, String optionKey, int integerOption) {
 
     }
 

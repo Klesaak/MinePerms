@@ -1,17 +1,20 @@
 package ua.klesaak.mineperms.api;
 
 import lombok.experimental.UtilityClass;
+import ua.klesaak.mineperms.MinePermsManager;
 
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @UtilityClass
 public class MinePermsAPI {
+    private MinePermsManager MANAGER;
 
-    public boolean hasPermission(String playerName, String permission) {
-        return false;
+    public void register(MinePermsManager manager) {
+        MANAGER = manager;
     }
 
-    public boolean hasPermission(UUID uuid, String permission) {
+    public boolean hasPermission(String playerName, String permission) {
         return false;
     }
 
@@ -19,15 +22,7 @@ public class MinePermsAPI {
         return "";
     }
 
-    public String getUserGroup(UUID uuid) {
-        return "";
-    }
-
     public String getUserPrefix(String playerName) {
-        return "";
-    }
-
-    public String getUserPrefix(UUID uuid) {
         return "";
     }
 
@@ -35,7 +30,15 @@ public class MinePermsAPI {
         return "";
     }
 
-    public String getUserSuffix(UUID uuid) {
+    public List<String> getGroupInheritance(String groupID) {
+        return new ArrayList<>(); //todo return groups
+    }
+
+    public String getGroupPrefix(String groupID) {
+        return "";
+    }
+
+    public String getGroupSuffix(String groupID) {
         return "";
     }
 }
