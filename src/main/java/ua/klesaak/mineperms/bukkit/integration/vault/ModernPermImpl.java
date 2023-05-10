@@ -21,7 +21,7 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 
 	@Override
 	public boolean playerInGroup(String world, OfflinePlayer player, String groupName) {
-		return this.storage.playerInGroup(player.getName(), groupName);
+		return this.storage.hasPlayerInGroup(player.getName(), groupName);
 	}
 
 	@Override

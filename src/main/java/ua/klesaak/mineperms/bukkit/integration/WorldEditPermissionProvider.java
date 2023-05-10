@@ -39,7 +39,7 @@ public class WorldEditPermissionProvider implements PermissionsProvider, Permiss
 
     @Override
     public boolean inGroup(String player, String group) {
-        return this.storage.playerInGroup(player, group);
+        return this.storage.hasPlayerInGroup(player, group);
     }
 
     @Override

@@ -57,7 +57,7 @@ public abstract class Storage {
         return this.getDefaultGroup().hasPermission(permission);
     }
 
-    public boolean playerInGroup(String playerName, String groupID) {
+    public boolean hasPlayerInGroup(String playerName, String groupID) {
         Group group = this.getGroup(groupID);
         if (group == null) return false;
         User user = this.getUser(playerName);

@@ -12,10 +12,10 @@ import net.md_5.bungee.event.EventPriority;
 import java.util.Objects;
 
 public class MPBungeeListener implements Listener {
-    private final MinePermsBungee manager;
+    private final MinePermsBungee plugin;
 
-    public MPBungeeListener(MinePermsBungee manager) {
-        this.manager = manager;
+    public MPBungeeListener(MinePermsBungee plugin) {
+        this.plugin = plugin;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -28,7 +28,7 @@ public class MPBungeeListener implements Listener {
         String permission = event.getPermission();
         ProxiedPlayer player = (ProxiedPlayer) event.getSender();
 
-        event.setHasPermission(this.manager.getMinePermsManager().hasPermission(player.getName(), permission));
+        event.setHasPermission(this.plugin.getMinePermsManager().hasPermission(player.getName(), permission));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -52,7 +52,7 @@ public class MPBungeeListener implements Listener {
 
     }
 
-    // Wait until the last priority to unload, so plugins can still perform permission checks on this event
+    // Подождите, пока выгрузится последний приоритет, чтобы плагины все еще могли выполнять проверки разрешений для этого события.
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerQuit(PlayerDisconnectEvent event) {
         //handleDisconnect(e.getPlayer().getUniqueId());
