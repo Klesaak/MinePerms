@@ -1,17 +1,17 @@
 package ua.klesaak.mineperms.bukkit.integration;
 
 import com.sk89q.wepif.PermissionsProvider;
+import com.sk89q.wepif.PermissionsResolver;
 import com.sk89q.wepif.PermissionsResolverManager;
 import lombok.SneakyThrows;
 import org.bukkit.OfflinePlayer;
 import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
-import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 
 import java.lang.reflect.Field;
 import java.util.logging.Level;
 
-public class WorldEditPermissionProvider implements PermissionsProvider {
+public class WorldEditPermissionProvider implements PermissionsProvider, PermissionsResolver {
     private final Storage storage;
 
     public WorldEditPermissionProvider(MinePermsBukkit plugin) {
@@ -39,9 +39,7 @@ public class WorldEditPermissionProvider implements PermissionsProvider {
 
     @Override
     public boolean inGroup(String player, String group) {
-        Group playerGroup = this.storage.getGroup(player);
-        if (playerGroup == null) return false;
-        return this.storage.getUser(player).getGroup().equalsIgnoreCase(group);
+        return this.storage.playerInGroup(player, group);
     }
 
     @Override
@@ -67,5 +65,13 @@ public class WorldEditPermissionProvider implements PermissionsProvider {
     @Override
     public String[] getGroups(OfflinePlayer player) {
         return this.getGroups(player.getName());
+    }
+
+    @Override
+    public void load() {}
+
+    @Override
+    public String getDetectionMessage() {
+        return "MinePerms is detected.";
     }
 }

@@ -1,15 +1,14 @@
 package ua.klesaak.mineperms.bukkit;
 
 import lombok.NonNull;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import ua.klesaak.mineperms.manager.MinePermsCommand;
-import ua.klesaak.mineperms.manager.utils.UtilityMethods;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 //"§f[§cPermissionsEx§f] version [§91.23.4§f]"
@@ -35,16 +34,11 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
-        if (args.length == 1) {
-            return UtilityMethods.copyPartialMatches(args[0].toLowerCase(), MinePermsCommand.SUB_COMMANDS_0, new ArrayList<>());
+        List<String> onlinePlayers = new ArrayList<>(Bukkit.getMaxPlayers());
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            onlinePlayers.add(player.getName());
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("user")) {
-            return UtilityMethods.copyPartialMatches(args[1].toLowerCase(), MinePermsCommand.USER_SUB_COMMANDS_0, new ArrayList<>());
-        }
-        if (args.length == 2 && args[0].equalsIgnoreCase("group")) {
-            return UtilityMethods.copyPartialMatches(args[1].toLowerCase(), MinePermsCommand.GROUP_SUB_COMMANDS_0, new ArrayList<>());
-        }
-        return Collections.emptyList();
+        return this.plugin.getMinePermsManager().getMinePermsCommand().onTabComplete(label, onlinePlayers, args);
     }
 
 }

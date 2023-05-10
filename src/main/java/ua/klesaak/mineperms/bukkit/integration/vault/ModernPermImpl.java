@@ -3,7 +3,6 @@ package ua.klesaak.mineperms.bukkit.integration.vault;
 import org.bukkit.OfflinePlayer;
 import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
 import ua.klesaak.mineperms.manager.storage.Group;
-import ua.klesaak.mineperms.manager.storage.User;
 
 public abstract class ModernPermImpl extends BasicPermImpl {
 
@@ -22,11 +21,7 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 
 	@Override
 	public boolean playerInGroup(String world, OfflinePlayer player, String groupName) {
-		Group group = this.storage.getGroup(groupName);
-		if (group == null) {
-			return false;
-		}
-		return this.storage.getUser(player.getName()).getGroup().equalsIgnoreCase(groupName);
+		return this.storage.playerInGroup(player.getName(), groupName);
 	}
 
 	@Override
@@ -36,14 +31,12 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 
 	@Override
 	public String getPrimaryGroup(String world, OfflinePlayer player) {
-		User user = this.storage.getUser(player.getName());
-		return user.getGroup();
+		return this.storage.getUserGroup(player.getName());
 	}
 
 	@Override
 	public boolean playerHas(String world, OfflinePlayer player, String permission) {
-		User user = this.storage.getUser(player.getName());
-		return user.hasPermission(permission);
+		return this.storage.hasPermission(player.getName(), permission);
 	}
 
 	@Override
@@ -51,7 +44,6 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 		Group group = this.storage.getGroup(groupName);
 		if (group != null) {
 			this.storage.addGroupPermission(groupName.toLowerCase(), permission);
-			this.storage.recalculateUsersPermissions();
 			return true;
 		}
 		return false;
@@ -62,7 +54,6 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 		Group group = this.storage.getGroup(groupName);
 		if (group != null) {
 			this.storage.removeGroupPermission(groupName.toLowerCase(), permission);
-			this.storage.recalculateUsersPermissions();
 			return true;
 		}
 		return false;
@@ -88,7 +79,7 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 
 	@Override
 	public boolean playerRemoveGroup(String world, OfflinePlayer player, String groupName) {
-		this.storage.setUserGroup(player.getName(), this.plugin.getMinePermsManager().getConfigFile().getDefaultGroup());
+		this.storage.setUserGroup(player.getName(), this.storage.getDefaultGroup().getGroupID());
 		return true;
 	}
 

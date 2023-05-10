@@ -57,6 +57,20 @@ public abstract class Storage {
         return this.getDefaultGroup().hasPermission(permission);
     }
 
+    public boolean playerInGroup(String playerName, String groupID) {
+        Group group = this.getGroup(groupID);
+        if (group == null) return false;
+        User user = this.getUser(playerName);
+        if (user == null) return this.getDefaultGroup().getGroupID().equalsIgnoreCase(groupID);
+        return user.getGroup().equalsIgnoreCase(groupID);
+    }
+
+    public String getUserGroup(String playerName) {
+        User user = this.getUser(playerName);
+        if (user == null) return this.getDefaultGroup().getGroupID();
+        return user.getGroup();
+    }
+
     public Group getGroupOrDefault(String groupID) {
         Group group = this.groups.get(groupID.toLowerCase());
         if (group == null) {
@@ -76,8 +90,10 @@ public abstract class Storage {
     public Collection<String> getUserInheritedGroups(String nickName) {
         val list = new ArrayList<String>();
         val playerMainGroupID = this.getUser(nickName).getGroup();
-        list.add(playerMainGroupID);
-        list.addAll(this.getGroup(playerMainGroupID).getInheritanceGroups());
+        if (playerMainGroupID != null) {
+            list.add(playerMainGroupID);
+            list.addAll(this.getGroup(playerMainGroupID).getInheritanceGroups());
+        }
         return Collections.unmodifiableCollection(list);
     }
 

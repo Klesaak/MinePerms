@@ -74,14 +74,14 @@ public class FileStorage extends Storage {
     @Override
     public String getUserPrefix(String nickName) {
         User user = this.getUser(nickName);
-        if (user == null) return this.getGroup(this.manager.getConfigFile().getDefaultGroup()).getPrefix();
+        if (user == null) return this.getDefaultGroup().getPrefix();
         return user.getPrefix().isEmpty() ? this.getGroup(user.getGroup()).getPrefix() : user.getPrefix();
     }
 
     @Override
     public String getUserSuffix(String nickName) {
         User user = this.getUser(nickName);
-        if (user == null) return this.getGroup(this.manager.getConfigFile().getDefaultGroup()).getSuffix();
+        if (user == null) return this.getDefaultGroup().getSuffix();
         return user.getSuffix().isEmpty() ? this.getGroup(user.getGroup()).getSuffix() : user.getSuffix();
     }
 
@@ -89,7 +89,7 @@ public class FileStorage extends Storage {
     public void addUserPermission(String nickName, String permission) {
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+            user = new User(nickName, this.getDefaultGroup().getGroupID());
         }
         user.addPermission(permission);
         this.saveUser(nickName, user);
@@ -107,7 +107,7 @@ public class FileStorage extends Storage {
     public void setUserPrefix(String nickName, String prefix) {
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+            user = new User(nickName, this.getDefaultGroup().getGroupID());
         }
         user.setPrefix(prefix);
         this.saveUser(nickName, user);
@@ -117,9 +117,9 @@ public class FileStorage extends Storage {
     public void setUserSuffix(String nickName, String suffix) {
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+            user = new User(nickName, this.getDefaultGroup().getGroupID());
         }
-        user.setPrefix(suffix);
+        user.setSuffix(suffix);
         this.saveUser(nickName, user);
     }
 
@@ -127,7 +127,7 @@ public class FileStorage extends Storage {
     public void setUserGroup(String nickName, String groupID) {
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+            user = new User(nickName, this.getDefaultGroup().getGroupID());
         }
         if (this.groups.get(groupID) != null) {
             user.setGroup(groupID);

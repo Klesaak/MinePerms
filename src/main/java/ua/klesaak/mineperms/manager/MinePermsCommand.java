@@ -5,9 +5,9 @@ import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.utils.UtilityMethods;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class MinePermsCommand {
     public static final String MAIN_PERMISSION = "mineperms.admin";
@@ -17,6 +17,10 @@ public class MinePermsCommand {
             "suffix", "clear-prefix", "clear-suffix");
     public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("addperm", "removeperm", "info", "delete", "prefix",
             "suffix", "clear-prefix", "clear-suffix", "create", "add-parent", "remove-parent");
+
+    public static final List<String> BULK_UPDATE_SUB_COMMANDS_0 = Arrays.asList("user", "group", "all");
+
+    public static final List<String> EXPORT_SUB_COMMANDS = Arrays.asList("file", "mysql", "redis");
     private final MinePermsManager manager;
 
     public MinePermsCommand(MinePermsManager manager) {
@@ -92,7 +96,9 @@ public class MinePermsCommand {
                     }
                     case "delete": {
                         if (args.length != 3) return "§6/" + label +" user delete <nickname> - delete specify user.";
-                        return "§cTODO delete method";
+                        String nickName = args[2];
+                        storage.deleteUser(nickName);
+                        return "§6User §c" + nickName + " §6deleted!";
                     }
                     case "prefix": {
                         if (args.length < 4) return "§6/" + label +" user prefix <nickname> <prefix> - set user prefix.";
@@ -146,12 +152,14 @@ public class MinePermsCommand {
                         String groupID = args[2];
                         Group group = storage.getGroup(groupID);
                         if (group == null) return "§cGroup not found!";
-                        String perms = group.getPermissions().isEmpty() ? "§cPermissions not set!" : '\n' + "  " + Joiner.on('\n' + "  " ).join(group.getPermissions());
+                        String perms = group.getPermissions().isEmpty() ? "§cPermissions not set!" : '\n' + "  " + Joiner.on('\n' + "  ").join(group.getPermissions());
+                        String parents = group.getInheritanceGroups().isEmpty() ? "§cParents not set!" : Joiner.on(", ").join(group.getInheritanceGroups());
                         return this.listMessages(
                                 "",
                                 "§aGroup " + groupID + " info:",
                                 " §aPrefix: §6" + (group.getPrefix().isEmpty() ? "§cNot set." : group.getPrefix()),
                                 " §aSuffix: §6" + (group.getSuffix().isEmpty() ? "§cNot set." : group.getSuffix()),
+                                " §aParent groups: §6" + parents,
                                 " §aPermissions: " + perms);
                     }
                     case "addperm": {
@@ -250,14 +258,40 @@ public class MinePermsCommand {
                 return "§aMinePerms reload successful!";
             }
             case "bulkupdate": {
-                return "§cTODO bulka help";
+                return "§cTODO bulka help";//todo
             }
             case "export": {
                 if (args.length != 4) return "§6/" + label +" export <from> <to> - export data from another backend.";
-
+                //todo
             }
         }
         return "§cUnknown operation.";
+    }
+
+    public List<String> onTabComplete(String label, Collection<String> onlinePlayers, String[] args) {
+        if (args.length == 1) {
+            return UtilityMethods.copyPartialMatches(args[0].toLowerCase(), SUB_COMMANDS_0, new ArrayList<>());
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("user")) {
+            return UtilityMethods.copyPartialMatches(args[1].toLowerCase(), USER_SUB_COMMANDS_0, new ArrayList<>());
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("group")) {
+            return UtilityMethods.copyPartialMatches(args[1].toLowerCase(), GROUP_SUB_COMMANDS_0, new ArrayList<>());
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("user")) {
+            return UtilityMethods.copyPartialMatches(args[2].toLowerCase(), onlinePlayers, new ArrayList<>());
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("group")) {
+            return UtilityMethods.copyPartialMatches(args[2].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
+        }
+        //todo tab for bulkupdate
+        if (args.length == 2 && args[0].equalsIgnoreCase("export")) {
+            return UtilityMethods.copyPartialMatches(args[1].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("export")) {
+            return UtilityMethods.copyPartialMatches(args[2].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
+        }
+        return Collections.emptyList();
     }
 
     private String getFinalArg(String[] args, int start) {
