@@ -75,14 +75,14 @@ public class FileStorage extends Storage {
     public String getUserPrefix(String nickName) {
         User user = this.getUser(nickName);
         if (user == null) return this.getGroup(this.manager.getConfigFile().getDefaultGroup()).getPrefix();
-        return user.getPrefix().isEmpty() ? "" : this.getGroup(user.getGroup()).getPrefix();
+        return user.getPrefix().isEmpty() ? this.getGroup(user.getGroup()).getPrefix() : user.getPrefix();
     }
 
     @Override
     public String getUserSuffix(String nickName) {
         User user = this.getUser(nickName);
         if (user == null) return this.getGroup(this.manager.getConfigFile().getDefaultGroup()).getSuffix();
-        return user.getPrefix().isEmpty() ? "" : this.getGroup(user.getGroup()).getSuffix();
+        return user.getSuffix().isEmpty() ? this.getGroup(user.getGroup()).getSuffix() : user.getSuffix();
     }
 
     @Override

@@ -13,12 +13,12 @@ public abstract class ModernChatImpl extends UnsupportedNodesChatImpl {
 
 	@Override
 	public String getPlayerPrefix(String worldName, OfflinePlayer player) {
-		return this.storage.getUser(player.getName()).getEffectivePrefix(this.storage);
+		return this.storage.getUserPrefix(player.getName());
 	}
 
 	@Override
 	public String getPlayerSuffix(String worldName, OfflinePlayer player) {
-		return this.storage.getUser(player.getName()).getEffectiveSuffix(this.storage);
+		return this.storage.getUserSuffix(player.getName());
 	}
 
 	@Override
