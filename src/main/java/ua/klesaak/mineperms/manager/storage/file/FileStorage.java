@@ -64,7 +64,7 @@ public class FileStorage extends Storage {
 
     @Override @Synchronized
     public void saveGroup(String groupID) {
-        this.groupsFile.write(this.groups.values(), true);
+        CompletableFuture.runAsync(()->this.groupsFile.write(this.groups.values(), true));
     }
 
     public User getUser(String nickName) {
