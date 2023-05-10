@@ -50,7 +50,7 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 	public boolean groupAdd(String worldName, String groupName, String permission) {
 		Group group = this.storage.getGroup(groupName);
 		if (group != null) {
-			group.addPermission(permission);
+			this.storage.addGroupPermission(groupName.toLowerCase(), permission);
 			this.storage.recalculateUsersPermissions();
 			return true;
 		}
@@ -61,7 +61,7 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 	public boolean groupRemove(String worldName, String groupName, String permission) {
 		Group group = this.storage.getGroup(groupName);
 		if (group != null) {
-			group.removePermission(permission);
+			this.storage.removeGroupPermission(groupName.toLowerCase(), permission);
 			this.storage.recalculateUsersPermissions();
 			return true;
 		}
@@ -76,44 +76,19 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 
 	@Override
 	public boolean playerRemove(String world, OfflinePlayer player, String permission) {
-		User user = users.getUser(player.getUniqueId());
-		if (user.hasAdditionalPermission(permission)) {
-			user.removeAdditionalPermission(permission);
-		} else {
-			user.addAdditionalPermission("-"+permission);
-		}
-		bperms.updatePermissions(player);
+		this.storage.removeUserPermission(player.getName(), permission);
 		return true;
 	}
 
 	@Override
 	public boolean playerAddGroup(String world, OfflinePlayer player, String groupName) {
-		Group group = groups.getGroup(groupName);
-		if (group == null) {
-			return false;
-		}
-		User user = users.getUser(player.getUniqueId());
-		if (user.getMainGroup() == groups.getDefaultGroup()) {
-			user.setMainGroup(group);
-		} else {
-			user.addSubGroup(group);
-		}
-		bperms.updatePermissions(player);
+		this.storage.setUserGroup(player.getName(), groupName.toLowerCase());
 		return true;
 	}
 
 	@Override
 	public boolean playerRemoveGroup(String world, OfflinePlayer player, String groupName) {
-		Group group = groups.getGroup(groupName);
-		if (group == null) {
-			return false;
-		}
-		User user = users.getUser(player.getUniqueId());
-		user.removeSubGroup(group);
-		if (user.getMainGroup() == group) {
-			user.setMainGroup(groups.getDefaultGroup());
-		}
-		bperms.updatePermissions(player);
+		this.storage.setUserGroup(player.getName(), this.plugin.getMinePermsManager().getConfigFile().getDefaultGroup());
 		return true;
 	}
 

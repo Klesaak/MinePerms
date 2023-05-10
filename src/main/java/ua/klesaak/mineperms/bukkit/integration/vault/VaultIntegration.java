@@ -9,7 +9,7 @@ import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
 import java.util.Objects;
 
 public class VaultIntegration {
-    protected final MinePermsBukkit plugin;
+    private final MinePermsBukkit plugin;
     private final Permission permissionImpl;
     private final Chat chatImpl;
 

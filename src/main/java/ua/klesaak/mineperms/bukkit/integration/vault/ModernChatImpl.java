@@ -3,6 +3,7 @@ package ua.klesaak.mineperms.bukkit.integration.vault;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.OfflinePlayer;
 import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
+import ua.klesaak.mineperms.manager.storage.Group;
 
 public abstract class ModernChatImpl extends UnsupportedNodesChatImpl {
 
@@ -12,49 +13,49 @@ public abstract class ModernChatImpl extends UnsupportedNodesChatImpl {
 
 	@Override
 	public String getPlayerPrefix(String worldName, OfflinePlayer player) {
-		return users.getUser(player.getUniqueId()).getEffectivePrefix();
+		return this.storage.getUser(player.getName()).getEffectivePrefix(this.storage);
 	}
 
 	@Override
 	public String getPlayerSuffix(String worldName, OfflinePlayer player) {
-		return users.getUser(player.getUniqueId()).getEffectiveSuffix();
+		return this.storage.getUser(player.getName()).getEffectiveSuffix(this.storage);
 	}
 
 	@Override
 	public String getGroupPrefix(String world, String groupName) {
-		Group group = groups.getGroup(groupName);
+		Group group = this.storage.getGroup(groupName);
 		return group != null ? group.getPrefix() : null;
 	}
 
 	@Override
 	public String getGroupSuffix(String world, String groupName) {
-		Group group = groups.getGroup(groupName);
+		Group group = this.storage.getGroup(groupName);
 		return group != null ? group.getSuffix() : null;
 	}
 
 	@Override
 	public void setPlayerPrefix(String worldName, OfflinePlayer player, String prefix) {
-		users.getUser(player.getUniqueId()).setPrefix(prefix);
+		this.storage.setUserPrefix(player.getName(), prefix);
 	}
 
 	@Override
 	public void setPlayerSuffix(String worldName, OfflinePlayer player, String suffix) {
-		users.getUser(player.getUniqueId()).setSuffix(suffix);
+		this.storage.setUserSuffix(player.getName(), suffix);
 	}
 
 	@Override
 	public void setGroupPrefix(String world, String groupName, String prefix) {
-		Group group = groups.getGroup(groupName);
+		Group group = this.storage.getGroup(groupName);
 		if (group != null) {
-			group.setPrefix(prefix);
+			this.storage.setGroupPrefix(groupName, prefix);
 		}
 	}
 
 	@Override
 	public void setGroupSuffix(String world, String groupName, String suffix) {
-		Group group = groups.getGroup(groupName);
+		Group group = this.storage.getGroup(groupName);
 		if (group != null) {
-			group.setPrefix(suffix);
+			this.storage.setGroupSuffix(groupName, suffix);
 		}
 	}
 

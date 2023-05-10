@@ -60,6 +60,14 @@ public class User {
         this.calculatedPermissions.remove(perm);
     }
 
+    public String getEffectivePrefix(Storage storage) {
+        return this.prefix.isEmpty() ? storage.getGroup(this.group).getPrefix() : this.prefix;
+    }
+
+    public String getEffectiveSuffix(Storage storage) {
+        return this.suffix.isEmpty() ? storage.getGroup(this.group).getSuffix() : this.suffix;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

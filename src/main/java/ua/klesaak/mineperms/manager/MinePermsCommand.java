@@ -14,9 +14,9 @@ public class MinePermsCommand {
 
     public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "bulkupdate", "find", "export");
     public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("addperm", "removeperm", "info", "setgroup", "delete", "prefix",
-            "suffix", "setoption", "removeoption", "getoption");
+            "suffix", "clear-prefix", "clear-suffix", "setoption", "removeoption", "getoption");
     public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("addperm", "removeperm", "info", "delete", "prefix",
-            "suffix", "setoption", "create", "add-parent", "remove-parent", "removeoption", "getoption");
+            "suffix", "clear-prefix", "clear-suffix", "setoption", "create", "add-parent", "remove-parent", "removeoption", "getoption");
     private final MinePermsManager manager;
 
     public MinePermsCommand(MinePermsManager manager) {
@@ -48,6 +48,8 @@ public class MinePermsCommand {
                             "§6/" + label +" user delete <nickname> - delete specify user.",
                             "§6/" + label +" user prefix <nickname> <prefix> - set user prefix.",
                             "§6/" + label +" user suffix <nickname> <suffix> - set user suffix.",
+                            "§6/" + label +" user clear-prefix <nickname> - clear user prefix.",
+                            "§6/" + label +" user clear-suffix <nickname> - clear user suffix.",
                             "§6/" + label +" user setoption <nickname> <option> - set specify user option.",
                             "§6/" + label +" user removeoption <nickname> <option> - remove specify user option.",
                             "§6/" + label +" user getoption <nickname> <option> - get specify user option."
@@ -93,16 +95,34 @@ public class MinePermsCommand {
                         return "§6Group §c" + groupID + " §6set to §a" + nickName;
                     }
                     case "delete": {
-                        if (args.length != 3) return "§6/" + label +" user delete <nickname> - delete specify group.";
+                        if (args.length != 3) return "§6/" + label +" user delete <nickname> - delete specify user.";
                         return "§cTODO delete method";
                     }
                     case "prefix": {
-                        if (args.length != 4) return "§6/" + label +" user prefix <nickname> <prefix> - set group prefix.";
-                        return "§cTODO prefix method";
+                        if (args.length < 4) return "§6/" + label +" user prefix <nickname> <prefix> - set user prefix.";
+                        String nickName = args[2];
+                        String prefix = this.getFinalArg(args, 3);
+                        storage.setUserPrefix(nickName, prefix);
+                        return "§6Prefix §c" + prefix + " §6set to §a" + nickName;
                     }
                     case "suffix": {
-                        if (args.length != 4) return "§6/" + label +" user suffix <nickname> <prefix> - set group prefix.";
-                        return "§cTODO suffix method";
+                        if (args.length < 4) return "§6/" + label +" user suffix <nickname> <prefix> - set user suffix.";
+                        String nickName = args[2];
+                        String suffix = this.getFinalArg(args, 3);
+                        storage.setUserSuffix(nickName, suffix);
+                        return "§6Suffix §c" + suffix + " §6set to §a" + nickName;
+                    }
+                    case "clear-prefix": {
+                        if (args.length != 3) return "§6/" + label +" user clear-prefix <nickname> - clear user prefix.";
+                        String nickName = args[2];
+                        storage.setUserPrefix(nickName, "");
+                        return "§6Prefix remove from §a" + nickName;
+                    }
+                    case "clear-suffix": {
+                        if (args.length != 3) return "§6/" + label +" user clear-suffix <nickname> - clear user suffix.";
+                        String nickName = args[2];
+                        storage.setUserSuffix(nickName, "");
+                        return "§6Suffix remove from §a" + nickName;
                     }
                     case "setoption": {
                         if (args.length != 4) return "§6/" + label +" user setoption <nickname> <option> - set specify group option.";
@@ -133,6 +153,8 @@ public class MinePermsCommand {
                             "§6/" + label +" group create <groupID> - create specify group.",
                             "§6/" + label +" group prefix <groupID> <prefix> - set group prefix.",
                             "§6/" + label +" group suffix <groupID> <suffix> - set group suffix.",
+                            "§6/" + label +" group clear-prefix <groupID> - clear group prefix.",
+                            "§6/" + label +" group clear-suffix <groupID> - clear group suffix.",
                             "§6/" + label +" group setoption <groupID> <option> - set specify group option.",
                             "§6/" + label +" group removeoption <groupID> <option> - remove specify group option.",
                             "§6/" + label +" group getoption <groupID> <option> - get specify group option."
@@ -208,12 +230,38 @@ public class MinePermsCommand {
                         return "§6Group §c" + groupID + " §6created!";
                     }
                     case "prefix": {
-                        if (args.length != 4) return "§6/" + label +" group prefix <groupID> <prefix> - set group prefix.";
-                        return "§cTODO prefix method";
+                        if (args.length < 4) return "§6/" + label +" group prefix <groupID> <prefix> - set group prefix.";
+                        String groupID = args[2].toLowerCase();
+                        Group group = storage.getGroup(groupID);
+                        if (group == null) return "§cGroup not found!";
+                        String prefix = this.getFinalArg(args, 3);
+                        storage.setGroupPrefix(groupID, prefix);
+                        return "§6Prefix §c" + prefix + " §6set to group §a" + groupID;
                     }
                     case "suffix": {
-                        if (args.length != 4) return "§6/" + label +" group suffix <groupID> <prefix> - set group prefix.";
-                        return "§cTODO suffix method";
+                        if (args.length < 4) return "§6/" + label +" group suffix <groupID> <prefix> - set group prefix.";
+                        String groupID = args[2].toLowerCase();
+                        Group group = storage.getGroup(groupID);
+                        if (group == null) return "§cGroup not found!";
+                        String suffix = this.getFinalArg(args, 3);
+                        storage.setGroupPrefix(groupID, suffix);
+                        return "§6Suffix §c" + suffix + " §6set to group §a" + groupID;
+                    }
+                    case "clear-prefix": {
+                        if (args.length != 3) return "§6/" + label +" user clear-prefix <groupID> - clear group prefix.";
+                        String groupID = args[2].toLowerCase();
+                        Group group = storage.getGroup(groupID);
+                        if (group == null) return "§cGroup not found!";
+                        storage.setGroupPrefix(groupID, "");
+                        return "§6Prefix remove from group §a" + groupID;
+                    }
+                    case "clear-suffix": {
+                        if (args.length != 3) return "§6/" + label +" user clear-suffix <groupID> - clear group suffix.";
+                        String groupID = args[2].toLowerCase();
+                        Group group = storage.getGroup(groupID);
+                        if (group == null) return "§cGroup not found!";
+                        storage.setGroupSuffix(groupID, "");
+                        return "§6Suffix remove from group §a" + groupID;
                     }
                     case "setoption": {
                         if (args.length != 4) return "§6/" + label +" group setoption <groupID> <option> - set specify group option.";
@@ -244,6 +292,17 @@ public class MinePermsCommand {
             }
         }
         return "§cUnknown operation.";
+    }
+
+    private String getFinalArg(String[] args, int start) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = start; i < args.length; ++i) {
+            if (i != start) {
+                builder.append(" ");
+            }
+            builder.append(args[i]);
+        }
+        return builder.toString();
     }
 
     private String listMessages(String... messages) {
