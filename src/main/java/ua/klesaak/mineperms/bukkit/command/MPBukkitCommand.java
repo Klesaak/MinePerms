@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.bukkit;
+package ua.klesaak.mineperms.bukkit.command;
 
 import lombok.NonNull;
 import org.bukkit.Bukkit;
@@ -7,6 +7,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§cOnly from console!");
             return true;
         }*/
-        sender.sendMessage(this.plugin.getMinePermsManager().getMinePermsCommand().invoke(label, args));
+        this.plugin.getMinePermsManager().getMinePermsCommand().invoke(new BukkitCommandSource(sender), label, args);
         return true;
     }
 

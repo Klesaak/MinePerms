@@ -4,17 +4,16 @@ import lombok.val;
 
 public class MySQLConfig {
     private final int port;
-    private final String username, password, database, address, groupsTable, usersTable;
+    private final String username, password, database, address, tablePrefix;
     private final boolean isUseSSL;
 
-    public MySQLConfig(String username, String password, String database, String address, String groupsTable, String usersTable, int port, boolean isUseSSL) {
-        this.address = address;
-        this.port = port;
+    public MySQLConfig(String username, String password, String database, String address, String tablePrefix, int port, boolean isUseSSL) {
         this.username = username;
         this.password = password;
         this.database = database;
-        this.groupsTable = groupsTable;
-        this.usersTable = usersTable;
+        this.address = address;
+        this.tablePrefix = tablePrefix;
+        this.port = port;
         this.isUseSSL = isUseSSL;
     }
 
@@ -53,8 +52,7 @@ public class MySQLConfig {
                 ", password='" + password + '\'' +
                 ", database='" + database + '\'' +
                 ", address='" + address + '\'' +
-                ", groupsTable='" + groupsTable + '\'' +
-                ", usersTable='" + usersTable + '\'' +
+                ", tablePrefix='" + tablePrefix + '\'' +
                 ", isUseSSL=" + isUseSSL +
                 '}';
     }

@@ -89,8 +89,9 @@ public abstract class Storage {
 
     public Collection<String> getUserInheritedGroups(String nickName) {
         val list = new ArrayList<String>();
-        val playerMainGroupID = this.getUser(nickName).getGroup();
-        if (playerMainGroupID != null) {
+        val user = this.getUser(nickName);
+        if (user != null) {
+            val playerMainGroupID = user.getGroup();
             list.add(playerMainGroupID);
             list.addAll(this.getGroup(playerMainGroupID).getInheritanceGroups());
         }

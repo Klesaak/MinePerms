@@ -2,7 +2,7 @@ package ua.klesaak.mineperms;
 
 import lombok.Getter;
 import ua.klesaak.mineperms.api.MinePermsAPI;
-import ua.klesaak.mineperms.manager.MinePermsCommand;
+import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 import ua.klesaak.mineperms.manager.config.ConfigFile;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.file.FileStorage;

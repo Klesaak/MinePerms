@@ -24,8 +24,7 @@ public class ConfigFile extends JsonData {
                 JsonData.pairOf("host", "localhost"),
                 JsonData.pairOf("port", "3306"),
                 JsonData.pairOf("database", "mineperms"),
-                JsonData.pairOf("groups_table", "mp_groups"),
-                JsonData.pairOf("users_table", "mp_users"),
+                JsonData.pairOf("table_prefix", "mp_"),
                 JsonData.pairOf("isUseSSL", false)
         );
         this.redisSettings = JsonData.mapOf(
@@ -56,8 +55,7 @@ public class ConfigFile extends JsonData {
                 (String) this.mySQLSettings.get("password"),
                 (String) this.mySQLSettings.get("database"),
                 (String) this.mySQLSettings.get("host"),
-                (String) this.mySQLSettings.get("groups_table"),
-                (String) this.mySQLSettings.get("users_table"),
+                (String) this.mySQLSettings.get("table_prefix"),
                 Integer.parseInt((String) this.mySQLSettings.get("port")),
                 (Boolean) this.mySQLSettings.get("isUseSSL")
         );

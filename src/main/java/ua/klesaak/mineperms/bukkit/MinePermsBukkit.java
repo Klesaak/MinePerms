@@ -16,10 +16,11 @@ import org.bukkit.plugin.java.annotation.plugin.Plugin;
 import org.bukkit.plugin.java.annotation.plugin.Website;
 import org.bukkit.plugin.java.annotation.plugin.author.Author;
 import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.bukkit.command.MPBukkitCommand;
 import ua.klesaak.mineperms.bukkit.integration.PermissibleOverride;
 import ua.klesaak.mineperms.bukkit.integration.WorldEditPermissionProvider;
 import ua.klesaak.mineperms.bukkit.integration.vault.VaultIntegration;
-import ua.klesaak.mineperms.manager.MinePermsCommand;
+import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 
 import java.util.logging.Level;
 
