@@ -8,28 +8,26 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
+import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 //"§f[§cPermissionsEx§f] version [§91.23.4§f]"
 
 public class MPBukkitCommand implements CommandExecutor, TabCompleter {
-    private final MinePermsBukkit plugin;
+    private final MinePermsCommand minePermsCommand;
 
     public MPBukkitCommand(MinePermsBukkit plugin) {
-        this.plugin = plugin;
-        plugin.getCommand("mineperms").setExecutor(this);
-        plugin.getCommand("mineperms").setTabCompleter(this);
+        this.minePermsCommand = plugin.getMinePermsManager().getMinePermsCommand();
+        Objects.requireNonNull(plugin.getCommand("mineperms")).setExecutor(this);
+        Objects.requireNonNull(plugin.getCommand("mineperms")).setTabCompleter(this);
     }
 
     @Override
     public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
-        /* if (sender instanceof Player) {
-            sender.sendMessage("§cOnly from console!");
-            return true;
-        }*/
-        this.plugin.getMinePermsManager().getMinePermsCommand().invoke(new BukkitCommandSource(sender), label, args);
+        this.minePermsCommand.invoke(new BukkitCommandSource(sender), label, args);
         return true;
     }
 
@@ -39,7 +37,7 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
         for (Player player : Bukkit.getOnlinePlayers()) {
             onlinePlayers.add(player.getName());
         }
-        return this.plugin.getMinePermsManager().getMinePermsCommand().onTabComplete(label, onlinePlayers, args);
+        return this.minePermsCommand.onTabComplete(label, onlinePlayers, args);
     }
 
 }

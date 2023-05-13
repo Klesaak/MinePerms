@@ -8,14 +8,15 @@ import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
+import ua.klesaak.mineperms.MinePermsManager;
 
 import java.util.Objects;
 
 public class MPBungeeListener implements Listener {
-    private final MinePermsBungee plugin;
+    private final MinePermsManager minePermsManager;
 
     public MPBungeeListener(MinePermsBungee plugin) {
-        this.plugin = plugin;
+        this.minePermsManager = plugin.getMinePermsManager();
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -28,7 +29,7 @@ public class MPBungeeListener implements Listener {
         String permission = event.getPermission();
         ProxiedPlayer player = (ProxiedPlayer) event.getSender();
 
-        event.setHasPermission(this.plugin.getMinePermsManager().hasPermission(player.getName(), permission));
+        event.setHasPermission(this.minePermsManager.hasPermission(player.getName(), permission));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

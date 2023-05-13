@@ -12,17 +12,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MPBungeeCommand extends Command implements TabExecutor {
-    private final MinePermsBungee plugin;
+    private final MinePermsCommand minePermsCommand;
 
     public MPBungeeCommand(MinePermsBungee plugin) {
         super("bmineperms", MinePermsCommand.MAIN_PERMISSION, "bmp", "bmperms", "bperms");
-        this.plugin = plugin;
+        this.minePermsCommand = plugin.getMinePermsManager().getMinePermsCommand();
         plugin.getProxy().getPluginManager().registerCommand(plugin, this);
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        this.plugin.getMinePermsManager().getMinePermsCommand().invoke(new BungeeCommandSource(sender), this.getName(), args);
+        this.minePermsCommand.invoke(new BungeeCommandSource(sender), this.getName(), args);
     }
 
 
@@ -32,6 +32,6 @@ public class MPBungeeCommand extends Command implements TabExecutor {
         for (ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
             onlinePlayers.add(player.getName());
         }
-        return this.plugin.getMinePermsManager().getMinePermsCommand().onTabComplete(this.getName(), onlinePlayers, args);
+        return this.minePermsCommand.onTabComplete(this.getName(), onlinePlayers, args);
     }
 }
