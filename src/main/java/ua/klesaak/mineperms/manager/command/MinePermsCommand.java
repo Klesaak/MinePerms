@@ -41,6 +41,8 @@ public class MinePermsCommand {
         switch (args[0].toLowerCase()) {
             case "user": {
                 if (args.length == 1) {
+                    commandSource.sendMessage("§6MinePerms User command help:");
+                    commandSource.sendMessage("");
                     commandSource.sendMessage("§6/" + label +" user info <nickname> - show info of a player.");
                     commandSource.sendMessage("§6/" + label +" user addperm <nickname> <permission> - add a specify permission.");
                     commandSource.sendMessage("§6/" + label +" user removeperm <nickname> <permission> - remove specify permission.");
@@ -172,6 +174,8 @@ public class MinePermsCommand {
             }
             case "group": {
                 if (args.length == 1) {
+                    commandSource.sendMessage("§6MinePerms Group command help:");
+                    commandSource.sendMessage("");
                     commandSource.sendMessage("§6/" + label +" group info <groupID> - show info of a group.");
                     commandSource.sendMessage("§6/" + label +" group addperm <groupID> <permission> - add a specify permission.");
                     commandSource.sendMessage("§6/" + label +" group removeperm <groupID> <permission> - remove specify permission.");
@@ -407,6 +411,9 @@ public class MinePermsCommand {
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("user")) {
             return this.copyPartialMatches(args[2].toLowerCase(), onlinePlayers, new ArrayList<>());
+        }
+        if (args.length == 4 && args[1].equalsIgnoreCase("add-parent")) {
+            return this.copyPartialMatches(args[3].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("group")) {
             return this.copyPartialMatches(args[2].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
