@@ -27,7 +27,7 @@ public class MinePermsCommand {
         this.manager = manager;
     }
 
-    public void invoke(MPCommandSource commandSource, String label, String[] args) {
+    public void invoke(IMPCommandSource commandSource, String label, String[] args) {
         if (args.length == 0) {
             commandSource.sendMessage("§6MinePerms by Klesaak §cv1.0");
             commandSource.sendMessage("");
@@ -452,7 +452,7 @@ public class MinePermsCommand {
         return string.length() >= prefix.length() && string.regionMatches(true, 0, prefix, 0, prefix.length());
     }
 
-    private boolean checkSuperPermission(MPCommandSource commandSource, String permission) {
+    private boolean checkSuperPermission(IMPCommandSource commandSource, String permission) {
         if (permission.equals(MinePermsManager.ROOT_WILDCARD) && !commandSource.hasPermission(MinePermsManager.ROOT_WILDCARD)) {
             commandSource.sendMessage("§cYou can't add super-permission because you don't have it!");
             return true;

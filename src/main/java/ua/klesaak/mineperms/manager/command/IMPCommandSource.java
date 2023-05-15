@@ -1,6 +1,6 @@
 package ua.klesaak.mineperms.manager.command;
 
-public interface MPCommandSource {
+public interface IMPCommandSource {
     boolean hasPermission(String permission);
     void sendMessage(String message);
 }

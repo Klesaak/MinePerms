@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.bukkit.command;
+package ua.klesaak.mineperms.bukkit;
 
 import lombok.NonNull;
 import org.bukkit.Bukkit;
@@ -7,7 +7,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
+import ua.klesaak.mineperms.manager.command.BukkitCommandSource;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 
 import java.util.ArrayList;

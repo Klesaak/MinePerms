@@ -1,9 +1,8 @@
-package ua.klesaak.mineperms.bukkit.command;
+package ua.klesaak.mineperms.manager.command;
 
 import org.bukkit.command.CommandSender;
-import ua.klesaak.mineperms.manager.command.MPCommandSource;
 
-public class BukkitCommandSource implements MPCommandSource {
+public class BukkitCommandSource implements IMPCommandSource {
     private final CommandSender sender;
 
     public BukkitCommandSource(CommandSender sender) {

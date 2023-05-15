@@ -17,13 +17,12 @@ public class MPBungeeListener implements Listener {
 
     public MPBungeeListener(MinePermsBungee plugin) {
         this.minePermsManager = plugin.getMinePermsManager();
+        plugin.getProxy().getPluginManager().registerListener(plugin, this);
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerPermissionCheck(PermissionCheckEvent event) {
-        if (!(event.getSender() instanceof ProxiedPlayer)) {
-            return;
-        }
+        if (!(event.getSender() instanceof ProxiedPlayer)) return;
         Objects.requireNonNull(event.getPermission(), "permission");
         Objects.requireNonNull(event.getSender(), "sender");
         String permission = event.getPermission();

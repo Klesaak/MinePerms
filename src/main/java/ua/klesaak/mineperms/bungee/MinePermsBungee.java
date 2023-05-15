@@ -4,7 +4,6 @@ import lombok.Getter;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.plugin.Plugin;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.bungee.command.MPBungeeCommand;
 
 @Getter
 public class MinePermsBungee extends Plugin {

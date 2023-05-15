@@ -1,10 +1,9 @@
-package ua.klesaak.mineperms.bungee.command;
+package ua.klesaak.mineperms.manager.command;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
-import ua.klesaak.mineperms.manager.command.MPCommandSource;
 
-public class BungeeCommandSource implements MPCommandSource {
+public class BungeeCommandSource implements IMPCommandSource {
     private final CommandSender sender;
 
     public BungeeCommandSource(CommandSender sender) {

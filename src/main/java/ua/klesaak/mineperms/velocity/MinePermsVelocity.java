@@ -1,7 +1,6 @@
 package ua.klesaak.mineperms.velocity;
 
 import com.google.inject.Inject;
-import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
@@ -10,7 +9,6 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
 import org.slf4j.Logger;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.velocity.command.MPVelocityCommand;
 
 import java.nio.file.Path;
 

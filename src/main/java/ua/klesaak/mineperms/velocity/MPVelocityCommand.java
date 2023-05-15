@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.velocity.command;
+package ua.klesaak.mineperms.velocity;
 
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
@@ -6,7 +6,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import lombok.val;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
-import ua.klesaak.mineperms.velocity.MinePermsVelocity;
+import ua.klesaak.mineperms.manager.command.VelocityCommandSource;
 
 import java.util.ArrayList;
 import java.util.Collections;

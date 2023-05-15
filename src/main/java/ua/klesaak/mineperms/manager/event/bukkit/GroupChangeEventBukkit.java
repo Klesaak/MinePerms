@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.bukkit.event;
+package ua.klesaak.mineperms.manager.event.bukkit;
 
 
 //todo зарегать другие евенты

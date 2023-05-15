@@ -1,10 +1,9 @@
-package ua.klesaak.mineperms.velocity.command;
+package ua.klesaak.mineperms.manager.command;
 
 import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.text.Component;
-import ua.klesaak.mineperms.manager.command.MPCommandSource;
 
-public class VelocityCommandSource implements MPCommandSource {
+public class VelocityCommandSource implements IMPCommandSource {
     private final CommandSource sender;
 
     public VelocityCommandSource(CommandSource sender) {
