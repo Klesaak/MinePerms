@@ -38,7 +38,7 @@ public class User {
         return false;
     }
 
-    public void recalculatePermissions(ConcurrentHashMap<String, Group> groupsMap) {
+    public void recalculatePermissions(Map<String, Group> groupsMap) {
         this.calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
         this.calculatedPermissions.addAll(this.permissions);
         if (groupsMap.get(this.group) != null) {
