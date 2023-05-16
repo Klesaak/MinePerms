@@ -4,6 +4,7 @@ import lombok.Getter;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.plugin.Plugin;
 import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.event.bungee.BungeeEventManager;
 
 @Getter
 public class MinePermsBungee extends Plugin {
@@ -16,6 +17,7 @@ public class MinePermsBungee extends Plugin {
         this.minePermsManager.initStorage();
         new MPBungeeCommand(this);
         new MPBungeeListener(this);
+        this.minePermsManager.registerEventsManager(new BungeeEventManager());
         this.getLogger().info(ChatColor.GREEN + "Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }
 

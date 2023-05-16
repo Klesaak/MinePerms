@@ -133,6 +133,7 @@ public class FileStorage extends Storage {
             user.setGroup(groupID);
             this.saveUser(nickName, user);
         }
+        this.manager.getEventManager().callGroupChangeEvent(user);
         user.recalculatePermissions(this.groups);
     }
 

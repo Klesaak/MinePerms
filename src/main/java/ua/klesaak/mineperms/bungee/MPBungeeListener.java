@@ -9,6 +9,7 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.event.bungee.GroupChangeEventBungee;
 
 import java.util.Objects;
 
@@ -49,7 +50,6 @@ public class MPBungeeListener implements Listener {
 
     @EventHandler
     public void onPlayerPostLogin(PostLoginEvent event) {
-
     }
 
     // Подождите, пока выгрузится последний приоритет, чтобы плагины все еще могли выполнять проверки разрешений для этого события.

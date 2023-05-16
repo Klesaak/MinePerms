@@ -9,6 +9,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
 import org.slf4j.Logger;
 import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.event.velocity.VelocityEventManager;
 
 import java.nio.file.Path;
 
@@ -33,11 +34,13 @@ public class MinePermsVelocity {
         this.minePermsManager = new MinePermsManager();
         this.minePermsManager.loadConfig(dataDirectory.toFile());
         this.minePermsManager.initStorage();
+        this.minePermsManager.registerEventsManager(new VelocityEventManager(this));
         this.logger.info("Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         new MPVelocityCommand(this);
+        new MPVelocityListener(this);
     }
 }

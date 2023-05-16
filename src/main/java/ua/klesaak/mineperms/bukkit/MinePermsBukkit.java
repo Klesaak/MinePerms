@@ -20,6 +20,7 @@ import ua.klesaak.mineperms.bukkit.integration.PermissibleOverride;
 import ua.klesaak.mineperms.bukkit.integration.WorldEditPermissionProvider;
 import ua.klesaak.mineperms.bukkit.integration.vault.VaultIntegration;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
+import ua.klesaak.mineperms.manager.event.bukkit.BukkitEventManager;
 
 import java.util.logging.Level;
 
@@ -59,6 +60,7 @@ public class MinePermsBukkit extends JavaPlugin {
         this.getServer().getOnlinePlayers().forEach(player -> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.minePermsManager, player)));
         new MPBukkitListener(this);
         new MPBukkitCommand(this);
+        this.minePermsManager.registerEventsManager(new BukkitEventManager());
         this.getLogger().log(Level.INFO, "Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }
 

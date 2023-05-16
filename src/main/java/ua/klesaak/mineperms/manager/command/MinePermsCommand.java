@@ -400,30 +400,50 @@ public class MinePermsCommand {
     }
 
     public List<String> onTabComplete(String label, Collection<String> onlinePlayers, String[] args) {
+        if (args.length == 0) return Collections.emptyList(); //fix velocity termiAnal error
         if (args.length == 1) {
             return this.copyPartialMatches(args[0].toLowerCase(), SUB_COMMANDS_0, new ArrayList<>());
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("user")) {
-            return this.copyPartialMatches(args[1].toLowerCase(), USER_SUB_COMMANDS_0, new ArrayList<>());
+        if (args[0].equalsIgnoreCase("user")) {
+            switch (args.length) {
+                case 2: {
+                    return this.copyPartialMatches(args[1].toLowerCase(), USER_SUB_COMMANDS_0, new ArrayList<>());
+                }
+                case 3: {
+                    return this.copyPartialMatches(args[2].toLowerCase(), onlinePlayers, new ArrayList<>());
+                }
+                case 4: {
+                    if (args[1].equalsIgnoreCase("setgroup")) {
+                        return this.copyPartialMatches(args[3].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
+                    }
+                }
+            }
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("group")) {
-            return this.copyPartialMatches(args[1].toLowerCase(), GROUP_SUB_COMMANDS_0, new ArrayList<>());
+        if (args[0].equalsIgnoreCase("group")) {
+            switch (args.length) {
+                case 2: {
+                    return this.copyPartialMatches(args[1].toLowerCase(), GROUP_SUB_COMMANDS_0, new ArrayList<>());
+                }
+                case 3: {
+                    return this.copyPartialMatches(args[2].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
+                }
+                case 4: {
+                    if (args[1].equalsIgnoreCase("add-parent")) {
+                        return this.copyPartialMatches(args[3].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
+                    }
+                }
+            }
         }
-        if (args.length == 3 && args[0].equalsIgnoreCase("user")) {
-            return this.copyPartialMatches(args[2].toLowerCase(), onlinePlayers, new ArrayList<>());
-        }
-        if (args.length == 4 && args[1].equalsIgnoreCase("add-parent")) {
-            return this.copyPartialMatches(args[3].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
-        }
-        if (args.length == 3 && args[0].equalsIgnoreCase("group")) {
-            return this.copyPartialMatches(args[2].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
-        }
-        //todo tab for bulkupdate
-        if (args.length == 2 && args[0].equalsIgnoreCase("export")) {
-            return this.copyPartialMatches(args[1].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
-        }
-        if (args.length == 3 && args[0].equalsIgnoreCase("export")) {
-            return this.copyPartialMatches(args[2].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
+
+        if (args[0].equalsIgnoreCase("export")) {
+            switch (args.length) {
+                case 2: {
+                    return this.copyPartialMatches(args[1].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
+                }
+                case 3: {
+                    return this.copyPartialMatches(args[2].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
+                }
+            }
         }
         return Collections.emptyList();
     }
