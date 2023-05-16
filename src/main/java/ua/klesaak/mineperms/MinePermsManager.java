@@ -4,7 +4,7 @@ import lombok.Getter;
 import ua.klesaak.mineperms.api.MinePermsAPI;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 import ua.klesaak.mineperms.manager.config.ConfigFile;
-import ua.klesaak.mineperms.manager.event.MPEventManager;
+import ua.klesaak.mineperms.manager.event.IMPEventManager;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.file.FileStorage;
 import ua.klesaak.mineperms.manager.storage.mysql.MySQLStorage;
@@ -20,7 +20,7 @@ public final class MinePermsManager {
     public static final String ROOT_WILDCARD_WITH_QUOTES = "'*'";
     public static final String DOT_WILDCARD = ".";
     private final MinePermsCommand minePermsCommand;
-    private MPEventManager eventManager;
+    private IMPEventManager eventManager;
     private volatile ConfigFile configFile;
     private volatile Storage storage;
 
@@ -33,7 +33,7 @@ public final class MinePermsManager {
         this.configFile = JsonData.load(new File(pluginDataFolder, "config.json"), ConfigFile.class);
     }
 
-    public void registerEventsManager(MPEventManager eventManager) {
+    public void registerEventsManager(IMPEventManager eventManager) {
         this.eventManager = eventManager;
     }
 
