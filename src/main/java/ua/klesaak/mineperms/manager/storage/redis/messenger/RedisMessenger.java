@@ -29,7 +29,7 @@ public class RedisMessenger {
         try (Jedis jedis = this.redisPool.getRedis()) {
             jedis.publish(channel, JsonData.GSON.toJson(messageData));
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error while publish message ", e);
         }
     }
 

@@ -132,9 +132,9 @@ public class FileStorage extends Storage {
         if (this.groups.get(groupID) != null) {
             user.setGroup(groupID);
             this.saveUser(nickName, user);
+            this.manager.getEventManager().callGroupChangeEvent(user);
+            user.recalculatePermissions(this.groups);
         }
-        this.manager.getEventManager().callGroupChangeEvent(user);
-        user.recalculatePermissions(this.groups);
     }
 
     @Override
@@ -153,41 +153,41 @@ public class FileStorage extends Storage {
 
     @Override
     public void addGroupPermission(String groupID, String permission) {
-        this.getGroup(groupID.toLowerCase()).addPermission(permission);
+        this.getGroup(groupID).addPermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
     }
 
     @Override
     public void removeGroupPermission(String groupID, String permission) {
-        this.getGroup(groupID.toLowerCase()).removePermission(permission);
+        this.getGroup(groupID).removePermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
     }
 
     @Override
     public void addGroupParent(String groupID, String parentID) {
-        this.getGroup(groupID.toLowerCase()).addInheritanceGroup(parentID);
+        this.getGroup(groupID).addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
     }
 
     @Override
     public void removeGroupParent(String groupID, String parentID) {
-        this.getGroup(groupID.toLowerCase()).removeInheritanceGroup(parentID);
+        this.getGroup(groupID).removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
     }
 
     @Override
     public void setGroupPrefix(String groupID, String prefix) {
-        this.getGroup(groupID.toLowerCase()).setPrefix(prefix);
+        this.getGroup(groupID).setPrefix(prefix);
         this.saveGroup(groupID);
     }
 
     @Override
     public void setGroupSuffix(String groupID, String suffix) {
-        this.getGroup(groupID.toLowerCase()).setSuffix(suffix);
+        this.getGroup(groupID).setSuffix(suffix);
         this.saveGroup(groupID);
     }
 
