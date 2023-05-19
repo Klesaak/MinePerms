@@ -147,7 +147,7 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public void updateUser(String nickName) {
+    public void updateUser(String nickName, User user) {
         throw new UnsupportedOperationException("Don't update user, because used FileStorage!");
     }
 
@@ -204,7 +204,7 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public void updateGroup(String groupID) {
+    public void updateGroup(String groupID, Group group) {
         throw new UnsupportedOperationException("Don't update group, because used FileStorage!");
     }
 

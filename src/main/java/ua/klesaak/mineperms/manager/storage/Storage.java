@@ -2,6 +2,8 @@ package ua.klesaak.mineperms.manager.storage;
 
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.storage.redis.RedisPool;
+import ua.klesaak.mineperms.manager.storage.redis.messenger.RedisMessenger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,9 +15,13 @@ public abstract class Storage {
     protected final MinePermsManager manager;
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
     protected final ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
+    protected RedisMessenger redisMessenger;
 
     public Storage(MinePermsManager manager) {
         this.manager = manager;
+        if (manager.getConfigFile().isUseRedisPubSub()) {
+            this.redisMessenger = new RedisMessenger(this, new RedisPool(manager.getConfigFile().getRedisConfig()));
+        }
     }
 
     public abstract void cacheUser(String nickName);
@@ -33,7 +39,7 @@ public abstract class Storage {
     public abstract void setUserSuffix(String nickName, String suffix);
     public abstract void setUserGroup(String nickName, String groupID);
     public abstract void deleteUser(String nickName);
-    public abstract void updateUser(String nickName);
+    public abstract void updateUser(String nickName, User user);
     //////Group operations//////
     public abstract void addGroupPermission(String groupID, String permission);
     public abstract void removeGroupPermission(String groupID, String permission);
@@ -43,7 +49,7 @@ public abstract class Storage {
     public abstract void setGroupSuffix(String groupID, String suffix);
     public abstract void deleteGroup(String groupID);
     public abstract void createGroup(String groupID);
-    public abstract void updateGroup(String groupID);
+    public abstract void updateGroup(String groupID, Group group);
 
     public abstract void close();
 
@@ -98,11 +104,24 @@ public abstract class Storage {
         return Collections.unmodifiableCollection(list);
     }
 
+    public ConcurrentHashMap<String, Group> getGroups() {
+        return groups;
+    }
+
+    public ConcurrentHashMap<String, User> getUsers() {
+        return users;
+    }
+
+    public RedisMessenger getRedisMessenger() {
+        return redisMessenger;
+    }
+
     public void recalculateUsersPermissionsByGroup(String groupId) {
         for (User user : this.users.values()) {
             if (user.getGroup().equalsIgnoreCase(groupId)) user.recalculatePermissions(this.groups);
         }
     }
+
     public void recalculateUsersPermissions() {
         this.users.values().forEach(user -> user.recalculatePermissions(this.groups));
     }

@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.manager.storage.redis.messanger;
+package ua.klesaak.mineperms.manager.storage.redis.messenger;
 
 public enum MessageType {
     USER_UPDATE,

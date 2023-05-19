@@ -8,21 +8,25 @@ import redis.clients.jedis.JedisPoolConfig;
 public class RedisPool implements AutoCloseable {
     private final JedisPool pool;
 
-    public RedisPool(String host, int port, String pass) {
+    public RedisPool(RedisConfig redisConfig) {
         val jpc = new JedisPoolConfig();
         //jpc.setLifo(false);
         jpc.setTestOnBorrow(true);
         jpc.setMinIdle(3);
         jpc.setMaxTotal(500);
-        this.pool = new JedisPool(jpc, host, port, 30000, pass == null || pass.isEmpty() ? null : pass);
+        this.pool = new JedisPool(jpc, redisConfig.getAddress(), redisConfig.getPort(), 30000, redisConfig.getPassword() == null || redisConfig.getPassword().isEmpty() ? null : redisConfig.getPassword());
     }
 
     public Jedis getRedis() {
-        return pool.getResource();
+        return this.pool.getResource();
+    }
+
+    public JedisPool getJedisPool() {
+        return this.pool;
     }
 
     @Override
     public void close() {
-        pool.destroy();
+        this.pool.destroy();
     }
 }

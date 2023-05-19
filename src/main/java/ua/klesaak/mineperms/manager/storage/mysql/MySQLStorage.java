@@ -37,7 +37,6 @@ public class MySQLStorage extends Storage {
     }
 
     /**
-     *
      * При выходе игрока с сервера отгружаем его из основного кеша во временный
      * чтобы в случае быстрого перезахода игрока не тратить лишние ресурсы на его подгрузку из БД
      */
@@ -108,7 +107,7 @@ public class MySQLStorage extends Storage {
     }
 
     @Override
-    public void updateUser(String nickName) {
+    public void updateUser(String nickName, User user) {
 
     }
 
@@ -153,7 +152,7 @@ public class MySQLStorage extends Storage {
     }
 
     @Override
-    public void updateGroup(String groupID) {
+    public void updateGroup(String groupID, Group group) {
 
     }
 

@@ -1,5 +1,8 @@
 package ua.klesaak.mineperms.manager.storage.redis;
 
+import lombok.Getter;
+
+@Getter
 public class RedisConfig {
     public static final String UPDATE_CHANNEL_NAME = "mineperms-update";
     private final String address, password, groupsKey, usersKey;
