@@ -5,7 +5,10 @@ import lombok.Setter;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Getter @Setter

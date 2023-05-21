@@ -6,13 +6,17 @@ import redis.clients.jedis.JedisPubSub;
 import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.mysql.MySQLStorage;
 import ua.klesaak.mineperms.manager.storage.redis.RedisConfig;
 import ua.klesaak.mineperms.manager.storage.redis.RedisPool;
+import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class RedisMessenger {
+    public static UUID SERVER_UUID = UUID.randomUUID();
     private final Storage storage;
     private final RedisPool redisPool;
     private final Subscription sub;
@@ -25,9 +29,10 @@ public class RedisMessenger {
         CompletableFuture.runAsync(this.sub);
     }
 
-    public void sendOutgoingMessage(String channel, MessageData messageData) {
+    public void sendOutgoingMessage(MessageData messageData) {
         try (Jedis jedis = this.redisPool.getRedis()) {
-            jedis.publish(channel, JsonData.GSON.toJson(messageData));
+            messageData.setUuid(SERVER_UUID);
+            jedis.publish(RedisConfig.UPDATE_CHANNEL_NAME, JsonData.GSON.toJson(messageData));
         } catch (Exception e) {
             throw new RuntimeException("Error while publish message ", e);
         }
@@ -79,6 +84,7 @@ public class RedisMessenger {
         public void onMessage(String channel, String msg) {
             if (!channel.equals(RedisConfig.UPDATE_CHANNEL_NAME)) return;
             val messageData = JsonData.GSON.fromJson(msg, MessageData.class);
+            if (messageData.getUuid().equals(SERVER_UUID)) return;
             switch (messageData.getMessageType()) {
                 case USER_UPDATE: {
                     val user = JsonData.GSON.fromJson(messageData.getObject(), User.class);
@@ -87,7 +93,16 @@ public class RedisMessenger {
                 }
                 case USER_DELETE: {
                     val userName = messageData.getObject();
-                    RedisMessenger.this.storage.deleteUser(userName);
+                    val storage = RedisMessenger.this.storage;
+                    if (storage instanceof RedisStorage) {
+                        storage.getUsers().remove(userName);
+                        ((RedisStorage)storage).getTemporalUsersCache().invalidate(userName);
+                        break;
+                    }
+                    if (storage instanceof MySQLStorage) {
+                        storage.getUsers().remove(userName);
+                        ((MySQLStorage)storage).getTemporalUsersCache().invalidate(userName);
+                    }
                     break;
                 }
                 case GROUP_UPDATE: {
@@ -97,7 +112,8 @@ public class RedisMessenger {
                 }
                 case GROUP_DELETE: {
                     val groupID = messageData.getObject();
-                    RedisMessenger.this.storage.deleteGroup(groupID);
+                    RedisMessenger.this.storage.getGroups().remove(groupID);
+                    RedisMessenger.this.storage.recalculateUsersPermissions();
                     break;
                 }
             }

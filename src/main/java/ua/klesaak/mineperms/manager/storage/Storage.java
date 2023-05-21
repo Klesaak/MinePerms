@@ -3,6 +3,7 @@ package ua.klesaak.mineperms.manager.storage;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.redis.RedisPool;
+import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.RedisMessenger;
 
 import java.util.ArrayList;
@@ -22,6 +23,10 @@ public abstract class Storage {
         if (manager.getConfigFile().isUseRedisPubSub()) {
             this.redisMessenger = new RedisMessenger(this, new RedisPool(manager.getConfigFile().getRedisConfig()));
         }
+    }
+
+    protected void broadcastUpdatePacket(MessageData messageData) {
+        if (this.redisMessenger != null) this.redisMessenger.sendOutgoingMessage(messageData);
     }
 
     public abstract void cacheUser(String nickName);

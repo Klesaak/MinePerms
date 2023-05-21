@@ -2,6 +2,7 @@ package ua.klesaak.mineperms.manager.storage.redis;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import lombok.Getter;
 import lombok.val;
 import org.bukkit.Bukkit;
 import redis.clients.jedis.Jedis;
@@ -9,15 +10,18 @@ import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
+import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageType;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+@Getter
 public class RedisStorage extends Storage {
     private final RedisConfig redisConfig;
     private final RedisPool redisPool;
     private final Cache<String, User> temporalUsersCache = CacheBuilder.newBuilder()
-            .initialCapacity(Bukkit.getMaxPlayers())
             .concurrencyLevel(16)
             .expireAfterWrite(1, TimeUnit.MINUTES).build(); //Временный кеш, чтобы уменьшить кол-во запросов в бд.
 
@@ -26,16 +30,22 @@ public class RedisStorage extends Storage {
         super(manager);
         this.redisConfig = manager.getConfigFile().getRedisConfig();
         this.redisPool = new RedisPool(this.redisConfig);
-        try (Jedis jed = this.redisPool.getRedis()) {
-            jed.select(this.redisConfig.getDatabase());
-            val allData = jed.hgetAll(this.redisConfig.getGroupsKey());
-            allData.forEach((groupID, groupJsonObject) -> this.groups.put(groupID, JsonData.GSON.fromJson(groupJsonObject, Group.class)));
-        } catch (Exception e) {
-            throw new RuntimeException("Error while load groups data", e);
-        }
-        if (this.getGroup(manager.getConfigFile().getDefaultGroup()) == null) {
-            this.createGroup(manager.getConfigFile().getDefaultGroup());
-        }
+        this.init();
+    }
+
+    private void init() {
+        CompletableFuture.runAsync(()-> {
+            try (Jedis jed = this.redisPool.getRedis()) {
+                jed.select(this.redisConfig.getDatabase());
+                val allData = jed.hgetAll(this.redisConfig.getGroupsKey());
+                allData.forEach((groupID, groupJsonObject) -> this.groups.put(groupID, JsonData.GSON.fromJson(groupJsonObject, Group.class)));
+            } catch (Exception e) {
+                throw new RuntimeException("Error while load groups data", e);
+            }
+            if (this.getGroup(manager.getConfigFile().getDefaultGroup()) == null) {
+                this.createGroup(manager.getConfigFile().getDefaultGroup());
+            }
+        });
     }
 
     @Override
@@ -112,8 +122,11 @@ public class RedisStorage extends Storage {
 
         try (Jedis jed = this.redisPool.getRedis()) {
             jed.select(this.redisConfig.getDatabase());
-            if (jed.hexists(this.redisConfig.getUsersKey(), nickName)) {
-                return JsonData.GSON.fromJson(jed.hget(this.redisConfig.getUsersKey(), nickName), User.class);
+            val userData = jed.hget(this.redisConfig.getUsersKey(), nickName);
+            if (userData != null) {
+                user = JsonData.GSON.fromJson(userData, User.class);
+                user.recalculatePermissions(this.groups);
+                return user;
             }
         } catch (Exception e) {
             throw new RuntimeException("Error while get user " + nickName + " data", e);
@@ -150,6 +163,7 @@ public class RedisStorage extends Storage {
         }
         user.addPermission(permission);
         this.saveUser(nickName, user);
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
     }
 
     @Override
@@ -158,6 +172,7 @@ public class RedisStorage extends Storage {
         if (user == null) return;
         user.removePermission(permission);
         this.saveUser(nickName, user);
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
     }
 
     @Override
@@ -169,6 +184,7 @@ public class RedisStorage extends Storage {
         }
         user.setPrefix(prefix);
         this.saveUser(nickName, user);
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
     }
 
     @Override
@@ -180,6 +196,7 @@ public class RedisStorage extends Storage {
         }
         user.setSuffix(suffix);
         this.saveUser(nickName, user);
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
     }
 
     @Override
@@ -195,17 +212,15 @@ public class RedisStorage extends Storage {
             user.recalculatePermissions(this.groups);
             this.manager.getEventManager().callGroupChangeEvent(user);
         }
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
     }
 
     @Override
     public void deleteUser(String nickName) {
-        val newUser = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
         if (this.temporalUsersCache.getIfPresent(nickName) != null) {
-            this.temporalUsersCache.put(nickName, newUser);
+            this.temporalUsersCache.invalidate(nickName);
         }
-        if (this.users.get(nickName) != null) {
-            this.users.put(nickName, newUser);
-        }
+        this.users.remove(nickName);
         try (Jedis jed = this.redisPool.getRedis()) {
             jed.select(this.redisConfig.getDatabase());
             if (jed.hexists(this.redisConfig.getUsersKey(), nickName)) {
@@ -214,6 +229,7 @@ public class RedisStorage extends Storage {
         } catch (Exception e) {
             throw new RuntimeException("Error while delete user " + nickName + " data", e);
         }
+        this.broadcastUpdatePacket(new MessageData(new User(nickName, ""), MessageType.USER_DELETE));
     }
 
     @Override
@@ -229,42 +245,54 @@ public class RedisStorage extends Storage {
 
     @Override
     public void addGroupPermission(String groupID, String permission) {
-        this.getGroup(groupID).addPermission(permission);
+        val group = this.getGroup(groupID);
+        group.addPermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
     @Override
     public void removeGroupPermission(String groupID, String permission) {
-        this.getGroup(groupID).removePermission(permission);
+        val group = this.getGroup(groupID);
+        group.removePermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
     @Override
     public void addGroupParent(String groupID, String parentID) {
-        this.getGroup(groupID).addInheritanceGroup(parentID);
+        val group = this.getGroup(groupID);
+        group.addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
     @Override
     public void removeGroupParent(String groupID, String parentID) {
-        this.getGroup(groupID).removeInheritanceGroup(parentID);
+        val group = this.getGroup(groupID);
+        group.removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
     @Override
     public void setGroupPrefix(String groupID, String prefix) {
-        this.getGroup(groupID).setPrefix(prefix);
+        val group = this.getGroup(groupID);
+        group.setPrefix(prefix);
         this.saveGroup(groupID);
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
     @Override
     public void setGroupSuffix(String groupID, String suffix) {
-        this.getGroup(groupID).setSuffix(suffix);
+        val group = this.getGroup(groupID);
+        group.setSuffix(suffix);
         this.saveGroup(groupID);
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
     @Override
@@ -278,6 +306,7 @@ public class RedisStorage extends Storage {
         } catch (Exception e) {
             throw new RuntimeException("Error while delete group " + groupID + " data", e);
         }
+        this.broadcastUpdatePacket(new MessageData(new Group(groupID), MessageType.GROUP_DELETE));
     }
 
     @Override
@@ -290,11 +319,13 @@ public class RedisStorage extends Storage {
         } catch (Exception e) {
             throw new RuntimeException("Error while delete group " + groupID + " data", e);
         }
+        this.broadcastUpdatePacket(new MessageData(newGroup, MessageType.GROUP_UPDATE));
     }
 
     @Override
     public void updateGroup(String groupID, Group group) {
         this.groups.put(groupID, group); //не проверяем потому что может быть факт создания группы
+        this.recalculateUsersPermissions();
     }
 
     @Override

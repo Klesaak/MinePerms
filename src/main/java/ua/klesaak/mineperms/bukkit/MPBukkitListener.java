@@ -22,14 +22,16 @@ public class MPBukkitListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public final void onLogin(PlayerLoginEvent event) {
         Player player = event.getPlayer();
+        this.plugin.getMinePermsManager().getStorage().cacheUser(plugin.getName());
         CompletableFuture.runAsync(()-> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.plugin.getMinePermsManager(), player)));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onJoin(PlayerJoinEvent event) {
+    public final void onJoin(PlayerJoinEvent event) {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onLeave(PlayerQuitEvent event) {
+        this.plugin.getMinePermsManager().getStorage().unCacheUser(plugin.getName());
     }
 }

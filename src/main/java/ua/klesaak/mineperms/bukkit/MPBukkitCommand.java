@@ -6,7 +6,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
 import ua.klesaak.mineperms.manager.command.BukkitCommandSource;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 
@@ -34,9 +33,7 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
         List<String> onlinePlayers = new ArrayList<>(Bukkit.getMaxPlayers());
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            onlinePlayers.add(player.getName());
-        }
+        Bukkit.getOnlinePlayers().forEach(player -> onlinePlayers.add(player.getName()));
         return this.minePermsCommand.onTabComplete(label, onlinePlayers, args);
     }
 

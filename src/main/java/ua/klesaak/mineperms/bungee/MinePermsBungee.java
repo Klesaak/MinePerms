@@ -9,6 +9,7 @@ import ua.klesaak.mineperms.manager.event.bungee.BungeeEventManager;
 @Getter
 public class MinePermsBungee extends Plugin {
     private volatile MinePermsManager minePermsManager;
+
     @Override
     public void onEnable() {
         long time = System.currentTimeMillis();

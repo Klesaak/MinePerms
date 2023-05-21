@@ -3,7 +3,7 @@ package ua.klesaak.mineperms.manager.storage.mysql;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.j256.ormlite.dao.Dao;
-import org.bukkit.Bukkit;
+import lombok.Getter;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
@@ -13,10 +13,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Getter
 public class MySQLStorage extends Storage {
     private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(3);
     private final Cache<String, User> temporalUsersCache = CacheBuilder.newBuilder()
-            .initialCapacity(Bukkit.getMaxPlayers())
             .concurrencyLevel(16)
             .expireAfterWrite(1, TimeUnit.MINUTES).build(); //Временный кеш, чтобы уменьшить кол-во запросов в бд.
     private Dao<User, String> userDataDao;

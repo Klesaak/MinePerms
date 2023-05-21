@@ -4,7 +4,6 @@ import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
-import lombok.val;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 import ua.klesaak.mineperms.manager.command.VelocityCommandSource;
 
@@ -50,9 +49,7 @@ public final class MPVelocityCommand implements SimpleCommand {
     @Override
     public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
         List<String> onlinePlayers = new ArrayList<>();
-        for (val player : this.minePermsVelocity.getServer().getAllPlayers()) {
-            onlinePlayers.add(player.getUsername());
-        };
+        this.minePermsVelocity.getServer().getAllPlayers().forEach(player -> onlinePlayers.add(player.getUsername()));
         return CompletableFuture.completedFuture(this.minePermsCommand.onTabComplete(invocation.alias(), onlinePlayers, invocation.arguments()));
     }
 }
