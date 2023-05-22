@@ -167,7 +167,7 @@ public class RedisStorage extends Storage {
         User user = this.getUser(nickName);
         if (user == null) {
             user = new User(nickName, this.getDefaultGroup().getGroupID());
-            this.users.put(nickName, user);
+            this.temporalUsersCache.put(nickName, user);
         }
         user.addPermission(permission);
         this.saveUser(nickName, user);
@@ -188,7 +188,7 @@ public class RedisStorage extends Storage {
         User user = this.getUser(nickName);
         if (user == null) {
             user = new User(nickName, this.getDefaultGroup().getGroupID());
-            this.users.put(nickName, user);
+            this.temporalUsersCache.put(nickName, user);
         }
         user.setPrefix(prefix);
         this.saveUser(nickName, user);
@@ -200,7 +200,7 @@ public class RedisStorage extends Storage {
         User user = this.getUser(nickName);
         if (user == null) {
             user = new User(nickName, this.getDefaultGroup().getGroupID());
-            this.users.put(nickName, user);
+            this.temporalUsersCache.put(nickName, user);
         }
         user.setSuffix(suffix);
         this.saveUser(nickName, user);
@@ -212,7 +212,7 @@ public class RedisStorage extends Storage {
         User user = this.getUser(nickName);
         if (user == null) {
             user = new User(nickName, this.getDefaultGroup().getGroupID());
-            this.users.put(nickName, user);
+            this.temporalUsersCache.put(nickName, user);
         }
         if (this.groups.get(groupID) != null) {
             user.setGroup(groupID);
@@ -225,10 +225,13 @@ public class RedisStorage extends Storage {
 
     @Override
     public void deleteUser(String nickName) {
-        if (this.temporalUsersCache.getIfPresent(nickName) != null) {
-            this.temporalUsersCache.invalidate(nickName);
+        val newUser = new User(nickName, this.getDefaultGroup().getGroupID());
+        if (this.users.get(nickName) != null) {
+            this.users.put(nickName, newUser);
         }
-        this.users.remove(nickName);
+        if (this.temporalUsersCache.getIfPresent(nickName) != null) {
+            this.temporalUsersCache.put(nickName, newUser);
+        }
         CompletableFuture.runAsync(()-> {
             try (Jedis jed = this.redisPool.getRedis()) {
                 jed.select(this.redisConfig.getDatabase());
