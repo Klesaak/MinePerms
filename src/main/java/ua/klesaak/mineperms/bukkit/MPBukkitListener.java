@@ -22,8 +22,11 @@ public class MPBukkitListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public final void onLogin(PlayerLoginEvent event) {
         Player player = event.getPlayer();
-        this.plugin.getMinePermsManager().getStorage().cacheUser(plugin.getName());
-        CompletableFuture.runAsync(()-> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.plugin.getMinePermsManager(), player)));
+        this.plugin.getMinePermsManager().getStorage().cacheUser(player.getName());
+        CompletableFuture.runAsync(()-> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.plugin.getMinePermsManager(), player))).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -32,6 +35,6 @@ public class MPBukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onLeave(PlayerQuitEvent event) {
-        this.plugin.getMinePermsManager().getStorage().unCacheUser(plugin.getName());
+        this.plugin.getMinePermsManager().getStorage().unCacheUser(event.getPlayer().getName());
     }
 }

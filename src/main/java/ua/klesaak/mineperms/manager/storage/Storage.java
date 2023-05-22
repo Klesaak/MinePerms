@@ -1,5 +1,7 @@
 package ua.klesaak.mineperms.manager.storage;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.redis.RedisPool;
@@ -11,11 +13,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public abstract class Storage {
     protected final MinePermsManager manager;
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
     protected final ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
+    protected final Cache<String, User> temporalUsersCache = CacheBuilder.newBuilder()
+            .concurrencyLevel(16)
+            .expireAfterWrite(1, TimeUnit.MINUTES).build(); //Временный кеш, чтобы уменьшить кол-во запросов в бд.
     protected RedisMessenger redisMessenger;
 
     public Storage(MinePermsManager manager) {
@@ -115,6 +121,10 @@ public abstract class Storage {
 
     public ConcurrentHashMap<String, User> getUsers() {
         return users;
+    }
+
+    public Cache<String, User> getTemporalUsersCache() {
+        return temporalUsersCache;
     }
 
     public RedisMessenger getRedisMessenger() {

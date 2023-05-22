@@ -3,20 +3,17 @@ package ua.klesaak.mineperms.manager.storage.redis.messenger;
 import lombok.val;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
-import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
-import ua.klesaak.mineperms.manager.storage.mysql.MySQLStorage;
+import ua.klesaak.mineperms.manager.storage.file.FileStorage;
 import ua.klesaak.mineperms.manager.storage.redis.RedisConfig;
 import ua.klesaak.mineperms.manager.storage.redis.RedisPool;
-import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
-import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class RedisMessenger {
-    public static UUID SERVER_UUID = UUID.randomUUID();
+    public static UUID SERVER_UUID = UUID.randomUUID(); //Уникальный идентификатор сервера для корректного обмена сообщениями через Redis-pub-sub
     private final Storage storage;
     private final RedisPool redisPool;
     private final Subscription sub;
@@ -30,12 +27,17 @@ public class RedisMessenger {
     }
 
     public void sendOutgoingMessage(MessageData messageData) {
-        try (Jedis jedis = this.redisPool.getRedis()) {
-            messageData.setUuid(SERVER_UUID);
-            jedis.publish(RedisConfig.UPDATE_CHANNEL_NAME, JsonData.GSON.toJson(messageData));
-        } catch (Exception e) {
-            throw new RuntimeException("Error while publish message ", e);
-        }
+        CompletableFuture.runAsync(() -> {
+            try (Jedis jedis = this.redisPool.getRedis()) {
+                messageData.setUuid(SERVER_UUID);
+                jedis.publish(RedisConfig.UPDATE_CHANNEL_NAME, messageData.toJson());
+            } catch (Exception e) {
+                throw new RuntimeException("Error while publish message ", e);
+            }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
 
@@ -83,37 +85,39 @@ public class RedisMessenger {
         @Override
         public void onMessage(String channel, String msg) {
             if (!channel.equals(RedisConfig.UPDATE_CHANNEL_NAME)) return;
-            val messageData = JsonData.GSON.fromJson(msg, MessageData.class);
+            val messageData = MessageData.fromJson(msg);
             if (messageData.getUuid().equals(SERVER_UUID)) return;
+            val storage = RedisMessenger.this.storage;
+            if (storage instanceof FileStorage) {
+                throw new UnsupportedOperationException("Don't update data by redis pub-sub, because used FileStorage! You must change field 'useRedisPubSub' to 'false' in plugin config!");
+            }
             switch (messageData.getMessageType()) {
                 case USER_UPDATE: {
-                    val user = JsonData.GSON.fromJson(messageData.getObject(), User.class);
-                    RedisMessenger.this.storage.updateUser(user.getPlayerName(), user);
+                    val user = messageData.getUserObject();
+                    storage.updateUser(user.getPlayerName(), user);
                     break;
                 }
                 case USER_DELETE: {
-                    val userName = messageData.getObject();
-                    val storage = RedisMessenger.this.storage;
-                    if (storage instanceof RedisStorage) {
-                        storage.getUsers().remove(userName);
-                        ((RedisStorage)storage).getTemporalUsersCache().invalidate(userName);
+                    val userName = messageData.getStringObject();
+                    if (storage.getUsers().get(userName) != null) {
+                        storage.getUsers().put(userName, new User(userName, storage.getDefaultGroup().getGroupID()));
                         break;
+
                     }
-                    if (storage instanceof MySQLStorage) {
-                        storage.getUsers().remove(userName);
-                        ((MySQLStorage)storage).getTemporalUsersCache().invalidate(userName);
+                    if (storage.getTemporalUsersCache().getIfPresent(userName) != null) {
+                        storage.getTemporalUsersCache().put(userName, new User(userName, storage.getDefaultGroup().getGroupID()));
                     }
                     break;
                 }
                 case GROUP_UPDATE: {
-                    val group = JsonData.GSON.fromJson(messageData.getObject(), Group.class);
-                    RedisMessenger.this.storage.updateGroup(group.getGroupID(), group);
+                    val group = messageData.getGroupObject();
+                    storage.updateGroup(group.getGroupID(), group);
                     break;
                 }
                 case GROUP_DELETE: {
-                    val groupID = messageData.getObject();
-                    RedisMessenger.this.storage.getGroups().remove(groupID);
-                    RedisMessenger.this.storage.recalculateUsersPermissions();
+                    val groupID = messageData.getStringObject();
+                    storage.getGroups().remove(groupID);
+                    storage.recalculateUsersPermissions();
                     break;
                 }
             }

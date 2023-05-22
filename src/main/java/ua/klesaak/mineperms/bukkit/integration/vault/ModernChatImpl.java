@@ -24,13 +24,13 @@ public abstract class ModernChatImpl extends UnsupportedNodesChatImpl {
 	@Override
 	public String getGroupPrefix(String world, String groupName) {
 		Group group = this.storage.getGroup(groupName);
-		return group != null ? group.getPrefix() : null;
+		return group != null ? group.getPrefix() : "";
 	}
 
 	@Override
 	public String getGroupSuffix(String world, String groupName) {
 		Group group = this.storage.getGroup(groupName);
-		return group != null ? group.getSuffix() : null;
+		return group != null ? group.getSuffix() : "";
 	}
 
 	@Override

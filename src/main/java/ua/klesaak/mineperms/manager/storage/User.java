@@ -44,9 +44,13 @@ public class User {
     public void recalculatePermissions(Map<String, Group> groupsMap) {
         this.calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
         this.calculatedPermissions.addAll(this.permissions);
-        if (groupsMap.get(this.group) != null) {
-            this.calculatedPermissions.addAll(groupsMap.get(this.group).getPermissions());
-            groupsMap.get(this.group).getInheritanceGroups().forEach(groupID -> this.calculatedPermissions.addAll(groupsMap.get(groupID).getPermissions()));
+        val group = groupsMap.get(this.group);
+        if (group != null) {
+            this.calculatedPermissions.addAll(group.getPermissions());
+            group.getInheritanceGroups().forEach(groupID -> {
+                val inheritanceGroup = groupsMap.get(groupID);
+                if (inheritanceGroup != null) this.calculatedPermissions.addAll(inheritanceGroup.getPermissions());
+            });
         }
     }
 

@@ -75,7 +75,7 @@ public class MinePermsCommand {
                             return;
                         }
                         commandSource.sendMessage(" §aPermissions:");
-                        user.getPermissions().forEach(permission -> commandSource.sendMessage("  §a- " + permission));
+                        user.getPermissions().forEach(permission -> commandSource.sendMessage("  §7- " + permission));
                         return;
                     }
                     case "addperm": {
@@ -211,7 +211,7 @@ public class MinePermsCommand {
                             return;
                         }
                         commandSource.sendMessage(" §aPermissions:");
-                        group.getPermissions().forEach(permission -> commandSource.sendMessage("  §a- " + permission));
+                        group.getPermissions().forEach(permission -> commandSource.sendMessage("  §7- " + permission));
                         return;
                     }
                     case "addperm": {

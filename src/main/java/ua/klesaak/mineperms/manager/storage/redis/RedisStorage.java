@@ -1,10 +1,7 @@
 package ua.klesaak.mineperms.manager.storage.redis;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import lombok.Getter;
 import lombok.val;
-import org.bukkit.Bukkit;
 import redis.clients.jedis.Jedis;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Group;
@@ -15,15 +12,11 @@ import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageType;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Getter
 public class RedisStorage extends Storage {
     private final RedisConfig redisConfig;
     private final RedisPool redisPool;
-    private final Cache<String, User> temporalUsersCache = CacheBuilder.newBuilder()
-            .concurrencyLevel(16)
-            .expireAfterWrite(1, TimeUnit.MINUTES).build(); //Временный кеш, чтобы уменьшить кол-во запросов в бд.
 
 
     public RedisStorage(MinePermsManager manager) {
@@ -34,7 +27,7 @@ public class RedisStorage extends Storage {
     }
 
     private void init() {
-        CompletableFuture.runAsync(()-> {
+        CompletableFuture.runAsync(() -> {
             try (Jedis jed = this.redisPool.getRedis()) {
                 jed.select(this.redisConfig.getDatabase());
                 val allData = jed.hgetAll(this.redisConfig.getGroupsKey());
@@ -42,23 +35,29 @@ public class RedisStorage extends Storage {
             } catch (Exception e) {
                 throw new RuntimeException("Error while load groups data", e);
             }
-            if (this.getGroup(manager.getConfigFile().getDefaultGroup()) == null) {
-                this.createGroup(manager.getConfigFile().getDefaultGroup());
-            }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
         });
+        if (this.getGroup(manager.getConfigFile().getDefaultGroup()) == null) {
+            this.createGroup(manager.getConfigFile().getDefaultGroup());
+        }
     }
 
     @Override
-    public void cacheUser(String nickName) { //todo поместить в евенты!
+    public void cacheUser(String nickName) { //todo поместить в евенты(Velocity)!
         User user = this.temporalUsersCache.getIfPresent(nickName);
         if (user != null) {
+            user.recalculatePermissions(this.groups);
             this.users.put(nickName, user);
             this.temporalUsersCache.invalidate(nickName);
             return;
         }
         user = this.getUser(nickName);
         if (user != null) {
+            user.recalculatePermissions(this.groups);
             this.users.put(nickName, user);
+            this.temporalUsersCache.invalidate(nickName);
             return;
         }
         val newUser = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
@@ -72,7 +71,7 @@ public class RedisStorage extends Storage {
      * чтобы в случае быстрого перезахода игрока не тратить лишние ресурсы на его подгрузку из БД
      */
     @Override
-    public void unCacheUser(String nickName) { //todo поместить в евенты!
+    public void unCacheUser(String nickName) { //todo поместить в евенты(Velocity)!
         User user = this.users.remove(nickName);
         this.temporalUsersCache.put(nickName, user);
     }
@@ -92,24 +91,34 @@ public class RedisStorage extends Storage {
 
     @Override
     public void saveUser(String nickName, User user) {
-        try (Jedis jed = this.redisPool.getRedis()) {
-            jed.select(this.redisConfig.getDatabase());
-            jed.hset(this.redisConfig.getUsersKey(), nickName, JsonData.GSON.toJson(user));
-        } catch (Exception e) {
-            throw new RuntimeException("Error while save user " + nickName + " data", e);
-        }
+        CompletableFuture.runAsync(()-> {
+            try (Jedis jed = this.redisPool.getRedis()) {
+                jed.select(this.redisConfig.getDatabase());
+                jed.hset(this.redisConfig.getUsersKey(), nickName, JsonData.GSON.toJson(user));
+            } catch (Exception e) {
+                throw new RuntimeException("Error while save user " + nickName + " data", e);
+            }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     @Override
     public void saveGroup(String groupID) {
         val group = this.groups.get(groupID);
         if (group == null) return;
-        try (Jedis jed = this.redisPool.getRedis()) {
-            jed.select(this.redisConfig.getDatabase());
-            jed.hset(this.redisConfig.getGroupsKey(), groupID, JsonData.GSON.toJson(group));
-        } catch (Exception e) {
-            throw new RuntimeException("Error while save group " + groupID + " data", e);
-        }
+        CompletableFuture.runAsync(()-> {
+            try (Jedis jed = this.redisPool.getRedis()) {
+                jed.select(this.redisConfig.getDatabase());
+                jed.hset(this.redisConfig.getGroupsKey(), groupID, JsonData.GSON.toJson(group));
+            } catch (Exception e) {
+                throw new RuntimeException("Error while save group " + groupID + " data", e);
+            }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     @Override
@@ -125,7 +134,8 @@ public class RedisStorage extends Storage {
             val userData = jed.hget(this.redisConfig.getUsersKey(), nickName);
             if (userData != null) {
                 user = JsonData.GSON.fromJson(userData, User.class);
-                user.recalculatePermissions(this.groups);
+                //user.recalculatePermissions(this.groups);
+                this.temporalUsersCache.put(nickName, user);
                 return user;
             }
         } catch (Exception e) {
@@ -139,9 +149,8 @@ public class RedisStorage extends Storage {
         User user = this.getUser(nickName);
         if (user == null) {
             user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
-            this.users.put(nickName, user);
         }
-        return user.getPrefix().isEmpty() ? this.getGroup(user.getGroup()).getPrefix() : user.getPrefix();
+        return user.getPrefix().isEmpty() ? this.getGroupOrDefault(user.getGroup()).getPrefix() : user.getPrefix();
     }
 
     @Override
@@ -149,9 +158,8 @@ public class RedisStorage extends Storage {
         User user = this.getUser(nickName);
         if (user == null) {
             user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
-            this.users.put(nickName, user);
         }
-        return user.getSuffix().isEmpty() ? this.getGroup(user.getGroup()).getSuffix() : user.getSuffix();
+        return user.getSuffix().isEmpty() ? this.getGroupOrDefault(user.getGroup()).getSuffix() : user.getSuffix();
     }
 
     @Override
@@ -221,15 +229,20 @@ public class RedisStorage extends Storage {
             this.temporalUsersCache.invalidate(nickName);
         }
         this.users.remove(nickName);
-        try (Jedis jed = this.redisPool.getRedis()) {
-            jed.select(this.redisConfig.getDatabase());
-            if (jed.hexists(this.redisConfig.getUsersKey(), nickName)) {
-                jed.hdel(this.redisConfig.getUsersKey(), nickName);
+        CompletableFuture.runAsync(()-> {
+            try (Jedis jed = this.redisPool.getRedis()) {
+                jed.select(this.redisConfig.getDatabase());
+                if (jed.hexists(this.redisConfig.getUsersKey(), nickName)) {
+                    jed.hdel(this.redisConfig.getUsersKey(), nickName);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error while delete user " + nickName + " data", e);
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Error while delete user " + nickName + " data", e);
-        }
-        this.broadcastUpdatePacket(new MessageData(new User(nickName, ""), MessageType.USER_DELETE));
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
+        this.broadcastUpdatePacket(new MessageData(nickName, MessageType.USER_DELETE));
     }
 
     @Override
@@ -298,27 +311,37 @@ public class RedisStorage extends Storage {
     @Override
     public void deleteGroup(String groupID) {
         this.groups.remove(groupID);
-        try (Jedis jed = this.redisPool.getRedis()) {
-            jed.select(this.redisConfig.getDatabase());
-            if (jed.hexists(this.redisConfig.getGroupsKey(), groupID)) {
-                jed.hdel(this.redisConfig.getGroupsKey(), groupID);
+        CompletableFuture.runAsync(()-> {
+            try (Jedis jed = this.redisPool.getRedis()) {
+                jed.select(this.redisConfig.getDatabase());
+                if (jed.hexists(this.redisConfig.getGroupsKey(), groupID)) {
+                    jed.hdel(this.redisConfig.getGroupsKey(), groupID);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error while delete group " + groupID + " data", e);
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Error while delete group " + groupID + " data", e);
-        }
-        this.broadcastUpdatePacket(new MessageData(new Group(groupID), MessageType.GROUP_DELETE));
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
+        this.broadcastUpdatePacket(new MessageData(groupID, MessageType.GROUP_DELETE));
     }
 
     @Override
     public void createGroup(String groupID) {
         val newGroup = new Group(groupID);
         this.groups.put(groupID, newGroup);
-        try (Jedis jed = this.redisPool.getRedis()) {
-            jed.select(this.redisConfig.getDatabase());
-            jed.hset(this.redisConfig.getGroupsKey(), groupID, JsonData.GSON.toJson(newGroup));
-        } catch (Exception e) {
-            throw new RuntimeException("Error while delete group " + groupID + " data", e);
-        }
+        CompletableFuture.runAsync(()-> {
+            try (Jedis jed = this.redisPool.getRedis()) {
+                jed.select(this.redisConfig.getDatabase());
+                jed.hset(this.redisConfig.getGroupsKey(), groupID, JsonData.GSON.toJson(newGroup));
+            } catch (Exception e) {
+                throw new RuntimeException("Error while delete group " + groupID + " data", e);
+            }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
         this.broadcastUpdatePacket(new MessageData(newGroup, MessageType.GROUP_UPDATE));
     }
 

@@ -22,6 +22,7 @@ import ua.klesaak.mineperms.bukkit.integration.vault.VaultIntegration;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 import ua.klesaak.mineperms.manager.event.bukkit.BukkitEventManager;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 @Plugin(name = "MinePermsBukkit", version = "1.0")
@@ -31,7 +32,10 @@ import java.util.logging.Level;
 @LoadBefore("WorldEdit")
 @Website("https://t.me/klesaak")
 @Commands({
-        @Command(name = "mineperms", aliases = {"mp", "mperms", "perms"}, desc = "Admin command.", permission = MinePermsCommand.MAIN_PERMISSION)
+        @Command(name = "mineperms",
+                aliases = {"mp", "mperms", "perms"},
+                desc = "Admin command.",
+                permission = MinePermsCommand.MAIN_PERMISSION)
 })
 @Description("Simple high performance permission plugin.")
 @Permissions({
@@ -56,8 +60,14 @@ public class MinePermsBukkit extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
             this.vaultIntegration = new VaultIntegration(this);
         }
-        //Производим иньекцию онлайн игрокам, заменяя дефолтный оператор прав на оператор нашего плагина. //todo так же если есть игроки онлайн - загрузить их в кеш из бд
-        this.getServer().getOnlinePlayers().forEach(player -> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.minePermsManager, player)));
+        //Производим иньекцию онлайн игрокам, заменяя дефолтный оператор прав на оператор нашего плагина.
+        CompletableFuture.runAsync(()-> {
+            //todo так же если есть игроки онлайн - загрузить их в кеш из бд
+            this.getServer().getOnlinePlayers().forEach(player -> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.minePermsManager, player)));
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
         new MPBukkitListener(this);
         new MPBukkitCommand(this);
         this.minePermsManager.registerEventsManager(new BukkitEventManager());
