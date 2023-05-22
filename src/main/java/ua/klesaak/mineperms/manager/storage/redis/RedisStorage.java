@@ -211,7 +211,7 @@ public class RedisStorage extends Storage {
     public void setUserGroup(String nickName, String groupID) {
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.getDefaultGroup().getGroupID());
+            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
             this.temporalUsersCache.put(nickName, user);
         }
         if (this.groups.get(groupID) != null) {
@@ -225,7 +225,7 @@ public class RedisStorage extends Storage {
 
     @Override
     public void deleteUser(String nickName) {
-        val newUser = new User(nickName, this.getDefaultGroup().getGroupID());
+        val newUser = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
         if (this.users.get(nickName) != null) {
             this.users.put(nickName, newUser);
         }
