@@ -9,16 +9,17 @@ import ua.klesaak.mineperms.manager.storage.User;
 
 import java.util.*;
 
-public class MinePermsCommand {
+public final class MinePermsCommand {
     public static final String MAIN_PERMISSION = "mineperms.admin";
 
-    public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "bulkupdate", "export");
-    public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("addperm", "removeperm", "info", "setgroup", "delete", "prefix",
+    public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "find", "export");
+    public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "set-group", "delete", "prefix",
             "suffix", "clear-prefix", "clear-suffix");
-    public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("addperm", "removeperm", "info", "delete", "prefix",
+    public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "delete", "prefix",
             "suffix", "clear-prefix", "clear-suffix", "create", "add-parent", "remove-parent");
 
-    public static final List<String> BULK_UPDATE_SUB_COMMANDS_0 = Arrays.asList("user", "group", "all");
+    public static final List<String> FIND_SUB_COMMANDS_0 = Arrays.asList("user", "group", "all");
+    public static final List<String> FIND_SUB_COMMANDS_1 = Arrays.asList("permission", "group");
 
     public static final List<String> EXPORT_SUB_COMMANDS = Arrays.asList("file", "mysql", "redis");
     private final MinePermsManager manager;
@@ -33,7 +34,7 @@ public class MinePermsCommand {
             commandSource.sendMessage("");
             commandSource.sendMessage("§6/" + label + " user - user operations command.");
             commandSource.sendMessage("§6/" + label + " group - group operations command.");
-            commandSource.sendMessage("§6/" + label + " bulkupdate - bulkupdate operations command.");
+            commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|group> <identifier> - find user/group with special permission/group command.");
             commandSource.sendMessage("§6/" + label + " export <from> <to> - export data from another backend.");
             return;
         }
@@ -44,9 +45,9 @@ public class MinePermsCommand {
                     commandSource.sendMessage("§6MinePerms User command help:");
                     commandSource.sendMessage("");
                     commandSource.sendMessage("§6/" + label +" user info <nickname> - show info of a player.");
-                    commandSource.sendMessage("§6/" + label +" user addperm <nickname> <permission> - add a specify permission.");
-                    commandSource.sendMessage("§6/" + label +" user removeperm <nickname> <permission> - remove specify permission.");
-                    commandSource.sendMessage("§6/" + label +" user setgroup <nickname> <groupID> - set a specify group.");
+                    commandSource.sendMessage("§6/" + label +" user add-perm <nickname> <permission> - add a specify permission.");
+                    commandSource.sendMessage("§6/" + label +" user remove-perm <nickname> <permission> - remove specify permission.");
+                    commandSource.sendMessage("§6/" + label +" user set-group <nickname> <groupID> - set a specify group.");
                     commandSource.sendMessage("§6/" + label +" user delete <nickname> - delete specify user.");
                     commandSource.sendMessage("§6/" + label +" user prefix <nickname> <prefix> - set user prefix.");
                     commandSource.sendMessage("§6/" + label +" user suffix <nickname> <suffix> - set user suffix.");
@@ -78,9 +79,9 @@ public class MinePermsCommand {
                         user.getPermissions().forEach(permission -> commandSource.sendMessage("  §7- " + permission));
                         return;
                     }
-                    case "addperm": {
+                    case "add-perm": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("§6/" + label +" user addperm <nickname> <permission> - add a specify permission.");
+                            commandSource.sendMessage("§6/" + label +" user add-perm <nickname> <permission> - add a specify permission.");
                             return;
                         }
                         String nickName = args[2];
@@ -90,9 +91,9 @@ public class MinePermsCommand {
                         commandSource.sendMessage("§6Permission §c" + permission + " §6added to §a" + nickName);
                         return;
                     }
-                    case "removeperm": {
+                    case "remove-perm": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("§6/" + label +" user removeperm <nickname> <permission> - remove a specify permission.");
+                            commandSource.sendMessage("§6/" + label +" user remove-perm <nickname> <permission> - remove a specify permission.");
                             return;
                         }
                         String nickName = args[2];
@@ -101,9 +102,9 @@ public class MinePermsCommand {
                         commandSource.sendMessage("§6Permission §c" + permission + " §6removed from §a" + nickName);
                         return;
                     }
-                    case "setgroup": {
+                    case "set-group": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("§6/" + label +" user setgroup <nickname> <groupID> - set a specify group.");
+                            commandSource.sendMessage("§6/" + label +" user set-group <nickname> <groupID> - set a specify group.");
                             return;
                         }
                         String nickName = args[2];
@@ -177,8 +178,8 @@ public class MinePermsCommand {
                     commandSource.sendMessage("§6MinePerms Group command help:");
                     commandSource.sendMessage("");
                     commandSource.sendMessage("§6/" + label +" group info <groupID> - show info of a group.");
-                    commandSource.sendMessage("§6/" + label +" group addperm <groupID> <permission> - add a specify permission.");
-                    commandSource.sendMessage("§6/" + label +" group removeperm <groupID> <permission> - remove specify permission.");
+                    commandSource.sendMessage("§6/" + label +" group add-perm <groupID> <permission> - add a specify permission.");
+                    commandSource.sendMessage("§6/" + label +" group remove-perm <groupID> <permission> - remove specify permission.");
                     commandSource.sendMessage("§6/" + label +" group add-parent <groupID> <parentGroupID> - add a specify parent group.");
                     commandSource.sendMessage("§6/" + label +" group remove-parent <groupID> <parentGroupID> - remove a specify parent group.");
                     commandSource.sendMessage("§6/" + label +" group delete <groupID> - delete specify group.");
@@ -214,9 +215,9 @@ public class MinePermsCommand {
                         group.getPermissions().forEach(permission -> commandSource.sendMessage("  §7- " + permission));
                         return;
                     }
-                    case "addperm": {
+                    case "add-perm": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("§6/" + label +" group addperm <groupID> <permission> - add a specify permission.");
+                            commandSource.sendMessage("§6/" + label +" group add-perm <groupID> <permission> - add a specify permission.");
                             return;
                         }
                         String groupID = args[2].toLowerCase();
@@ -231,9 +232,9 @@ public class MinePermsCommand {
                         commandSource.sendMessage("§6Permission §c" + permission + " §6added to group §a" + groupID);
                         return;
                     }
-                    case "removeperm": {
+                    case "remove-perm": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("§6/" + label +" group removeperm <groupID> <permission> - remove a specify permission.");
+                            commandSource.sendMessage("§6/" + label +" group remove-perm <groupID> <permission> - remove a specify permission.");
                             return;
                         }
                         String groupID = args[2].toLowerCase();
@@ -384,8 +385,28 @@ public class MinePermsCommand {
                 commandSource.sendMessage("§aMinePerms reload successful!");
                 return;
             }
-            case "bulkupdate": {
-                commandSource.sendMessage("§cTODO bulka help");//todo
+            case "find": {
+                if (args.length != 4) {
+                    commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|group> <identifier> - find user/group with special permission/group command.");
+
+                    List<String> users = new ArrayList<>();
+                    for (User user : this.manager.getStorage().getAllUsersData()) {
+                        users.add(user.getPlayerName());
+                    }
+                    List<String> groups = new ArrayList<>();
+                    for (Group group : this.manager.getStorage().getAllGroupsData()) {
+                        groups.add(group.getGroupID());
+                    }
+                    commandSource.sendMessage("Users finding: " + Joiner.on(", ").join(users));
+                    commandSource.sendMessage("Groups finding: " + Joiner.on(", ").join(groups));
+                    return;
+                }
+
+
+                /*
+                cs.sendMessage("§aSearch " + action.toUpperCase() + "=" + value + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                cs.sendMessage("§aResults: " + SimplePermsCommand.this.join(found));
+                 */
                 return;
             }
             case "export": {
@@ -400,7 +421,7 @@ public class MinePermsCommand {
     }
 
     public List<String> onTabComplete(String label, Collection<String> onlinePlayers, String[] args) {
-        if (args.length == 0) return Collections.emptyList(); //fix velocity termiAnal error
+        if (args.length == 0) return Collections.emptyList(); //fix Velocity termi-Anal error
         if (args.length == 1) {
             return this.copyPartialMatches(args[0].toLowerCase(), SUB_COMMANDS_0, new ArrayList<>());
         }

@@ -7,6 +7,7 @@ import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
 
+import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -148,6 +149,16 @@ public class MySQLStorage extends Storage {
     @Override
     public void updateGroup(String groupID, Group group) {
 
+    }
+
+    @Override
+    public Collection<User> getAllUsersData() {
+        return null;
+    }
+
+    @Override
+    public Collection<Group> getAllGroupsData() {
+        return null;
     }
 
     @Override

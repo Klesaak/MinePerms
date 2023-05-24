@@ -1,44 +1,44 @@
 package ua.klesaak.mineperms.api;
 
 import lombok.experimental.UtilityClass;
-import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.storage.Storage;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 
 @UtilityClass
 public class MinePermsAPI {
-    private MinePermsManager MANAGER;
+    private Storage STORAGE;
 
-    public void register(MinePermsManager manager) {
-        MANAGER = manager;
+    public void register(Storage storage) {
+        STORAGE = storage;
     }
 
     public boolean hasPermission(String playerName, String permission) {
-        return false;
+        return STORAGE.hasPermission(playerName, permission);
     }
 
     public String getUserGroup(String playerName) {
-        return "";
+        return STORAGE.getUserGroup(playerName);
     }
 
     public String getUserPrefix(String playerName) {
-        return "";
+        return STORAGE.getUserPrefix(playerName);
     }
 
     public String getUserSuffix(String playerName) {
-        return "";
+        return STORAGE.getUserSuffix(playerName);
     }
 
-    public List<String> getGroupInheritance(String groupID) {
-        return new ArrayList<>(); //todo return groups
+    public Set<String> getGroupInheritance(String groupID) {
+        return Collections.unmodifiableSet(STORAGE.getGroup(groupID).getInheritanceGroups());
     }
 
     public String getGroupPrefix(String groupID) {
-        return "";
+        return STORAGE.getGroup(groupID).getPrefix();
     }
 
     public String getGroupSuffix(String groupID) {
-        return "";
+        return STORAGE.getGroup(groupID).getSuffix();
     }
 }

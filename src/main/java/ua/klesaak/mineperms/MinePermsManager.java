@@ -26,7 +26,7 @@ public final class MinePermsManager {
 
     public MinePermsManager() {
         this.minePermsCommand = new MinePermsCommand(this);
-        MinePermsAPI.register(this);
+        MinePermsAPI.register(this.storage);
     }
 
     public void loadConfig(File pluginDataFolder) {

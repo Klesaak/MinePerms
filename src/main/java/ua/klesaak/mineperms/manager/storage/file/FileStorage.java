@@ -148,7 +148,7 @@ public class FileStorage extends Storage {
 
     @Override
     public void updateUser(String nickName, User user) {
-        throw new UnsupportedOperationException("Don't update user, because used FileStorage!");
+        throw new UnsupportedOperationException("Don't update user by redis pub-sub, because used FileStorage!");
     }
 
     @Override
@@ -205,7 +205,17 @@ public class FileStorage extends Storage {
 
     @Override
     public void updateGroup(String groupID, Group group) {
-        throw new UnsupportedOperationException("Don't update group, because used FileStorage!");
+        throw new UnsupportedOperationException("Don't update group by redis pub-sub, because used FileStorage!");
+    }
+
+    @Override
+    public Collection<User> getAllUsersData() {
+        return Collections.unmodifiableCollection(this.users.values());
+    }
+
+    @Override
+    public Collection<Group> getAllGroupsData() {
+        return Collections.unmodifiableCollection(this.groups.values());
     }
 
     @Override

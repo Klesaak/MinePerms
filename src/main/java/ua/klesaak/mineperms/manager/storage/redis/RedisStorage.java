@@ -11,6 +11,10 @@ import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageType;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Getter
@@ -352,6 +356,31 @@ public class RedisStorage extends Storage {
     public void updateGroup(String groupID, Group group) {
         this.groups.put(groupID, group); //не проверяем потому что может быть факт создания группы
         this.recalculateUsersPermissions();
+    }
+
+    @Override
+    public Collection<User> getAllUsersData() {
+        Set<User> users = new HashSet<>();
+        CompletableFuture.runAsync(()-> {
+            try (Jedis jed = this.redisPool.getRedis()) {
+                jed.select(this.redisConfig.getDatabase());
+                val userData = jed.hgetAll(this.redisConfig.getUsersKey()).values();
+                for (String data : userData) {
+                    users.add(JsonData.GSON.fromJson(data, User.class));
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error while get all users data", e);
+            }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
+        return users;
+    }
+
+    @Override
+    public Collection<Group> getAllGroupsData() {
+        return Collections.unmodifiableCollection(this.groups.values());
     }
 
     @Override

@@ -61,6 +61,8 @@ public abstract class Storage {
     public abstract void deleteGroup(String groupID);
     public abstract void createGroup(String groupID);
     public abstract void updateGroup(String groupID, Group group);
+    public abstract Collection<User> getAllUsersData();
+    public abstract Collection<Group> getAllGroupsData();
 
     public abstract void close();
 
