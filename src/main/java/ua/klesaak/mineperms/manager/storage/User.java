@@ -41,6 +41,15 @@ public class User {
         return false;
     }
 
+    public boolean hasOwnPermission(String permission) {
+        val permissionLowerCase = permission.toLowerCase();
+        return this.permissions.contains(permissionLowerCase);
+    }
+
+    public boolean hasGroup(String groupID) {
+        return this.group.equalsIgnoreCase(groupID);
+    }
+
     public void recalculatePermissions(Map<String, Group> groupsMap) {
         this.calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
         this.calculatedPermissions.addAll(this.permissions);

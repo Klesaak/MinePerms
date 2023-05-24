@@ -81,7 +81,7 @@ public abstract class Storage {
         if (group == null) return false;
         User user = this.getUser(playerName);
         if (user == null) return this.getDefaultGroup().getGroupID().equalsIgnoreCase(groupID);
-        return user.getGroup().equalsIgnoreCase(groupID);
+        return user.hasGroup(groupID);
     }
 
     public String getUserGroup(String playerName) {

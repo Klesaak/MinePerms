@@ -2,12 +2,14 @@ package ua.klesaak.mineperms.manager.command;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public final class MinePermsCommand {
     public static final String MAIN_PERMISSION = "mineperms.admin";
@@ -19,7 +21,7 @@ public final class MinePermsCommand {
             "suffix", "clear-prefix", "clear-suffix", "create", "add-parent", "remove-parent");
 
     public static final List<String> FIND_SUB_COMMANDS_0 = Arrays.asList("user", "group", "all");
-    public static final List<String> FIND_SUB_COMMANDS_1 = Arrays.asList("permission", "group");
+    public static final List<String> FIND_SUB_COMMANDS_1 = Arrays.asList("permission", "parent-group");
 
     public static final List<String> EXPORT_SUB_COMMANDS = Arrays.asList("file", "mysql", "redis");
     private final MinePermsManager manager;
@@ -34,7 +36,7 @@ public final class MinePermsCommand {
             commandSource.sendMessage("");
             commandSource.sendMessage("§6/" + label + " user - user operations command.");
             commandSource.sendMessage("§6/" + label + " group - group operations command.");
-            commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|group> <identifier> - find user/group with special permission/group command.");
+            commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|parent-group> <identifier> - find user/group with special permission/group command.");
             commandSource.sendMessage("§6/" + label + " export <from> <to> - export data from another backend.");
             return;
         }
@@ -386,31 +388,11 @@ public final class MinePermsCommand {
                 return;
             }
             case "find": {
-                if (args.length != 4) {
-                    commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|group> <identifier> - find user/group with special permission/group command.");
-
-                    List<String> users = new ArrayList<>();
-                    for (User user : this.manager.getStorage().getAllUsersData()) {
-                        users.add(user.getPlayerName());
-                    }
-                    List<String> groups = new ArrayList<>();
-                    for (Group group : this.manager.getStorage().getAllGroupsData()) {
-                        groups.add(group.getGroupID());
-                    }
-                    commandSource.sendMessage("Users finding: " + Joiner.on(", ").join(users));
-                    commandSource.sendMessage("Groups finding: " + Joiner.on(", ").join(groups));
-                    return;
-                }
-
-
-                /*
-                cs.sendMessage("§aSearch " + action.toUpperCase() + "=" + value + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
-                cs.sendMessage("§aResults: " + SimplePermsCommand.this.join(found));
-                 */
+                CompletableFuture.runAsync(()-> this.onFind(commandSource, label, args));
                 return;
             }
             case "export": {
-                if (args.length != 4)  {
+                if (args.length != 3)  {
                     commandSource.sendMessage("§6/" + label +" export <from> <to> - export data from another backend.");
                     return;
                 }
@@ -418,6 +400,92 @@ public final class MinePermsCommand {
             }
         }
         commandSource.sendMessage("§cUnknown operation.");
+    }
+
+    private void onFind(IMPCommandSource commandSource, String label, String[] args) {
+        if (args.length != 4) {
+            commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|parent-group> <identifier> - find user/group with special permission/group command.");
+            return;
+        }
+        switch (args[1].toLowerCase()) {
+            case "group": {
+                long start = System.currentTimeMillis();
+                val groups = this.manager.getStorage().getAllGroupsData();
+                val identifier = args[3].toLowerCase();
+                val found = new ArrayList<String>();
+                switch (args[2].toLowerCase()) {
+                    case "permission": {
+                        for (val group : groups) {
+                            if (group.hasOwnPermission(identifier)) found.add(group.getGroupID());
+                        }
+                        break;
+                    }
+                    case "parent-group": {
+                        for (val group : groups) {
+                            if (group.getInheritanceGroups().contains(identifier)) found.add(group.getGroupID());
+                        }
+                        break;
+                    }
+                }
+                commandSource.sendMessage("§aFinding Group with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                commandSource.sendMessage(found.isEmpty() ? "§cNothing..." : "§aResults: " + Joiner.on(", ").join(found));
+                return;
+            }
+            case "user": {
+                long start = System.currentTimeMillis();
+                val users = this.manager.getStorage().getAllUsersData();
+                val identifier = args[3].toLowerCase();
+                val found = new ArrayList<String>();
+                switch (args[2].toLowerCase()) {
+                    case "permission": {
+                        for (val user : users) {
+                            if (user.hasOwnPermission(identifier)) found.add(user.getPlayerName());
+                        }
+                        break;
+                    }
+                    case "parent-group": {
+                        for (val user : users) {
+                            if (user.hasGroup(identifier)) found.add(user.getPlayerName());
+                        }
+                        break;
+                    }
+                }
+                commandSource.sendMessage("§aFinding User with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                commandSource.sendMessage(found.isEmpty() ? "§cNothing..." : "§aResults: " + Joiner.on(", ").join(found));
+                return;
+            }
+            case "all": {
+                long start = System.currentTimeMillis();
+                val users = this.manager.getStorage().getAllUsersData();
+                val groups = this.manager.getStorage().getAllGroupsData();
+                val identifier = args[3].toLowerCase();
+                val usersFound = new ArrayList<String>();
+                val groupsFound = new ArrayList<String>();
+                switch (args[2].toLowerCase()) {
+                    case "permission": {
+                        for (val user : users) {
+                            if (user.hasOwnPermission(identifier)) usersFound.add(user.getPlayerName());
+                        }
+                        for (val group : groups) {
+                            if (group.hasOwnPermission(identifier)) groupsFound.add(group.getGroupID());
+                        }
+                    }
+                    case "parent-group": {
+                        for (val user : users) {
+                            if (user.hasGroup(identifier)) usersFound.add(user.getPlayerName());
+                        }
+                        for (val group : groups) {
+                            if (group.hasGroup(identifier)) groupsFound.add(group.getGroupID());
+                        }
+                    }
+                }
+                commandSource.sendMessage("§aFinding User and Group with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                val usersResult =  usersFound.isEmpty() ? "§cNothing..." : Joiner.on(", ").join(usersFound);
+                val groupsResult =  groupsFound.isEmpty() ? "§cNothing..." : Joiner.on(", ").join(groupsFound);
+                commandSource.sendMessage("§aResults for Users: " + usersResult);
+                commandSource.sendMessage("§aResults for Groups: " + groupsResult);
+            }
+        }
     }
 
     public List<String> onTabComplete(String label, Collection<String> onlinePlayers, String[] args) {
@@ -452,6 +520,17 @@ public final class MinePermsCommand {
                     if (args[1].equalsIgnoreCase("add-parent")) {
                         return this.copyPartialMatches(args[3].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
                     }
+                }
+            }
+        }
+
+        if (args[0].equalsIgnoreCase("find")) {
+            switch (args.length) {
+                case 2: {
+                    return this.copyPartialMatches(args[1].toLowerCase(), FIND_SUB_COMMANDS_0, new ArrayList<>());
+                }
+                case 3: {
+                    return this.copyPartialMatches(args[2].toLowerCase(), FIND_SUB_COMMANDS_1, new ArrayList<>());
                 }
             }
         }

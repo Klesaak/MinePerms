@@ -361,26 +361,32 @@ public class RedisStorage extends Storage {
     @Override
     public Collection<User> getAllUsersData() {
         Set<User> users = new HashSet<>();
-        CompletableFuture.runAsync(()-> {
-            try (Jedis jed = this.redisPool.getRedis()) {
-                jed.select(this.redisConfig.getDatabase());
-                val userData = jed.hgetAll(this.redisConfig.getUsersKey()).values();
-                for (String data : userData) {
-                    users.add(JsonData.GSON.fromJson(data, User.class));
-                }
-            } catch (Exception e) {
-                throw new RuntimeException("Error while get all users data", e);
+        try (Jedis jed = this.redisPool.getRedis()) {
+            jed.select(this.redisConfig.getDatabase());
+            val usersData = jed.hgetAll(this.redisConfig.getUsersKey()).values();
+            for (String data : usersData) {
+                users.add(JsonData.GSON.fromJson(data, User.class));
             }
-        }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
-        return users;
+        } catch (Exception e) {
+            throw new RuntimeException("Error while get all users data", e);
+        }
+
+        return Collections.unmodifiableCollection(users);
     }
 
     @Override
     public Collection<Group> getAllGroupsData() {
-        return Collections.unmodifiableCollection(this.groups.values());
+        Set<Group> groups = new HashSet<>();
+        try (Jedis jed = this.redisPool.getRedis()) {
+            jed.select(this.redisConfig.getDatabase());
+            val groupsData = jed.hgetAll(this.redisConfig.getGroupsKey()).values();
+            for (String data : groupsData) {
+                groups.add(JsonData.GSON.fromJson(data, Group.class));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error while get all groups data", e);
+        }
+        return Collections.unmodifiableCollection(groups);
     }
 
     @Override

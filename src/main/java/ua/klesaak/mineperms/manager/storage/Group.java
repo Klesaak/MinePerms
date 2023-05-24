@@ -34,6 +34,15 @@ public class Group {
         return false;
     }
 
+    public boolean hasOwnPermission(String permission) {
+        val permissionLowerCase = permission.toLowerCase();
+        return this.permissions.contains(permissionLowerCase);
+    }
+
+    public boolean hasGroup(String groupID) {
+        return this.inheritanceGroups.contains(groupID.toLowerCase());
+    }
+
     public Set<String> getPermissions() {
         return Collections.unmodifiableSet(permissions);
     }
@@ -53,7 +62,6 @@ public class Group {
     public void removeInheritanceGroup(String group) {
         inheritanceGroups.remove(group.toLowerCase());
     }
-
 
     public static String getIDorNull(Group group) {
         return group != null ? group.getGroupID() : "null";
