@@ -133,7 +133,11 @@ public class RedisStorage extends Storage {
         user = this.users.get(nickName);
         if (user != null) return user;
 
-        user = CompletableFuture.supplyAsync(()-> this.loadUser(nickName)).join();
+        user = CompletableFuture.supplyAsync(() -> this.loadUser(nickName))
+                .exceptionally(throwable -> {
+                    throwable.printStackTrace();
+                    return null;
+                }).join();
         this.temporalUsersCache.put(nickName, user);
         return user;
     }
