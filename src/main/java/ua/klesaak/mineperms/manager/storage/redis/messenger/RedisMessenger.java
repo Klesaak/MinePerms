@@ -27,17 +27,12 @@ public class RedisMessenger {
     }
 
     public void sendOutgoingMessage(MessageData messageData) {
-        CompletableFuture.runAsync(() -> {
-            try (Jedis jedis = this.redisPool.getRedis()) {
-                messageData.setUuid(SERVER_UUID);
-                jedis.publish(RedisConfig.UPDATE_CHANNEL_NAME, messageData.toJson());
-            } catch (Exception e) {
-                throw new RuntimeException("Error while publish message ", e);
-            }
-        }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
+        try (Jedis jedis = this.redisPool.getRedis()) {
+            messageData.setUuid(SERVER_UUID);
+            jedis.publish(RedisConfig.UPDATE_CHANNEL_NAME, messageData.toJson());
+        } catch (Exception e) {
+            throw new RuntimeException("Error while publish message", e);
+        }
     }
 
 
@@ -56,7 +51,7 @@ public class RedisMessenger {
                     if (first) {
                         first = false;
                     } else {
-                        System.out.println("[MinePerms]: Redis pub-sub connection re-established");
+                        System.out.println("[MinePerms] Redis pub-sub connection re-established");
                     }
 
                     jedis.subscribe(this, RedisConfig.UPDATE_CHANNEL_NAME); // blocking call
@@ -65,7 +60,7 @@ public class RedisMessenger {
                         return;
                     }
 
-                    System.out.println("[MinePerms]: Redis pub-sub connection dropped, trying to re-open the connection " + e);
+                    System.out.println("[MinePerms] Redis pub-sub connection dropped, trying to re-open the connection " + e);
                     try {
                         unsubscribe();
                     } catch (Exception ignored) {

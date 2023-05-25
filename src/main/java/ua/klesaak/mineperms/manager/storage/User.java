@@ -21,6 +21,7 @@ public class User {
 
     ///Transient Data///
     private transient volatile Set<String> calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private transient String jsonPerms; //костыль для ORMLite
 
     public User(String playerName, String groupID) {
         this.playerName = playerName;
@@ -91,11 +92,13 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                ", playerName='" + playerName + '\'' +
+                "playerName='" + playerName + '\'' +
+                ", group='" + group + '\'' +
                 ", prefix='" + prefix + '\'' +
                 ", suffix='" + suffix + '\'' +
-                ", group='" + group + '\'' +
-                ", permissions=" + calculatedPermissions +
+                ", permissions=" + permissions +
+                ", calculatedPermissions=" + calculatedPermissions +
+                ", jsonPerms='" + jsonPerms + '\'' +
                 '}';
     }
 }
