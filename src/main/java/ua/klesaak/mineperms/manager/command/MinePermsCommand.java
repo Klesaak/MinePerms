@@ -422,7 +422,7 @@ public final class MinePermsCommand {
                     }
                     case "parent-group": {
                         for (val group : groups) {
-                            if (group.getInheritanceGroups().contains(identifier)) found.add(group.getGroupID());
+                            if (group.hasGroup(identifier)) found.add(group.getGroupID());
                         }
                         break;
                     }
