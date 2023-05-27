@@ -36,6 +36,11 @@ public class RedisStorage extends Storage {
                 jed.select(this.redisConfig.getDatabase());
                 val allData = jed.hgetAll(this.redisConfig.getGroupsKey());
                 allData.forEach((groupID, groupJsonObject) -> this.groups.put(groupID, JsonData.GSON.fromJson(groupJsonObject, Group.class)));
+
+                val defaultGroup = manager.getConfigFile().getDefaultGroup();
+                if (this.getGroup(defaultGroup) == null) {
+                    this.createGroup(defaultGroup);
+                }
             } catch (Exception e) {
                 throw new RuntimeException("Error while load groups data", e);
             }
@@ -43,21 +48,18 @@ public class RedisStorage extends Storage {
             throwable.printStackTrace();
             return null;
         });
-        if (this.getGroup(manager.getConfigFile().getDefaultGroup()) == null) {
-            this.createGroup(manager.getConfigFile().getDefaultGroup());
-        }
     }
 
     @Override
     public void cacheUser(String nickName) { //todo поместить в евенты(Velocity)!
-        User user = this.temporalUsersCache.getIfPresent(nickName);
-        if (user != null) {
-            user.recalculatePermissions(this.groups);
-            this.users.put(nickName, user);
-            this.temporalUsersCache.invalidate(nickName);
-            return;
+        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.getUser(nickName);
+        if (!this.manager.getConfigFile().isUseRedisPubSub()) { //загружаем игрока из бд при каждом заходе, чтобы была актуальность данных!
+            user = CompletableFuture.supplyAsync(() -> this.loadUser(nickName))
+                    .exceptionally(throwable -> {
+                        throwable.printStackTrace();
+                        return null;
+                    }).join();
         }
-        user = this.getUser(nickName);
         if (user != null) {
             user.recalculatePermissions(this.groups);
             this.users.put(nickName, user);
@@ -82,12 +84,7 @@ public class RedisStorage extends Storage {
 
     @Override
     public void saveUser(String nickName) {
-        User user = this.temporalUsersCache.getIfPresent(nickName);
-        if (user != null) {
-            this.saveUser(nickName, user);
-            return;
-        }
-        user = this.users.get(nickName);
+        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.users.get(nickName);
         if (user != null) {
             this.saveUser(nickName, user);
         }
@@ -127,33 +124,25 @@ public class RedisStorage extends Storage {
 
     @Override
     public User getUser(String nickName) {
-        User user = this.temporalUsersCache.getIfPresent(nickName);
+        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.users.get(nickName);
         if (user != null) return user;
-
-        user = this.users.get(nickName);
-        if (user != null) return user;
-
         user = CompletableFuture.supplyAsync(() -> this.loadUser(nickName))
                 .exceptionally(throwable -> {
                     throwable.printStackTrace();
                     return null;
                 }).join();
-        this.temporalUsersCache.put(nickName, user);
+        if (user != null) this.temporalUsersCache.put(nickName, user);
         return user;
     }
 
     private User loadUser(String nickName) {
-        User user = null;
         try (Jedis jed = this.redisPool.getRedis()) {
             jed.select(this.redisConfig.getDatabase());
             val userData = jed.hget(this.redisConfig.getUsersKey(), nickName);
-            if (userData != null) {
-                user = JsonData.GSON.fromJson(userData, User.class);
-            }
+            return JsonData.GSON.fromJson(userData, User.class);
         } catch (Exception e) {
             throw new RuntimeException("Error while load user data for " + nickName, e);
         }
-        return user;
     }
 
     @Override

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,8 +18,8 @@ public class Group {
     private final Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     ///Transient Data///
-    private transient String jsonInheritanceGroups; //костыль для ORMLite
-    private transient String jsonPerms; //костыль для ORMLite
+    private transient String serializedInheritanceGroups; //костыль для ORMLite
+    private transient String serializedPerms; //костыль для ORMLite
 
     public Group(String groupID) {
         this.groupID = groupID;
@@ -71,6 +72,22 @@ public class Group {
         return group != null ? group.getGroupID() : "null";
     }
 
+    public void serializePerms() {
+        this.serializedPerms = JsonData.GSON.toJson(this.permissions);
+    }
+
+    public void truncateSerializedPerms() {
+        this.serializedPerms = null;
+    }
+
+    public void serializeParents() {
+        this.serializedInheritanceGroups = JsonData.GSON.toJson(this.inheritanceGroups);
+    }
+
+    public void truncateSerializedParents() {
+        this.serializedInheritanceGroups = null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -93,8 +110,8 @@ public class Group {
                 ", suffix='" + suffix + '\'' +
                 ", inheritanceGroups=" + inheritanceGroups +
                 ", permissions=" + permissions +
-                ", jsonInheritanceGroups='" + jsonInheritanceGroups + '\'' +
-                ", jsonPerms='" + jsonPerms + '\'' +
+                ", serializedInheritanceGroups='" + serializedInheritanceGroups + '\'' +
+                ", serializedPerms='" + serializedPerms + '\'' +
                 '}';
     }
 }

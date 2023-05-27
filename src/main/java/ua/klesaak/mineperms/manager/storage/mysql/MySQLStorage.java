@@ -13,7 +13,6 @@ import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
-import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -38,6 +37,7 @@ public class MySQLStorage extends Storage {
         this.createUsersTable(config);
         this.createGroupsTable(config);
         this.connectionSource.setTestBeforeGet(true);
+        //todo generate default group aki redis
     }
 
     private void createUsersTable(MySQLConfig config) {
@@ -46,7 +46,7 @@ public class MySQLStorage extends Storage {
             DatabaseFieldConfig playerName = new DatabaseFieldConfig("playerName");
             playerName.setId(true);
             playerName.setCanBeNull(false);
-            playerName.setColumnName("player_name");
+            playerName.setColumnName("user_name");
             fieldConfigs.add(playerName);
 
             DatabaseFieldConfig groupField = new DatabaseFieldConfig("group");
@@ -70,7 +70,7 @@ public class MySQLStorage extends Storage {
             suffixField.setColumnName("suffix");
             fieldConfigs.add(suffixField);
 
-            DatabaseFieldConfig permsField = new DatabaseFieldConfig("jsonPerms");
+            DatabaseFieldConfig permsField = new DatabaseFieldConfig("serializedPerms");
             permsField.setCanBeNull(false);
             permsField.setDataType(DataType.LONG_STRING);
             permsField.setColumnName("permissions");
@@ -109,13 +109,13 @@ public class MySQLStorage extends Storage {
             suffixField.setColumnName("suffix");
             fieldConfigs.add(suffixField);
 
-            DatabaseFieldConfig parentField = new DatabaseFieldConfig("jsonInheritanceGroups");
+            DatabaseFieldConfig parentField = new DatabaseFieldConfig("serializedInheritanceGroups");
             parentField.setCanBeNull(false);
             parentField.setDataType(DataType.LONG_STRING);
             parentField.setColumnName("parent_groups");
             fieldConfigs.add(parentField);
 
-            DatabaseFieldConfig permsField = new DatabaseFieldConfig("jsonPerms");
+            DatabaseFieldConfig permsField = new DatabaseFieldConfig("serializedPerms");
             permsField.setCanBeNull(false);
             permsField.setDataType(DataType.LONG_STRING);
             permsField.setColumnName("permissions");
@@ -131,12 +131,23 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void cacheUser(String nickName) {
-        User user = this.temporalUsersCache.getIfPresent(nickName);
+        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.getUser(nickName);
+        if (!this.manager.getConfigFile().isUseRedisPubSub()) { //загружаем игрока из бд при каждом заходе, чтобы была актуальность данных!
+            user = CompletableFuture.supplyAsync(() -> this.loadUser(nickName))
+                    .exceptionally(throwable -> {
+                        throwable.printStackTrace();
+                        return null;
+                    }).join();
+        }
         if (user != null) {
+            user.recalculatePermissions(this.groups);
             this.users.put(nickName, user);
             this.temporalUsersCache.invalidate(nickName);
+            return;
         }
-        //todo query
+        val newUser = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+        newUser.recalculatePermissions(this.groups);
+        this.users.put(nickName, newUser);
     }
 
     /**
@@ -151,16 +162,19 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void saveUser(String nickName) {
-
+        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.users.get(nickName);
+        if (user != null) {
+            this.saveUser(nickName, user);
+        }
     }
 
     @Override
     public void saveUser(String nickName, User user) {
         CompletableFuture.runAsync(()-> {
             try {
-                user.setJsonPerms(JsonData.GSON.toJson(user.getPermissions()));
+                user.serializePerms();
                 this.userDataDao.createOrUpdate(user);
-                user.setJsonPerms(null);
+                user.truncateSerializedPerms();
             } catch (SQLException ex) {
                 throw new RuntimeException("Error while save user data " + nickName, ex);
             }
@@ -172,12 +186,39 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void saveGroup(String groupID) {
-
+        val group = this.groups.get(groupID);
+        CompletableFuture.runAsync(()-> {
+            try {
+                group.serializePerms();
+                group.serializeParents();
+                this.groupDataDao.createOrUpdate(group);
+                group.truncateSerializedPerms();
+                group.truncateSerializedParents();
+            } catch (SQLException ex) {
+                throw new RuntimeException("Error while save group data " + groupID, ex);
+            }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     @Override
     public User getUser(String nickName) {
+        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.users.get(nickName);
+        if (user != null) return user;
+        user = CompletableFuture.supplyAsync(() -> this.loadUser(nickName))
+                .exceptionally(throwable -> {
+                    throwable.printStackTrace();
+                    return null;
+                }).join();
+        if (user != null) this.temporalUsersCache.put(nickName, user);
+        return user;
+    }
+
+    private User loadUser(String nickName) {
         return null;
+        //todo
     }
 
     @Override
@@ -211,7 +252,7 @@ public class MySQLStorage extends Storage {
     }
 
     @Override
-    public void setUserGroup(String nickName, String groupID) {
+    public void setUserGroup(String nickName, String groupID) { //todo this.manager.getEventManager().callGroupChangeEvent(user);
 
     }
 

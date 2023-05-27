@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.util.Collections;
 import java.util.Map;
@@ -21,7 +22,7 @@ public class User {
 
     ///Transient Data///
     private transient volatile Set<String> calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private transient String jsonPerms; //костыль для ORMLite
+    private transient String serializedPerms; //костыль для ORMLite
 
     public User(String playerName, String groupID) {
         this.playerName = playerName;
@@ -76,6 +77,14 @@ public class User {
         this.calculatedPermissions.remove(perm);
     }
 
+    public void serializePerms() {
+        this.serializedPerms = JsonData.GSON.toJson(this.permissions);
+    }
+
+    public void truncateSerializedPerms() {
+        this.serializedPerms = null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -98,7 +107,7 @@ public class User {
                 ", suffix='" + suffix + '\'' +
                 ", permissions=" + permissions +
                 ", calculatedPermissions=" + calculatedPermissions +
-                ", jsonPerms='" + jsonPerms + '\'' +
+                ", serializedPerms='" + serializedPerms + '\'' +
                 '}';
     }
 }
