@@ -5,7 +5,6 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseFieldConfig;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
-import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.table.DatabaseTableConfig;
 import com.j256.ormlite.table.TableUtils;
 import lombok.Getter;
@@ -271,9 +270,7 @@ public class MySQLStorage extends Storage {
             this.temporalUsersCache.put(nickName, user);
         }
         user.addPermission(permission);
-        user.serializePerms();
-        this.saveUserField(nickName, DatabaseConstants.PERMISSIONS_COLUMN, user.getSerializedPerms());
-        user.truncateSerializedPerms();
+        this.saveUser(nickName, user);
         this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
     }
 
@@ -282,9 +279,7 @@ public class MySQLStorage extends Storage {
         User user = this.getUser(nickName);
         if (user == null) return;
         user.removePermission(permission);
-        user.serializePerms();
-        this.saveUserField(nickName, DatabaseConstants.PERMISSIONS_COLUMN, user.getSerializedPerms());
-        user.truncateSerializedPerms();
+        this.saveUser(nickName, user);
         this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
     }
 
@@ -296,7 +291,7 @@ public class MySQLStorage extends Storage {
             this.temporalUsersCache.put(nickName, user);
         }
         user.setPrefix(prefix);
-        this.saveUserField(nickName, DatabaseConstants.PREFIX_COLUMN, prefix);
+        this.saveUser(nickName, user);
         this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
     }
 
@@ -308,7 +303,7 @@ public class MySQLStorage extends Storage {
             this.temporalUsersCache.put(nickName, user);
         }
         user.setSuffix(suffix);
-        this.saveUserField(nickName, DatabaseConstants.SUFFIX_COLUMN, suffix);
+        this.saveUser(nickName, user);
         this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
     }
 
@@ -321,7 +316,7 @@ public class MySQLStorage extends Storage {
         }
         if (this.groups.get(groupID) != null) {
             user.setGroup(groupID);
-            this.saveUserField(nickName, DatabaseConstants.USER_GROUP_COLUMN, groupID);
+            this.saveUser(nickName, user);
             user.recalculatePermissions(this.groups);
             this.manager.getEventManager().callGroupChangeEvent(user);
         }
@@ -365,9 +360,7 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.addPermission(permission);
         this.recalculateUsersPermissions();
-        group.serializePerms();
-        this.saveGroupField(groupID, DatabaseConstants.PERMISSIONS_COLUMN, group.getSerializedPerms());
-        group.truncateSerializedPerms();
+        this.saveGroup(groupID);
         this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
@@ -376,9 +369,7 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.removePermission(permission);
         this.recalculateUsersPermissions();
-        group.serializePerms();
-        this.saveGroupField(groupID, DatabaseConstants.PERMISSIONS_COLUMN, group.getSerializedPerms());
-        group.truncateSerializedPerms();
+        this.saveGroup(groupID);
         this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
@@ -387,9 +378,7 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
-        group.truncateSerializedParents();
-        this.saveGroupField(groupID, DatabaseConstants.PERMISSIONS_COLUMN, group.getSerializedInheritanceGroups());
-        group.truncateSerializedParents();
+        this.saveGroup(groupID);
         this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
@@ -398,9 +387,7 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
-        group.truncateSerializedParents();
-        this.saveGroupField(groupID, DatabaseConstants.PERMISSIONS_COLUMN, group.getSerializedInheritanceGroups());
-        group.truncateSerializedParents();
+        this.saveGroup(groupID);
         this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
@@ -408,7 +395,7 @@ public class MySQLStorage extends Storage {
     public void setGroupPrefix(String groupID, String prefix) {
         val group = this.getGroup(groupID);
         group.setPrefix(prefix);
-        this.saveGroupField(groupID, DatabaseConstants.PREFIX_COLUMN, prefix);
+        this.saveGroup(groupID);
         this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
@@ -416,7 +403,7 @@ public class MySQLStorage extends Storage {
     public void setGroupSuffix(String groupID, String suffix) {
         val group = this.getGroup(groupID);
         group.setSuffix(suffix);
-        this.saveGroupField(groupID, DatabaseConstants.SUFFIX_COLUMN, suffix);
+        this.saveGroup(groupID);
         this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
     }
 
@@ -495,35 +482,5 @@ public class MySQLStorage extends Storage {
     @Override
     public void close() {
         this.connectionSource.closeQuietly();
-    }
-
-    private void saveUserField(String nickName, String field, String object) {
-        CompletableFuture.runAsync(()-> {
-            try {
-                val updateBuilder = this.userDataDao.updateBuilder();
-                updateBuilder.updateColumnValue(field, object).where().eq(DatabaseConstants.USER_NAME_COLUMN, nickName);
-                updateBuilder.update();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while update user " + nickName + " data", e);
-            }
-        }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
-    }
-
-    private void saveGroupField(String groupID, String field, String object) {
-        CompletableFuture.runAsync(()-> {
-            try {
-                val updateBuilder = this.groupDataDao.updateBuilder();
-                updateBuilder.updateColumnValue(field, object).where().eq(DatabaseConstants.GROUP_ID_COLUMN, groupID);
-                updateBuilder.update();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while update group " + groupID + " data", e);
-            }
-        }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
     }
 }

@@ -428,7 +428,7 @@ public final class MinePermsCommand {
                         break;
                     }
                 }
-                commandSource.sendMessage("§aFinding Group with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                commandSource.sendMessage("§aFinding Group's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
                 commandSource.sendMessage(found.isEmpty() ? "§cNothing..." : "§aResults: " + Joiner.on(", ").join(found));
                 return;
             }
@@ -452,7 +452,7 @@ public final class MinePermsCommand {
                         break;
                     }
                 }
-                commandSource.sendMessage("§aFinding User with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                commandSource.sendMessage("§aFinding User's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
                 commandSource.sendMessage(found.isEmpty() ? "§cNothing..." : "§aResults: " + Joiner.on(", ").join(found));
                 return;
             }
@@ -482,7 +482,7 @@ public final class MinePermsCommand {
                         }
                     }
                 }
-                commandSource.sendMessage("§aFinding User and Group with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                commandSource.sendMessage("§aFinding User's and Group's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
                 val usersResult =  usersFound.isEmpty() ? "§cNothing..." : Joiner.on(", ").join(usersFound);
                 val groupsResult =  groupsFound.isEmpty() ? "§cNothing..." : Joiner.on(", ").join(groupsFound);
                 commandSource.sendMessage("§aResults for Users: " + usersResult);
@@ -505,7 +505,7 @@ public final class MinePermsCommand {
                     return this.copyPartialMatches(args[2].toLowerCase(), onlinePlayers, new ArrayList<>());
                 }
                 case 4: {
-                    if (args[1].equalsIgnoreCase("setgroup")) {
+                    if (args[1].equalsIgnoreCase("set-group")) {
                         return this.copyPartialMatches(args[3].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
                     }
                 }
