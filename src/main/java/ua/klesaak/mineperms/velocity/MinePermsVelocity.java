@@ -10,6 +10,7 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.event.velocity.VelocityEventManager;
+import ua.klesaak.mineperms.velocity.listeners.MPVelocityListener;
 
 import java.nio.file.Path;
 

@@ -435,7 +435,7 @@ public class MySQLStorage extends Storage {
                 newGroup.truncateSerializedParents();
                 this.broadcastUpdatePacket(new MessageData(newGroup, MessageType.GROUP_UPDATE));
             } catch (SQLException e) {
-                throw new RuntimeException("Error while delete group " + groupID + " data", e);
+                throw new RuntimeException("Error while create group " + groupID + " data", e);
             }
         }).exceptionally(throwable -> {
             throwable.printStackTrace();

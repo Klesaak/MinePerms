@@ -40,7 +40,6 @@ public final class MPVelocityCommand implements SimpleCommand {
         return invocation.source().hasPermission(MinePermsCommand.MAIN_PERMISSION);
     }
 
-
     @Override
     public List<String> suggest(Invocation invocation) {
         return Collections.emptyList();
