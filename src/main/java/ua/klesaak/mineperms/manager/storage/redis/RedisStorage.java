@@ -131,7 +131,10 @@ public class RedisStorage extends Storage {
                     throwable.printStackTrace();
                     return null;
                 }).join();
-        if (user != null) this.temporalUsersCache.put(nickName, user);
+        if (user != null) {
+            this.temporalUsersCache.put(nickName, user);
+            user.recalculatePermissions(this.groups);
+        }
         return user;
     }
 
@@ -167,7 +170,7 @@ public class RedisStorage extends Storage {
     public void addUserPermission(String nickName, String permission) {
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.getDefaultGroup().getGroupID());
+            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
             this.temporalUsersCache.put(nickName, user);
         }
         user.addPermission(permission);
@@ -188,7 +191,7 @@ public class RedisStorage extends Storage {
     public void setUserPrefix(String nickName, String prefix) {
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.getDefaultGroup().getGroupID());
+            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
             this.temporalUsersCache.put(nickName, user);
         }
         user.setPrefix(prefix);
@@ -200,7 +203,7 @@ public class RedisStorage extends Storage {
     public void setUserSuffix(String nickName, String suffix) {
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.getDefaultGroup().getGroupID());
+            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
             this.temporalUsersCache.put(nickName, user);
         }
         user.setSuffix(suffix);

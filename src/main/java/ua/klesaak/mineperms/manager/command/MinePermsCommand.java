@@ -410,6 +410,7 @@ public final class MinePermsCommand {
         switch (args[1].toLowerCase()) {
             case "group": {
                 long start = System.currentTimeMillis();
+                commandSource.sendMessage("§cStart finding...");
                 val groups = this.manager.getStorage().getAllGroupsData();
                 val identifier = args[3].toLowerCase();
                 val found = new ArrayList<String>();
@@ -433,6 +434,7 @@ public final class MinePermsCommand {
             }
             case "user": {
                 long start = System.currentTimeMillis();
+                commandSource.sendMessage("§cStart finding...");
                 val users = this.manager.getStorage().getAllUsersData();
                 val identifier = args[3].toLowerCase();
                 val found = new ArrayList<String>();
@@ -456,6 +458,7 @@ public final class MinePermsCommand {
             }
             case "all": {
                 long start = System.currentTimeMillis();
+                commandSource.sendMessage("§cStart finding...");
                 val users = this.manager.getStorage().getAllUsersData();
                 val groups = this.manager.getStorage().getAllGroupsData();
                 val identifier = args[3].toLowerCase();

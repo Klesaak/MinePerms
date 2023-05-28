@@ -1,5 +1,6 @@
 package ua.klesaak.mineperms.manager.storage;
 
+import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -11,11 +12,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Getter @Setter
 public class Group {
-    private final String groupID;
+    private String groupID;
     private String prefix = "";
     private String suffix = "";
-    private final Set<String> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private final Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private Set<String> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     ///Transient Data///
     private transient String serializedInheritanceGroups; //костыль для ORMLite
@@ -23,6 +24,9 @@ public class Group {
 
     public Group(String groupID) {
         this.groupID = groupID;
+    }
+
+    protected Group() {
     }
 
     public boolean hasPermission(String permission) {
@@ -86,6 +90,15 @@ public class Group {
 
     public void truncateSerializedParents() {
         this.serializedInheritanceGroups = null;
+    }
+
+    public void convert() {
+        this.inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        this.permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        this.permissions.addAll(JsonData.GSON.fromJson(this.serializedPerms, new TypeToken<Set<String>>(){}.getType()));
+        this.inheritanceGroups.addAll(JsonData.GSON.fromJson(this.serializedInheritanceGroups, new TypeToken<Set<String>>(){}.getType()));
+        this.truncateSerializedPerms();
+        this.truncateSerializedParents();
     }
 
     @Override

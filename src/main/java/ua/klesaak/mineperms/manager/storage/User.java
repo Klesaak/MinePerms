@@ -1,5 +1,6 @@
 package ua.klesaak.mineperms.manager.storage;
 
+import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Getter @Setter
 public class User {
-    private final String playerName;
+    private String playerName;
     private volatile String group;
     private volatile String prefix = "";
     private volatile String suffix = "";
@@ -27,6 +28,9 @@ public class User {
     public User(String playerName, String groupID) {
         this.playerName = playerName;
         this.group = groupID;
+    }
+
+    protected User() {
     }
 
     public boolean hasPermission(String permission) {
@@ -83,6 +87,11 @@ public class User {
 
     public void truncateSerializedPerms() {
         this.serializedPerms = null;
+    }
+    public void convert() {
+        this.permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        this.permissions.addAll(JsonData.GSON.fromJson(this.serializedPerms, new TypeToken<Set<String>>(){}.getType()));
+        this.truncateSerializedPerms();
     }
 
     @Override

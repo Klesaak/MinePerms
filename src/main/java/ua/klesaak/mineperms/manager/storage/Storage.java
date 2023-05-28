@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+
+//todo синхронизировать группы если не включен пуб-суб
 public abstract class Storage {
     protected final MinePermsManager manager;
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
