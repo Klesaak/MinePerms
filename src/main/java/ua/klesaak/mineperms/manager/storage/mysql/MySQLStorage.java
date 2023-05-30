@@ -31,7 +31,7 @@ public class MySQLStorage extends Storage {
 
     public MySQLStorage(MinePermsManager manager) {
         super(manager);
-        val config = this.manager.getConfigFile().getMySQLConfig();
+        val config = this.manager.getConfigFile().getMySQLSettings();
         try {
             this.connectionSource = new JdbcPooledConnectionSource(config.getHost());
         } catch (SQLException ex) {
@@ -43,7 +43,10 @@ public class MySQLStorage extends Storage {
             this.connectionSource.setTestBeforeGet(true);
             try {
                 val allData = this.groupDataDao.queryForAll();
-                allData.forEach(group -> this.groups.put(group.getGroupID(), group));
+                allData.forEach(group -> {
+                    group.convert();
+                    this.groups.put(group.getGroupID(), group);
+                });
 
                 val defaultGroup = manager.getConfigFile().getDefaultGroup();
                 if (this.getGroup(defaultGroup) == null) {
@@ -477,6 +480,16 @@ public class MySQLStorage extends Storage {
             throw new RuntimeException("Error while get all groups data", e);
         }
         return list;
+    }
+
+    @Override
+    public void importUsersData(Collection<User> users) {
+        //todo
+    }
+
+    @Override
+    public void importGroupsData(Collection<Group> groups) {
+        //todo
     }
 
     @Override

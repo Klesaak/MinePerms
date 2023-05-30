@@ -42,6 +42,6 @@ public class MinePermsVelocity {
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         new MPVelocityCommand(this);
-        new MPVelocityListener(this);
+        new MPVelocityListener();
     }
 }

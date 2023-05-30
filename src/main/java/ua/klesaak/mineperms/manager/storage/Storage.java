@@ -29,7 +29,7 @@ public abstract class Storage {
     public Storage(MinePermsManager manager) {
         this.manager = manager;
         if (manager.getConfigFile().isUseRedisPubSub()) {
-            this.redisMessenger = new RedisMessenger(this, new RedisPool(manager.getConfigFile().getRedisConfig()));
+            this.redisMessenger = new RedisMessenger(this, new RedisPool(manager.getConfigFile().getRedisSettings()));
         }
     }
 
@@ -65,6 +65,8 @@ public abstract class Storage {
     public abstract void updateGroup(String groupID, Group group);
     public abstract Collection<User> getAllUsersData();
     public abstract Collection<Group> getAllGroupsData();
+    public abstract void importUsersData(Collection<User> users);
+    public abstract void importGroupsData(Collection<Group> groups);
 
     public abstract void close();
 

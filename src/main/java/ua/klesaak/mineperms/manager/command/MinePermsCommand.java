@@ -4,9 +4,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.config.StorageType;
 import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.file.FileStorage;
+import ua.klesaak.mineperms.manager.storage.mysql.MySQLStorage;
+import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -37,7 +41,7 @@ public final class MinePermsCommand {
             commandSource.sendMessage("§6/" + label + " user - user operations command.");
             commandSource.sendMessage("§6/" + label + " group - group operations command.");
             commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|parent-group> <identifier> - find user/group with special permission/group command.");
-            commandSource.sendMessage("§6/" + label + " export <from> <to> - export data from another backend.");
+            commandSource.sendMessage("§6/" + label + " export <backend> - export data from current backend to another backend.");
             return;
         }
         Storage storage = this.manager.getStorage();
@@ -388,18 +392,60 @@ public final class MinePermsCommand {
                 return;
             }
             case "find": {
-                CompletableFuture.runAsync(()-> this.onFind(commandSource, label, args));
+                CompletableFuture.runAsync(()-> this.onFind(commandSource, label, args)).exceptionally(throwable -> {
+                    throwable.printStackTrace();
+                    return null;
+                });
                 return;
             }
             case "export": {
-                if (args.length != 3)  {
-                    commandSource.sendMessage("§6/" + label +" export <from> <to> - export data from another backend.");
-                    return;
-                }
-                //todo
+                CompletableFuture.runAsync(()-> this.onExport(commandSource, label, args)).exceptionally(throwable -> {
+                    throwable.printStackTrace();
+                    return null;
+                });
+                return;
             }
         }
         commandSource.sendMessage("§cUnknown operation.");
+    }
+
+    private void onExport(IMPCommandSource commandSource, String label, String[] args) {
+        if (args.length != 2)  {
+            commandSource.sendMessage("§6/" + label +" export <backend> - export data from another backend.");
+            return;
+        }
+        val backend = args[1].toUpperCase();
+        Storage newStorage = null;
+        StorageType storageType;
+        try {
+            storageType = Enum.valueOf(StorageType.class, backend);
+        } catch (IllegalArgumentException e) {
+            commandSource.sendMessage("§cBackend §6" + backend + " §cis not exists! Available backends: §6FILE, REDIS, MYSQL");
+            commandSource.sendMessage("§cCurrent backend: §6" + this.manager.getConfigFile().getStorageType().toString());
+            return;
+        }
+        long start = System.currentTimeMillis();
+        commandSource.sendMessage("§cStart exporting data...");
+        commandSource.sendMessage("§cPlease don't using commands...");
+        switch (storageType) {//todo БАГ: при инициализации БД - она загружает свои группы в уже существующий кеш, нужно фикс!!
+            case FILE: {
+                newStorage = new FileStorage(this.manager);
+                break;
+            }
+            case MYSQL: {
+                newStorage = new MySQLStorage(this.manager);
+                break;
+            }
+            case REDIS: {
+                newStorage = new RedisStorage(this.manager);
+            }
+        }
+        val users = this.manager.getStorage().getAllUsersData();
+        val groups = this.manager.getStorage().getAllGroupsData();
+        newStorage.importUsersData(users);
+        newStorage.importGroupsData(groups);
+        commandSource.sendMessage("§aExporting" + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+        newStorage.close();
     }
 
     private void onFind(IMPCommandSource commandSource, String label, String[] args) {
@@ -539,13 +585,8 @@ public final class MinePermsCommand {
         }
 
         if (args[0].equalsIgnoreCase("export")) {
-            switch (args.length) {
-                case 2: {
-                    return this.copyPartialMatches(args[1].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
-                }
-                case 3: {
-                    return this.copyPartialMatches(args[2].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
-                }
+            if (args.length == 2) {
+                return this.copyPartialMatches(args[1].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
             }
         }
         return Collections.emptyList();

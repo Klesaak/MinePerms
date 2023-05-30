@@ -53,7 +53,10 @@ public class FileStorage extends Storage {
 
     @Override @Synchronized
     public void saveUser(String nickName) {
-        CompletableFuture.runAsync(()->this.usersFile.write(this.users.values(), true));
+        CompletableFuture.runAsync(()->this.usersFile.write(this.users.values(), true)).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     @Override
@@ -64,7 +67,10 @@ public class FileStorage extends Storage {
 
     @Override @Synchronized
     public void saveGroup(String groupID) {
-        CompletableFuture.runAsync(()->this.groupsFile.write(this.groups.values(), true));
+        CompletableFuture.runAsync(()->this.groupsFile.write(this.groups.values(), true)).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     public User getUser(String nickName) {
@@ -216,6 +222,24 @@ public class FileStorage extends Storage {
     @Override
     public Collection<Group> getAllGroupsData() {
         return Collections.unmodifiableCollection(this.groups.values());
+    }
+
+    @Override
+    public void importUsersData(Collection<User> users) {
+        for (User user : users) this.users.put(user.getPlayerName(), user);
+        CompletableFuture.runAsync(()->this.usersFile.write(this.users.values(), true)).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
+    }
+
+    @Override
+    public void importGroupsData(Collection<Group> groups) {
+        for (Group group : groups) this.groups.put(group.getGroupID(), group);
+        CompletableFuture.runAsync(()->this.groupsFile.write(this.groups.values(), true)).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     @Override

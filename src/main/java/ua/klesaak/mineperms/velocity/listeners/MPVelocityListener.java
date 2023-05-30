@@ -11,7 +11,7 @@ import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.velocity.MinePermsVelocity;
 
 public class MPVelocityListener {
-    private final MinePermsManager minePermsManager;
+   /* private final MinePermsManager minePermsManager;
 
     public MPVelocityListener(MinePermsVelocity plugin) {
         this.minePermsManager = plugin.getMinePermsManager();
@@ -68,7 +68,5 @@ public class MPVelocityListener {
     @Subscribe(order = PostOrder.LAST)
     public void onPlayerQuit(DisconnectEvent e) {
         handleDisconnect(e.getPlayer().getUniqueId());
-    }
-
-}
+    }*/
 }

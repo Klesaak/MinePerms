@@ -12,7 +12,7 @@ import lombok.NonNull;
 import ua.klesaak.mineperms.velocity.MinePermsVelocity;
 
 public class MonitoringPermissionCheckListener {
-    private final MinePermsVelocity plugin;
+ /*   private final MinePermsVelocity plugin;
 
     public MonitoringPermissionCheckListener(MinePermsVelocity plugin) {
         this.plugin = plugin;
@@ -70,5 +70,5 @@ public class MonitoringPermissionCheckListener {
             return "console";
         }
         return subject.getClass().getSimpleName();
-    }
+    }*/
 }

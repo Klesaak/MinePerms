@@ -3,6 +3,7 @@ package ua.klesaak.mineperms.manager.storage.redis;
 import lombok.Getter;
 import lombok.val;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
@@ -11,30 +12,25 @@ import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageType;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Getter
 public class RedisStorage extends Storage {
-    private final RedisConfig redisConfig;
     private final RedisPool redisPool;
-
 
     public RedisStorage(MinePermsManager manager) {
         super(manager);
-        this.redisConfig = manager.getConfigFile().getRedisConfig();
-        this.redisPool = new RedisPool(this.redisConfig);
+        this.redisPool = new RedisPool(manager.getConfigFile().getRedisSettings());
         this.init();
     }
 
     private void init() {
         CompletableFuture.runAsync(() -> {
             try (Jedis jed = this.redisPool.getRedis()) {
-                jed.select(this.redisConfig.getDatabase());
-                val allData = jed.hgetAll(this.redisConfig.getGroupsKey());
+                val config = manager.getConfigFile().getRedisSettings();
+                jed.select(config.getDatabase());
+                val allData = jed.hgetAll(config.getGroupsKey());
                 allData.forEach((groupID, groupJsonObject) -> this.groups.put(groupID, JsonData.GSON.fromJson(groupJsonObject, Group.class)));
 
                 val defaultGroup = manager.getConfigFile().getDefaultGroup();
@@ -94,8 +90,9 @@ public class RedisStorage extends Storage {
     public void saveUser(String nickName, User user) {
         CompletableFuture.runAsync(()-> {
             try (Jedis jed = this.redisPool.getRedis()) {
-                jed.select(this.redisConfig.getDatabase());
-                jed.hset(this.redisConfig.getUsersKey(), nickName, JsonData.GSON.toJson(user));
+                val config = manager.getConfigFile().getRedisSettings();
+                jed.select(config.getDatabase());
+                jed.hset(config.getUsersKey(), nickName, JsonData.GSON.toJson(user));
             } catch (Exception e) {
                 throw new RuntimeException("Error while save user " + nickName + " data", e);
             }
@@ -111,8 +108,9 @@ public class RedisStorage extends Storage {
         if (group == null) return;
         CompletableFuture.runAsync(()-> {
             try (Jedis jed = this.redisPool.getRedis()) {
-                jed.select(this.redisConfig.getDatabase());
-                jed.hset(this.redisConfig.getGroupsKey(), groupID, JsonData.GSON.toJson(group));
+                val config = manager.getConfigFile().getRedisSettings();
+                jed.select(config.getDatabase());
+                jed.hset(config.getGroupsKey(), groupID, JsonData.GSON.toJson(group));
             } catch (Exception e) {
                 throw new RuntimeException("Error while save group " + groupID + " data", e);
             }
@@ -140,8 +138,9 @@ public class RedisStorage extends Storage {
 
     private User loadUser(String nickName) {
         try (Jedis jed = this.redisPool.getRedis()) {
-            jed.select(this.redisConfig.getDatabase());
-            val userData = jed.hget(this.redisConfig.getUsersKey(), nickName);
+            val config = manager.getConfigFile().getRedisSettings();
+            jed.select(config.getDatabase());
+            val userData = jed.hget(config.getUsersKey(), nickName);
             return JsonData.GSON.fromJson(userData, User.class);
         } catch (Exception e) {
             throw new RuntimeException("Error while load user data for " + nickName, e);
@@ -238,9 +237,10 @@ public class RedisStorage extends Storage {
         }
         CompletableFuture.runAsync(()-> {
             try (Jedis jed = this.redisPool.getRedis()) {
-                jed.select(this.redisConfig.getDatabase());
-                if (jed.hexists(this.redisConfig.getUsersKey(), nickName)) {
-                    jed.hdel(this.redisConfig.getUsersKey(), nickName);
+                val config = manager.getConfigFile().getRedisSettings();
+                jed.select(config.getDatabase());
+                if (jed.hexists(config.getUsersKey(), nickName)) {
+                    jed.hdel(config.getUsersKey(), nickName);
                     this.broadcastUpdatePacket(new MessageData(nickName, MessageType.USER_DELETE));
                 }
             } catch (Exception e) {
@@ -320,9 +320,10 @@ public class RedisStorage extends Storage {
         this.groups.remove(groupID);
         CompletableFuture.runAsync(()-> {
             try (Jedis jed = this.redisPool.getRedis()) {
-                jed.select(this.redisConfig.getDatabase());
-                if (jed.hexists(this.redisConfig.getGroupsKey(), groupID)) {
-                    jed.hdel(this.redisConfig.getGroupsKey(), groupID);
+                val config = manager.getConfigFile().getRedisSettings();
+                jed.select(config.getDatabase());
+                if (jed.hexists(config.getGroupsKey(), groupID)) {
+                    jed.hdel(config.getGroupsKey(), groupID);
                     this.broadcastUpdatePacket(new MessageData(groupID, MessageType.GROUP_DELETE));
                 }
             } catch (Exception e) {
@@ -340,8 +341,9 @@ public class RedisStorage extends Storage {
         this.groups.put(groupID, newGroup);
         CompletableFuture.runAsync(()-> {
             try (Jedis jed = this.redisPool.getRedis()) {
-                jed.select(this.redisConfig.getDatabase());
-                jed.hset(this.redisConfig.getGroupsKey(), groupID, JsonData.GSON.toJson(newGroup));
+                val config = manager.getConfigFile().getRedisSettings();
+                jed.select(config.getDatabase());
+                jed.hset(config.getGroupsKey(), groupID, JsonData.GSON.toJson(newGroup));
                 this.broadcastUpdatePacket(new MessageData(newGroup, MessageType.GROUP_UPDATE));
             } catch (Exception e) {
                 throw new RuntimeException("Error while delete group " + groupID + " data", e);
@@ -362,8 +364,9 @@ public class RedisStorage extends Storage {
     public Collection<User> getAllUsersData() {
         Set<User> users = new HashSet<>();
         try (Jedis jed = this.redisPool.getRedis()) {
-            jed.select(this.redisConfig.getDatabase());
-            val usersData = jed.hgetAll(this.redisConfig.getUsersKey()).values();
+            val config = manager.getConfigFile().getRedisSettings();
+            jed.select(config.getDatabase());
+            val usersData = jed.hgetAll(config.getUsersKey()).values();
             for (String data : usersData) {
                 users.add(JsonData.GSON.fromJson(data, User.class));
             }
@@ -378,8 +381,9 @@ public class RedisStorage extends Storage {
     public Collection<Group> getAllGroupsData() {
         Set<Group> groups = new HashSet<>();
         try (Jedis jed = this.redisPool.getRedis()) {
-            jed.select(this.redisConfig.getDatabase());
-            val groupsData = jed.hgetAll(this.redisConfig.getGroupsKey()).values();
+            val config = manager.getConfigFile().getRedisSettings();
+            jed.select(config.getDatabase());
+            val groupsData = jed.hgetAll(config.getGroupsKey()).values();
             for (String data : groupsData) {
                 groups.add(JsonData.GSON.fromJson(data, Group.class));
             }
@@ -387,6 +391,40 @@ public class RedisStorage extends Storage {
             throw new RuntimeException("Error while get all groups data", e);
         }
         return Collections.unmodifiableCollection(groups);
+    }
+
+    @Override
+    public void importUsersData(Collection<User> users) {
+        try (Jedis jed = this.redisPool.getRedis()) {
+            val config = manager.getConfigFile().getRedisSettings();
+            jed.select(config.getDatabase());
+            Pipeline pip = jed.pipelined();
+            Map<String, String> usersData = new HashMap<>();
+            for (User user : users) {
+                usersData.put(user.getPlayerName(), JsonData.GSON.toJson(user));
+            }
+            pip.hmset(config.getUsersKey(), usersData);
+            pip.sync();
+        } catch (Exception e) {
+            throw new RuntimeException("Error while import users data", e);
+        }
+    }
+
+    @Override
+    public void importGroupsData(Collection<Group> groups) {
+        try (Jedis jed = this.redisPool.getRedis()) {
+            val config = manager.getConfigFile().getRedisSettings();
+            jed.select(config.getDatabase());
+            Pipeline pip = jed.pipelined();
+            Map<String, String> groupsData = new HashMap<>();
+            for (Group group : groups) {
+                groupsData.put(group.getGroupID(), JsonData.GSON.toJson(group));
+            }
+            pip.hmset(config.getGroupsKey(), groupsData);
+            pip.sync();
+        } catch (Exception e) {
+            throw new RuntimeException("Error while import groups data", e);
+        }
     }
 
     @Override
