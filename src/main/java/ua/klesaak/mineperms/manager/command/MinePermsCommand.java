@@ -411,7 +411,7 @@ public final class MinePermsCommand {
 
     private void onExport(IMPCommandSource commandSource, String label, String[] args) {
         if (args.length != 2)  {
-            commandSource.sendMessage("§6/" + label +" export <backend> - export data from another backend.");
+            commandSource.sendMessage("§6/" + label + " export <backend> - export data from current backend to another backend.");
             return;
         }
         val backend = args[1].toUpperCase();
@@ -424,10 +424,14 @@ public final class MinePermsCommand {
             commandSource.sendMessage("§cCurrent backend: §6" + this.manager.getConfigFile().getStorageType().toString());
             return;
         }
+        if (storageType.equals(this.manager.getConfigFile().getStorageType())) {
+            commandSource.sendMessage("§cYou can't export data from current backend to current :-/");
+            return;
+        }
         long start = System.currentTimeMillis();
         commandSource.sendMessage("§cStart exporting data...");
         commandSource.sendMessage("§cPlease don't using commands...");
-        switch (storageType) {//todo БАГ: при инициализации БД - она загружает свои группы в уже существующий кеш, нужно фикс!!
+        switch (storageType) {
             case FILE: {
                 newStorage = new FileStorage(this.manager);
                 break;

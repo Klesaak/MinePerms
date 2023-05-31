@@ -22,10 +22,10 @@ public class RedisStorage extends Storage {
     public RedisStorage(MinePermsManager manager) {
         super(manager);
         this.redisPool = new RedisPool(manager.getConfigFile().getRedisSettings());
-        this.init();
     }
 
-    private void init() {
+    @Override
+    public void init() {
         CompletableFuture.runAsync(() -> {
             try (Jedis jed = this.redisPool.getRedis()) {
                 val config = manager.getConfigFile().getRedisSettings();

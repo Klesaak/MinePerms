@@ -55,6 +55,7 @@ public final class MinePermsManager {
                 this.storage = new FileStorage(this);
             }
         }
+        this.storage.init();
     }
 
     public boolean hasPermission(String nickName, String permission) {

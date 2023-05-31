@@ -23,7 +23,10 @@ public class FileStorage extends Storage {
         val pluginDataFolder = configFile.getPluginDataFolder();
         this.groupsFile = new JsonData(new File(pluginDataFolder, "groups.json"));
         this.usersFile = new JsonData(new File(pluginDataFolder, "users.json"));
+    }
 
+    public void init() {
+        val configFile = this.manager.getConfigFile();
         if (this.groupsFile.getFile().length() > 0L) {
             Collection<Group> dataCollection = this.groupsFile.readAll(new TypeToken<Collection<Group>>() {});
             dataCollection.forEach(group -> this.groups.put(group.getGroupID(), group));

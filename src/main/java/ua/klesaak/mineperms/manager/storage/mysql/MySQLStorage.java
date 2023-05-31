@@ -37,10 +37,14 @@ public class MySQLStorage extends Storage {
         } catch (SQLException ex) {
             throw new RuntimeException("Error while init MySQL", ex);
         }
+        this.createUsersTable(config);
+        this.createGroupsTable(config);
+        this.connectionSource.setTestBeforeGet(true);
+    }
+
+    @Override
+    public void init() {
         CompletableFuture.runAsync(() -> {
-            this.createUsersTable(config);
-            this.createGroupsTable(config);
-            this.connectionSource.setTestBeforeGet(true);
             try {
                 val allData = this.groupDataDao.queryForAll();
                 allData.forEach(group -> {
@@ -484,16 +488,37 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void importUsersData(Collection<User> users) {
-        //todo
+        Collection<User> convertedUsers = new ArrayList<>();
+        for (User user : users) {
+            user.serializePerms();
+            convertedUsers.add(user);
+        }
+        try {
+            this.userDataDao.create(convertedUsers);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while import all users data", e);
+        }
     }
 
     @Override
     public void importGroupsData(Collection<Group> groups) {
-        //todo
+        Collection<Group> convertedGroups = new ArrayList<>();
+        for (Group group : groups) {
+            group.serializePerms();
+            group.serializeParents();
+            convertedGroups.add(group);
+        }
+        try {
+            this.groupDataDao.create(convertedGroups);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while import all groups data", e);
+        }
     }
 
     @Override
     public void close() {
+        this.userDataDao = null;
+        this.groupDataDao = null;
         this.connectionSource.closeQuietly();
     }
 }

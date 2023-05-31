@@ -37,6 +37,7 @@ public abstract class Storage {
         if (this.redisMessenger != null) this.redisMessenger.sendOutgoingMessage(messageData);
     }
 
+    public abstract void init();
     public abstract void cacheUser(String nickName);
     public abstract void unCacheUser(String nickName);
     public abstract void saveUser(String nickName);
