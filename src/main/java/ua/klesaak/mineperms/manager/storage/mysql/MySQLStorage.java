@@ -452,7 +452,8 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void updateGroup(String groupID, Group group) {
-        this.groups.put(groupID, group); //не проверяем потому что может быть факт создания группы
+        if (this.groups.get(groupID) == null) return;
+        this.groups.put(groupID, group);
         this.recalculateUsersPermissions();
     }
 
