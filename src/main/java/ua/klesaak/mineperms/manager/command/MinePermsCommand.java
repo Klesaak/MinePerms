@@ -448,7 +448,8 @@ public final class MinePermsCommand {
         val groups = this.manager.getStorage().getAllGroupsData();
         newStorage.importUsersData(users);
         newStorage.importGroupsData(groups);
-        commandSource.sendMessage("§aExporting" + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+        commandSource.sendMessage("§aExporting complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+        commandSource.sendMessage("§aTo cross the §6" + storageType + "§a backend, you must change field 'storageType' in file config.json and restart you server!");
         newStorage.close();
     }
 
