@@ -144,5 +144,27 @@
             <artifactId>jedis</artifactId>
             <version>4.4.0</version>
         </dependency>
+
+        <!-- Perms -->
+        <dependency>
+            <groupId>ru.Den_Abr</groupId>
+            <artifactId>simpleperms</artifactId>
+            <version>2.9</version>
+            <scope>system</scope>
+            <systemPath>D:/EclipseWS/SimplePerms29.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>ru.tehkode</groupId>
+            <artifactId>PermissionsEx</artifactId>
+            <version>1.23.4</version>
+            <scope>system</scope>
+            <systemPath>D:/EclipseWS/PermissionsEx-1.23.4.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+            <version>5.4</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
