@@ -48,13 +48,10 @@ public class RedisStorage extends Storage {
 
     @Override
     public void cacheUser(String nickName) { //todo поместить в евенты(Velocity)!
-        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.getUser(nickName);
+        val tempUser = this.temporalUsersCache.getIfPresent(nickName);
+        User user = tempUser != null ? tempUser : this.getUser(nickName);
         if (!this.manager.getConfigFile().isUseRedisPubSub()) { //загружаем игрока из бд при каждом заходе, чтобы была актуальность данных!
-            user = CompletableFuture.supplyAsync(() -> this.loadUser(nickName))
-                    .exceptionally(throwable -> {
-                        throwable.printStackTrace();
-                        return null;
-                    }).join();
+            user = this.loadUser(nickName).join();
         }
         if (user != null) {
             user.recalculatePermissions(this.groups);
@@ -80,7 +77,8 @@ public class RedisStorage extends Storage {
 
     @Override
     public void saveUser(String nickName) {
-        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.users.get(nickName);
+        val tempUser = this.temporalUsersCache.getIfPresent(nickName);
+        User user = tempUser != null ? tempUser : this.users.get(nickName);
         if (user != null) {
             this.saveUser(nickName, user);
         }
@@ -122,13 +120,10 @@ public class RedisStorage extends Storage {
 
     @Override
     public User getUser(String nickName) {
-        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.users.get(nickName);
+        val tempUser = this.temporalUsersCache.getIfPresent(nickName);
+        User user = tempUser != null ? tempUser : this.users.get(nickName);
         if (user != null) return user;
-        user = CompletableFuture.supplyAsync(() -> this.loadUser(nickName))
-                .exceptionally(throwable -> {
-                    throwable.printStackTrace();
-                    return null;
-                }).join();
+        user = this.loadUser(nickName).join();
         if (user != null) {
             this.temporalUsersCache.put(nickName, user);
             user.recalculatePermissions(this.groups);
@@ -136,15 +131,20 @@ public class RedisStorage extends Storage {
         return user;
     }
 
-    private User loadUser(String nickName) {
-        try (Jedis jed = this.redisPool.getRedis()) {
-            val config = manager.getConfigFile().getRedisSettings();
-            jed.select(config.getDatabase());
-            val userData = jed.hget(config.getUsersKey(), nickName);
-            return JsonData.GSON.fromJson(userData, User.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while load user data for " + nickName, e);
-        }
+    private CompletableFuture<User> loadUser(String nickName) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Jedis jed = this.redisPool.getRedis()) {
+                val config = manager.getConfigFile().getRedisSettings();
+                jed.select(config.getDatabase());
+                val userData = jed.hget(config.getUsersKey(), nickName);
+                return JsonData.GSON.fromJson(userData, User.class);
+            } catch (Exception e) {
+                throw new RuntimeException("Error while load user data for " + nickName, e);
+            }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     @Override

@@ -8,7 +8,6 @@ import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
 import com.j256.ormlite.table.DatabaseTableConfig;
 import com.j256.ormlite.table.TableUtils;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Group;
@@ -156,13 +155,10 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void cacheUser(String nickName) {
-        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.getUser(nickName);
+        val tempUser = this.temporalUsersCache.getIfPresent(nickName);
+        User user = tempUser != null ? tempUser : this.getUser(nickName);
         if (!this.manager.getConfigFile().isUseRedisPubSub()) { //загружаем игрока из бд при каждом заходе, чтобы была актуальность данных!
-            user = CompletableFuture.supplyAsync(() -> this.loadUser(nickName))
-                    .exceptionally(throwable -> {
-                        throwable.printStackTrace();
-                        return null;
-                    }).join();
+            user = this.loadUser(nickName).join();
         }
         if (user != null) {
             user.recalculatePermissions(this.groups);
@@ -187,7 +183,8 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void saveUser(String nickName) {
-        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.users.get(nickName);
+        val tempUser = this.temporalUsersCache.getIfPresent(nickName);
+        User user = tempUser != null ? tempUser : this.users.get(nickName);
         if (user != null) {
             this.saveUser(nickName, user);
         }
@@ -230,13 +227,10 @@ public class MySQLStorage extends Storage {
 
     @Override
     public User getUser(String nickName) {
-        User user = this.temporalUsersCache.getIfPresent(nickName) != null ? this.temporalUsersCache.getIfPresent(nickName) : this.users.get(nickName);
+        val tempUser = this.temporalUsersCache.getIfPresent(nickName);
+        User user = tempUser != null ? tempUser : this.users.get(nickName);
         if (user != null) return user;
-        user = CompletableFuture.supplyAsync(() -> this.loadUser(nickName))
-                .exceptionally(throwable -> {
-                    throwable.printStackTrace();
-                    return null;
-                }).join();
+        user = this.loadUser(nickName).join();
         if (user != null) {
             this.temporalUsersCache.put(nickName, user);
             user.recalculatePermissions(this.groups);
@@ -244,11 +238,19 @@ public class MySQLStorage extends Storage {
         return user;
     }
 
-    @SneakyThrows(SQLException.class)
-    private User loadUser(String nickName) {
-        User user = this.userDataDao.queryForId(nickName);
-        if (user != null) user.convert();
-        return user;
+    private CompletableFuture<User> loadUser(String nickName) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                User user = this.userDataDao.queryForId(nickName);
+                if (user != null) user.convert();
+                return user;
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while load user " + nickName + " data", e);
+            }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     @Override
