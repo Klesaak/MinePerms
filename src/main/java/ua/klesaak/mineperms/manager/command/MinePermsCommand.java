@@ -5,6 +5,10 @@ import com.google.common.base.Preconditions;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.config.StorageType;
+import ua.klesaak.mineperms.manager.migration.IMigrationPlugin;
+import ua.klesaak.mineperms.manager.migration.LPMigration;
+import ua.klesaak.mineperms.manager.migration.PEXMigration;
+import ua.klesaak.mineperms.manager.migration.SpermMigration;
 import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
@@ -18,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 public final class MinePermsCommand {
     public static final String MAIN_PERMISSION = "mineperms.admin";
 
-    public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "find", "export");
+    public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "find", "export", "migrate");
     public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "set-group", "delete", "prefix",
             "suffix", "clear-prefix", "clear-suffix");
     public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "delete", "prefix",
@@ -28,6 +32,7 @@ public final class MinePermsCommand {
     public static final List<String> FIND_SUB_COMMANDS_1 = Arrays.asList("permission", "parent-group");
 
     public static final List<String> EXPORT_SUB_COMMANDS = Arrays.asList("file", "mysql", "redis");
+    public static final List<String> MIGRATE_SUB_COMMANDS = Arrays.asList("simpleperms", "pex", "luckperms");
     private final MinePermsManager manager;
 
     public MinePermsCommand(MinePermsManager manager) {
@@ -36,12 +41,13 @@ public final class MinePermsCommand {
 
     public void invoke(IMPCommandSource commandSource, String label, String[] args) {
         if (args.length == 0) {
-            commandSource.sendMessage("§6MinePerms by Klesaak §cv1.0");
+            commandSource.sendMessage("§6MinePerms by Klesaak §cv1.0 - BETA");
             commandSource.sendMessage("");
             commandSource.sendMessage("§6/" + label + " user - user operations command.");
             commandSource.sendMessage("§6/" + label + " group - group operations command.");
             commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|parent-group> <identifier> - find user/group with special permission/group command.");
             commandSource.sendMessage("§6/" + label + " export <backend> - export data from current backend to another backend.");
+            commandSource.sendMessage("§6/" + label + " migrate <simpleperms|pex|luckperms> - migrate data from another perm-plugin to current backend.");
             return;
         }
         Storage storage = this.manager.getStorage();
@@ -405,8 +411,51 @@ public final class MinePermsCommand {
                 });
                 return;
             }
+            case "migrate": {
+                CompletableFuture.runAsync(()-> this.onMigrate(commandSource, label, args)).exceptionally(throwable -> {
+                    commandSource.sendMessage("§cError while migrate data: " + throwable.getMessage());
+                    return null;
+                });
+                return;
+            }
         }
         commandSource.sendMessage("§cUnknown operation.");
+    }
+
+    private void onMigrate(IMPCommandSource commandSource, String label, String[] args) {
+        if (args.length != 2)  {
+            commandSource.sendMessage("§6/" + label + " migrate <simpleperms|pex|luckperms> - migrate data from another perm-plugin to current backend.");
+            return;
+        }
+        val plugin = args[1].toLowerCase();
+        commandSource.sendMessage("§cStart migrating data...");
+        commandSource.sendMessage("§cPlease don't use commands...");
+        long start = System.currentTimeMillis();
+        IMigrationPlugin migrationPlugin;
+        switch (plugin) {
+            case "simpleperms": {
+                migrationPlugin = new SpermMigration();
+                break;
+            }
+            case "pex": {
+                migrationPlugin = new PEXMigration();
+                break;
+            }
+            case "luckperms": {
+                migrationPlugin = new LPMigration();
+                break;
+            }
+            default: {
+                migrationPlugin = new SpermMigration();
+            }
+        }
+        val usersCollection = migrationPlugin.getAllUsers();
+        val groupsCollection = migrationPlugin.getAllGroups();
+        val storage = this.manager.getStorage();
+        storage.importUsersData(usersCollection);
+        storage.importGroupsData(groupsCollection);
+        commandSource.sendMessage("§aMigrating complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+        commandSource.sendMessage("§aYou must delete old permission plugin and restart your server!");
     }
 
     private void onExport(IMPCommandSource commandSource, String label, String[] args) {
@@ -430,7 +479,7 @@ public final class MinePermsCommand {
         }
         long start = System.currentTimeMillis();
         commandSource.sendMessage("§cStart exporting data...");
-        commandSource.sendMessage("§cPlease don't using commands...");
+        commandSource.sendMessage("§cPlease don't use commands...");
         switch (storageType) {
             case FILE: {
                 newStorage = new FileStorage(this.manager);
@@ -592,6 +641,11 @@ public final class MinePermsCommand {
         if (args[0].equalsIgnoreCase("export")) {
             if (args.length == 2) {
                 return this.copyPartialMatches(args[1].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
+            }
+        }
+        if (args[0].equalsIgnoreCase("migrate")) {
+            if (args.length == 2) {
+                return this.copyPartialMatches(args[1].toLowerCase(), MIGRATE_SUB_COMMANDS, new ArrayList<>());
             }
         }
         return Collections.emptyList();
