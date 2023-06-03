@@ -29,7 +29,7 @@ public abstract class Storage {
     public Storage(MinePermsManager manager) {
         this.manager = manager;
         if (manager.getConfigFile().isUseRedisPubSub()) {
-            this.redisMessenger = new RedisMessenger(this, new RedisPool(manager.getConfigFile().getRedisSettings()));
+            this.redisMessenger = new RedisMessenger(manager, this);
         }
     }
 

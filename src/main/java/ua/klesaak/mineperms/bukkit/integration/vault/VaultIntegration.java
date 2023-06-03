@@ -3,6 +3,7 @@ package ua.klesaak.mineperms.bukkit.integration.vault;
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
 
@@ -20,12 +21,17 @@ public class VaultIntegration {
         plugin.getServer().getServicesManager().register(Permission.class, this.permissionImpl, plugin, ServicePriority.High);
         plugin.getServer().getServicesManager().register(Chat.class, this.chatImpl, plugin, ServicePriority.High);
         plugin.getLogger().info("Overriding Vault Permission and Chat service...");
-        plugin.getLogger().info("Chat: " + (Objects.requireNonNull(Bukkit.getServicesManager().getRegistration(Chat.class)).getProvider()).getName());
-        plugin.getLogger().info("Permission: " + (Objects.requireNonNull(Bukkit.getServicesManager().getRegistration(Permission.class)).getProvider()).getName());
+        plugin.getLogger().info("Chat: " + Objects.requireNonNull(this.getProvider(Chat.class)).getName());
+        plugin.getLogger().info("Permission: " + Objects.requireNonNull(this.getProvider(Permission.class)).getName());
     }
 
     public void unload() {
         this.plugin.getServer().getServicesManager().unregister(this.permissionImpl);
         this.plugin.getServer().getServicesManager().unregister(this.chatImpl);
+    }
+
+    private <P> P getProvider(Class<P> clazz) {
+        RegisteredServiceProvider<P> provider = Bukkit.getServer().getServicesManager().getRegistration(clazz);
+        return (provider != null) ? provider.getProvider() : null;
     }
 }

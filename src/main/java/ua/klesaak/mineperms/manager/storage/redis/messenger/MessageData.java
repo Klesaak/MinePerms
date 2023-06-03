@@ -10,24 +10,28 @@ import java.util.UUID;
 @Setter
 public class MessageData {
     private final String object;
+    private final String subChannel;
     private final MessageType messageType;
 
-    ///UUID для того, чтобы дать уникальность обьекту MessageData и он не принимал сам себя, входя в рекурсию.
+    ///UUID для того, чтобы дать уникальность объекту MessageData и он не принимал сам себя, входя в рекурсию.
     private UUID uuid;
 
-    public MessageData(User user, MessageType messageType) {
+    public MessageData(User user, MessageType messageType, String subChannel) {
         this.object = JsonData.GSON.toJson(user);
         this.messageType = messageType;
+        this.subChannel = subChannel;
     }
 
-    public MessageData(Group group, MessageType messageType) {
+    public MessageData(Group group, MessageType messageType, String subChannel) {
         this.object = JsonData.GSON.toJson(group);
         this.messageType = messageType;
+        this.subChannel = subChannel;
     }
 
-    public MessageData(String data, MessageType messageType) {
+    public MessageData(String data, MessageType messageType, String subChannel) {
         this.object = data;
         this.messageType = messageType;
+        this.subChannel = subChannel;
     }
 
     public User getUserObject() {
@@ -52,6 +56,10 @@ public class MessageData {
 
     public String toJson() {
         return JsonData.GSON.toJson(this);
+    }
+
+    public String getSubChannel() {
+        return subChannel;
     }
 
     public static MessageData fromJson(String data) {

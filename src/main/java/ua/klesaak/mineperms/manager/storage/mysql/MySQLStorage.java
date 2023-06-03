@@ -273,14 +273,15 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void addUserPermission(String nickName, String permission) {
+        val config = this.manager.getConfigFile();
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+            user = new User(nickName, config.getDefaultGroup());
             this.temporalUsersCache.put(nickName, user);
         }
         user.addPermission(permission);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getMySQLSettings().getUsersTable()));
     }
 
     @Override
@@ -289,38 +290,41 @@ public class MySQLStorage extends Storage {
         if (user == null) return;
         user.removePermission(permission);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, this.manager.getConfigFile().getMySQLSettings().getUsersTable()));
     }
 
     @Override
     public void setUserPrefix(String nickName, String prefix) {
+        val config = this.manager.getConfigFile();
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+            user = new User(nickName, config.getDefaultGroup());
             this.temporalUsersCache.put(nickName, user);
         }
         user.setPrefix(prefix);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getMySQLSettings().getUsersTable()));
     }
 
     @Override
     public void setUserSuffix(String nickName, String suffix) {
+        val config = this.manager.getConfigFile();
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+            user = new User(nickName, config.getDefaultGroup());
             this.temporalUsersCache.put(nickName, user);
         }
         user.setSuffix(suffix);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getMySQLSettings().getUsersTable()));
     }
 
     @Override
     public void setUserGroup(String nickName, String groupID) {
+        val config = this.manager.getConfigFile();
         User user = this.getUser(nickName);
         if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+            user = new User(nickName, config.getDefaultGroup());
             this.temporalUsersCache.put(nickName, user);
         }
         if (this.groups.get(groupID) != null) {
@@ -329,7 +333,7 @@ public class MySQLStorage extends Storage {
             user.recalculatePermissions(this.groups);
             this.manager.getEventManager().callGroupChangeEvent(user);
         }
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getMySQLSettings().getUsersTable()));
     }
 
     @Override
@@ -370,7 +374,7 @@ public class MySQLStorage extends Storage {
         group.addPermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -379,7 +383,7 @@ public class MySQLStorage extends Storage {
         group.removePermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -388,7 +392,7 @@ public class MySQLStorage extends Storage {
         group.addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -397,7 +401,7 @@ public class MySQLStorage extends Storage {
         group.removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -405,7 +409,7 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.setPrefix(prefix);
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -413,7 +417,7 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.setSuffix(suffix);
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE));
+        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -442,7 +446,7 @@ public class MySQLStorage extends Storage {
                 this.groupDataDao.createOrUpdate(newGroup);
                 newGroup.truncateSerializedPerms();
                 newGroup.truncateSerializedParents();
-                this.broadcastUpdatePacket(new MessageData(newGroup, MessageType.GROUP_UPDATE));
+                this.broadcastUpdatePacket(new MessageData(newGroup, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
             } catch (SQLException e) {
                 throw new RuntimeException("Error while create group " + groupID + " data", e);
             }
@@ -454,7 +458,6 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void updateGroup(String groupID, Group group) {
-        if (this.groups.get(groupID) == null) return;
         this.groups.put(groupID, group);
         this.recalculateUsersPermissions();
     }
