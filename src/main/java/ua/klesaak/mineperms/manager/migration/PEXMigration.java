@@ -36,6 +36,7 @@ public class PEXMigration implements IMigrationPlugin {
             mpUser.setPrefix(pexUser.getOwnPrefix());
             mpUser.setSuffix(pexUser.getOwnSuffix());
             userList.add(mpUser);
+            if (userList.size() % 500 == 0) System.out.println("Migrated " + userList.size() + " users!");
         }
         return userList;
     }
@@ -69,6 +70,7 @@ public class PEXMigration implements IMigrationPlugin {
             mpGroup.setPrefix(pexGroup.getOwnPrefix());
             mpGroup.setSuffix(pexGroup.getOwnSuffix());
             groupList.add(mpGroup);
+            if (groupList.size() % 10 == 0) System.out.println("Migrated " + groupList.size() + " groups!");
         }
         return groupList;
     }

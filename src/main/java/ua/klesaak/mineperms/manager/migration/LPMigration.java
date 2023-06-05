@@ -3,6 +3,7 @@ package ua.klesaak.mineperms.manager.migration;
 import lombok.val;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.node.Node;
 import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.InheritanceNode;
 import ua.klesaak.mineperms.manager.storage.Group;
@@ -33,18 +34,15 @@ public class LPMigration implements IMigrationPlugin {
             val lpUserCachedData = lpUser.getCachedData();
             val mpUser = new User(lpUser.getUsername(), lpUser.getPrimaryGroup());
             val permissions = new HashSet<String>();
-            /////////////////////////////////////////////////////////////////////////////////////////////
-            lpUserCachedData.getPermissionData().getPermissionMap().forEach((permission, aBoolean) -> {
-                if (aBoolean) permissions.add(permission);                  // TODO: 06.06.2023 fix добавляются наследованные от групп права!!!
-            });
-            /////////////////////////////////////////////////////////////////////////////////////////////
+            List<Node> nodes = new ArrayList<>(lpUser.getNodes());
+            nodes.removeIf(NodeType.INHERITANCE.predicate(n -> n.getValue() && this.luckPerms.getGroupManager().isLoaded(n.getGroupName()))
+                    .or(NodeType.META_OR_CHAT_META.predicate()));
+            nodes.forEach(permissionNode -> permissions.add(permissionNode.getKey()));
             mpUser.setPermissions(permissions);
-            mpUser.setPrefix(lpUserCachedData.getMetaData().getPrefix());
-            mpUser.setSuffix(lpUserCachedData.getMetaData().getSuffix());
+            mpUser.setPrefix(lpUserCachedData.getMetaData().getPrefix());// TODO: 06.06.2023  fix добавляются наследованные от групп!!!
+            mpUser.setSuffix(lpUserCachedData.getMetaData().getSuffix()); // TODO: 06.06.2023  fix добавляются наследованные от групп!!!
             userList.add(mpUser);
-            if (userList.size() % 500 == 0) {
-                //todo сообщение в лог
-            }
+            if (userList.size() % 500 == 0) System.out.println("Migrated " + userList.size() + " users!");
         }
         return userList;
     }
@@ -73,9 +71,7 @@ public class LPMigration implements IMigrationPlugin {
             mpGroup.setPrefix(lpGroupCachedData.getMetaData().getPrefix());
             mpGroup.setSuffix(lpGroupCachedData.getMetaData().getSuffix());
             groupList.add(mpGroup);
-            if (groupList.size() % 10 == 0) {
-                //todo сообщение в лог
-            }
+            if (groupList.size() % 10 == 0) System.out.println("Migrated " + groupList.size() + " groups!");
         }
         return groupList;
     }

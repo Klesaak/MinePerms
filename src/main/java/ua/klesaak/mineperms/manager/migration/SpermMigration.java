@@ -30,6 +30,7 @@ public class SpermMigration implements IMigrationPlugin {
             mpUser.setPrefix(spermUser.getPrefix() == null ? "" : spermUser.getPrefix());
             mpUser.setSuffix(spermUser.getSuffix() == null ? "" : spermUser.getSuffix());
             userList.add(mpUser);
+            if (userList.size() % 500 == 0) System.out.println("Migrated " + userList.size() + " users!");
         }
         return userList;
     }
@@ -44,6 +45,7 @@ public class SpermMigration implements IMigrationPlugin {
             mpGroup.setPrefix(spermGroup.getPrefix() == null ? "" : spermGroup.getPrefix());
             mpGroup.setSuffix(spermGroup.getSuffix() == null ? "" : spermGroup.getSuffix());
             groupList.add(mpGroup);
+            if (groupList.size() % 10 == 0) System.out.println("Migrated " + groupList.size() + " groups!");
         }
         return groupList;
     }

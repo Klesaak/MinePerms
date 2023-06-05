@@ -449,11 +449,11 @@ public final class MinePermsCommand {
                 migrationPlugin = new SpermMigration();
             }
         }
-        val usersCollection = migrationPlugin.getAllUsers();
         val groupsCollection = migrationPlugin.getAllGroups();
         val storage = this.manager.getStorage();
-        storage.importUsersData(usersCollection);
         storage.importGroupsData(groupsCollection);
+        val usersCollection = migrationPlugin.getAllUsers();
+        storage.importUsersData(usersCollection);
         commandSource.sendMessage("§aMigrating complete! (" + (System.currentTimeMillis() - start) + "ms.)");
         commandSource.sendMessage("§aYou must delete old permission plugin and restart your server!");
     }
