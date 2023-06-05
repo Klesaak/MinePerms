@@ -94,6 +94,14 @@ public class User {
         this.truncateSerializedPerms();
     }
 
+    public void setPrefix(String prefix) {
+        this.prefix = prefix == null ? "": prefix;
+    }
+
+    public void setSuffix(String suffix) {
+        this.suffix = suffix == null ? "": suffix;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
