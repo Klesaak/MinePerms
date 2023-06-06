@@ -63,7 +63,7 @@ public class MinePermsBukkit extends JavaPlugin {
         }
         //Производим иньекцию онлайн игрокам, заменяя дефолтный оператор прав на оператор нашего плагина.
         CompletableFuture.runAsync(()-> {
-            //todo так же если есть игроки онлайн - загрузить их в кеш из бд
+            // TODO: 06.06.2023  так же если есть игроки онлайн - загрузить их в кеш из бд
             this.getServer().getOnlinePlayers().forEach(player -> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.minePermsManager, player)));
         }).exceptionally(throwable -> {
             throwable.printStackTrace();

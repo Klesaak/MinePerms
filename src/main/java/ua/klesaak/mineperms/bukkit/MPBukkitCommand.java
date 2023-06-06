@@ -34,7 +34,7 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
         List<String> onlinePlayers = new ArrayList<>(Bukkit.getMaxPlayers());
         Bukkit.getOnlinePlayers().forEach(player -> onlinePlayers.add(player.getName()));
-        return this.minePermsCommand.onTabComplete(label, onlinePlayers, args);
+        return this.minePermsCommand.onTabComplete(onlinePlayers, args);
     }
 
 }

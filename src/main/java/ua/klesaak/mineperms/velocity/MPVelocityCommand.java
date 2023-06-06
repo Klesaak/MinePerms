@@ -49,6 +49,6 @@ public final class MPVelocityCommand implements SimpleCommand {
     public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
         List<String> onlinePlayers = new ArrayList<>();
         this.minePermsVelocity.getServer().getAllPlayers().forEach(player -> onlinePlayers.add(player.getUsername()));
-        return CompletableFuture.completedFuture(this.minePermsCommand.onTabComplete(invocation.alias(), onlinePlayers, invocation.arguments()));
+        return CompletableFuture.completedFuture(this.minePermsCommand.onTabComplete(onlinePlayers, invocation.arguments()));
     }
 }

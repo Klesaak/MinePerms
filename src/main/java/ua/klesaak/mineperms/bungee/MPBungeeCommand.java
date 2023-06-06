@@ -29,6 +29,6 @@ public class MPBungeeCommand extends Command implements TabExecutor {
     public Iterable<String> onTabComplete(CommandSender commandSender, String[] args) {
         List<String> onlinePlayers = new ArrayList<>();
         ProxyServer.getInstance().getPlayers().forEach(pp -> onlinePlayers.add(pp.getName()));
-        return this.minePermsCommand.onTabComplete(this.getName(), onlinePlayers, args);
+        return this.minePermsCommand.onTabComplete(onlinePlayers, args);
     }
 }

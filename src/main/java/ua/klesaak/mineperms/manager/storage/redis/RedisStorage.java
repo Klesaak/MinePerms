@@ -46,7 +46,7 @@ public class RedisStorage extends Storage {
     }
 
     @Override
-    public void cacheUser(String nickName) { //todo поместить в евенты(Velocity)!
+    public void cacheUser(String nickName) { // TODO: 06.06.2023 поместить в евенты(Velocity)!
         val tempUser = this.temporalUsersCache.getIfPresent(nickName);
         User user = tempUser != null ? tempUser : this.getUser(nickName);
         if (!this.manager.getConfigFile().isUseRedisPubSub()) { //загружаем игрока из бд при каждом заходе, чтобы была актуальность данных!
@@ -69,7 +69,7 @@ public class RedisStorage extends Storage {
      * чтобы в случае быстрого перезахода игрока не тратить лишние ресурсы на его подгрузку из БД
      */
     @Override
-    public void unCacheUser(String nickName) { //todo поместить в евенты(Velocity)!
+    public void unCacheUser(String nickName) { // TODO: 06.06.2023 поместить в евенты(Velocity)!
         User user = this.users.remove(nickName);
         this.temporalUsersCache.put(nickName, user);
     }

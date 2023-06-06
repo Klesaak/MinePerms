@@ -393,7 +393,7 @@ public final class MinePermsCommand {
                 break;
             }
             case "reload": {
-                //todo reload method
+                // TODO: 06.06.2023 reload method
                 commandSource.sendMessage("§aMinePerms reload successful!");
                 return;
             }
@@ -591,7 +591,7 @@ public final class MinePermsCommand {
         }
     }
 
-    public List<String> onTabComplete(String label, Collection<String> onlinePlayers, String[] args) {
+    public List<String> onTabComplete(Collection<String> onlinePlayers, String[] args) {
         if (args.length == 0) return Collections.emptyList(); //fix Velocity termi-Anal error
         if (args.length == 1) {
             return this.copyPartialMatches(args[0].toLowerCase(), SUB_COMMANDS_0, new ArrayList<>());
