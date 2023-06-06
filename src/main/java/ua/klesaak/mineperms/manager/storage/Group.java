@@ -21,9 +21,6 @@ public class Group {
         this.groupID = groupID;
     }
 
-    protected Group() {
-    }
-
     public boolean hasPermission(String permission) {
         return Storage.hasPermission(this.permissions, permission);
     }

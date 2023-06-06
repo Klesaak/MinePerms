@@ -24,9 +24,6 @@ public class User {
         this.group = groupID;
     }
 
-    protected User() {
-    }
-
     public boolean hasPermission(String permission) {
         return Storage.hasPermission(this.calculatedPermissions, permission);
     }
