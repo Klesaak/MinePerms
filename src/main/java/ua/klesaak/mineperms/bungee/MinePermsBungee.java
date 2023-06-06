@@ -5,6 +5,7 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.plugin.Plugin;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.event.bungee.BungeeEventManager;
+import ua.klesaak.mineperms.manager.utils.Platform;
 
 @Getter
 public class MinePermsBungee extends Plugin {
@@ -13,7 +14,7 @@ public class MinePermsBungee extends Plugin {
     @Override
     public void onEnable() {
         long time = System.currentTimeMillis();
-        this.minePermsManager = new MinePermsManager();
+        this.minePermsManager = new MinePermsManager(Platform.BUNGEECORD);
         this.minePermsManager.loadConfig(this.getDataFolder());
         this.minePermsManager.initStorage();
         new MPBungeeCommand(this);

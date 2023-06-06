@@ -17,15 +17,11 @@ public class MessageData {
     private UUID uuid;
 
     public MessageData(User user, MessageType messageType, String subChannel) {
-        this.object = JsonData.GSON.toJson(user);
-        this.messageType = messageType;
-        this.subChannel = subChannel;
+        this(JsonData.GSON.toJson(user), messageType, subChannel);
     }
 
     public MessageData(Group group, MessageType messageType, String subChannel) {
-        this.object = JsonData.GSON.toJson(group);
-        this.messageType = messageType;
-        this.subChannel = subChannel;
+        this(JsonData.GSON.toJson(group), messageType, subChannel);
     }
 
     public MessageData(String data, MessageType messageType, String subChannel) {
@@ -64,5 +60,21 @@ public class MessageData {
 
     public static MessageData fromJson(String data) {
         return JsonData.GSON.fromJson(data, MessageData.class);
+    }
+
+    public static MessageData goUpdateUserPacket(User user, String subChannel) {
+        return new MessageData(user, MessageType.USER_UPDATE, subChannel);
+    }
+
+    public static MessageData goDeleteUserPacket(String user, String subChannel) {
+        return new MessageData(user, MessageType.USER_DELETE, subChannel);
+    }
+
+    public static MessageData goUpdateGroupPacket(Group group, String subChannel) {
+        return new MessageData(group , MessageType.GROUP_UPDATE, subChannel);
+    }
+
+    public static MessageData goDeleteGroupPacket(String group, String subChannel) {
+        return new MessageData(group, MessageType.GROUP_DELETE, subChannel);
     }
 }

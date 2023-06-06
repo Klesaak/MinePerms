@@ -1,13 +1,12 @@
 package ua.klesaak.mineperms.manager.storage;
 
-import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
-import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.utils.JsonData;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Getter @Setter
@@ -18,10 +17,6 @@ public class Group {
     private Set<String> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    ///Transient Data///
-    private transient String serializedInheritanceGroups; //костыль для ORMLite
-    private transient String serializedPerms; //костыль для ORMLite
-
     public Group(String groupID) {
         this.groupID = groupID;
     }
@@ -30,17 +25,7 @@ public class Group {
     }
 
     public boolean hasPermission(String permission) {
-        val permissionLowerCase = permission.toLowerCase();
-        if (this.permissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
-        if (!permissionLowerCase.contains(MinePermsManager.DOT_WILDCARD)) return this.permissions.contains(permissionLowerCase);
-        if (this.permissions.contains(permissionLowerCase)) return true;
-        String[] parts = permissionLowerCase.toLowerCase().split("\\.");
-        StringBuilder partsBuilder = new StringBuilder();
-        for (String part : parts) {
-            partsBuilder.append(part).append(MinePermsManager.DOT_WILDCARD);
-            if (this.permissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) return true;
-        }
-        return false;
+        return Storage.hasPermission(this.permissions, permission);
     }
 
     public boolean hasOwnPermission(String permission) {
@@ -76,31 +61,6 @@ public class Group {
         return group != null ? group.getGroupID() : "null";
     }
 
-    public void serializePerms() {
-        this.serializedPerms = JsonData.GSON.toJson(this.permissions);
-    }
-
-    public void truncateSerializedPerms() {
-        this.serializedPerms = null;
-    }
-
-    public void serializeParents() {
-        this.serializedInheritanceGroups = JsonData.GSON.toJson(this.inheritanceGroups);
-    }
-
-    public void truncateSerializedParents() {
-        this.serializedInheritanceGroups = null;
-    }
-
-    public void convert() {
-        this.inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        this.permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        this.permissions.addAll(JsonData.GSON.fromJson(this.serializedPerms, new TypeToken<Set<String>>(){}.getType()));
-        this.inheritanceGroups.addAll(JsonData.GSON.fromJson(this.serializedInheritanceGroups, new TypeToken<Set<String>>(){}.getType()));
-        this.truncateSerializedPerms();
-        this.truncateSerializedParents();
-    }
-
     public void setPrefix(String prefix) {
         this.prefix = prefix == null ? "": prefix;
     }
@@ -131,8 +91,6 @@ public class Group {
                 ", suffix='" + suffix + '\'' +
                 ", inheritanceGroups=" + inheritanceGroups +
                 ", permissions=" + permissions +
-                ", serializedInheritanceGroups='" + serializedInheritanceGroups + '\'' +
-                ", serializedPerms='" + serializedPerms + '\'' +
                 '}';
     }
 }

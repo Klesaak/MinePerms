@@ -14,7 +14,6 @@ import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
-import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageType;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -25,8 +24,8 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class MySQLStorage extends Storage {
     private final JdbcPooledConnectionSource connectionSource;
-    private Dao<User, String> userDataDao;
-    private Dao<Group, String> groupDataDao;
+    private Dao<UserData, String> userDataDao;
+    private Dao<GroupData, String> groupDataDao;
 
     public MySQLStorage(MinePermsManager manager) {
         super(manager);
@@ -46,11 +45,7 @@ public class MySQLStorage extends Storage {
         CompletableFuture.runAsync(() -> {
             try {
                 val allData = this.groupDataDao.queryForAll();
-                allData.forEach(group -> {
-                    group.convert();
-                    this.groups.put(group.getGroupID(), group);
-                });
-
+                allData.forEach(groupData -> this.groups.put(groupData.getGroupID(), groupData.getGroup()));
                 val defaultGroup = manager.getConfigFile().getDefaultGroup();
                 if (this.getGroup(defaultGroup) == null) {
                     this.createGroup(defaultGroup);
@@ -100,7 +95,7 @@ public class MySQLStorage extends Storage {
             permsField.setColumnName(DatabaseConstants.PERMISSIONS_COLUMN);
             usersFieldConfigs.add(permsField);
 
-            DatabaseTableConfig<User> usersTableConfig = new DatabaseTableConfig<>(User.class, config.getUsersTable(), usersFieldConfigs);
+            DatabaseTableConfig<UserData> usersTableConfig = new DatabaseTableConfig<>(UserData.class, config.getUsersTable(), usersFieldConfigs);
             this.userDataDao = DaoManager.createDao(this.connectionSource, usersTableConfig);
             TableUtils.createTableIfNotExists(this.connectionSource, usersTableConfig);
         } catch (SQLException ex) {
@@ -145,7 +140,7 @@ public class MySQLStorage extends Storage {
             permsField.setColumnName(DatabaseConstants.PERMISSIONS_COLUMN);
             groupsFiledConfigs.add(permsField);
 
-            DatabaseTableConfig<Group> groupsTableConfig = new DatabaseTableConfig<>(Group.class, config.getGroupsTable(), groupsFiledConfigs);
+            DatabaseTableConfig<GroupData> groupsTableConfig = new DatabaseTableConfig<>(GroupData.class, config.getGroupsTable(), groupsFiledConfigs);
             this.groupDataDao = DaoManager.createDao(this.connectionSource, groupsTableConfig);
             TableUtils.createTableIfNotExists(this.connectionSource, groupsTableConfig);
         } catch (SQLException ex) {
@@ -194,9 +189,7 @@ public class MySQLStorage extends Storage {
     public void saveUser(String nickName, User user) {
         CompletableFuture.runAsync(()-> {
             try {
-                user.serializePerms();
-                this.userDataDao.createOrUpdate(user);
-                user.truncateSerializedPerms();
+                this.userDataDao.createOrUpdate(new UserData(user));
             } catch (SQLException ex) {
                 throw new RuntimeException("Error while save user data " + nickName, ex);
             }
@@ -211,11 +204,7 @@ public class MySQLStorage extends Storage {
         val group = this.groups.get(groupID);
         CompletableFuture.runAsync(()-> {
             try {
-                group.serializePerms();
-                group.serializeParents();
-                this.groupDataDao.createOrUpdate(group);
-                group.truncateSerializedPerms();
-                group.truncateSerializedParents();
+                this.groupDataDao.createOrUpdate(new GroupData(group));
             } catch (SQLException ex) {
                 throw new RuntimeException("Error while save group data " + groupID, ex);
             }
@@ -241,9 +230,9 @@ public class MySQLStorage extends Storage {
     private CompletableFuture<User> loadUser(String nickName) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                User user = this.userDataDao.queryForId(nickName);
-                if (user != null) user.convert();
-                return user;
+                UserData userData = this.userDataDao.queryForId(nickName);
+                if (userData == null) return null;
+                return userData.getUser();
             } catch (SQLException e) {
                 throw new RuntimeException("Error while load user " + nickName + " data", e);
             }
@@ -281,7 +270,7 @@ public class MySQLStorage extends Storage {
         }
         user.addPermission(permission);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getMySQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getMySQLSettings().getUsersTable()));
     }
 
     @Override
@@ -290,7 +279,7 @@ public class MySQLStorage extends Storage {
         if (user == null) return;
         user.removePermission(permission);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, this.manager.getConfigFile().getMySQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, this.manager.getConfigFile().getMySQLSettings().getUsersTable()));
     }
 
     @Override
@@ -303,7 +292,7 @@ public class MySQLStorage extends Storage {
         }
         user.setPrefix(prefix);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getMySQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getMySQLSettings().getUsersTable()));
     }
 
     @Override
@@ -316,7 +305,7 @@ public class MySQLStorage extends Storage {
         }
         user.setSuffix(suffix);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getMySQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getMySQLSettings().getUsersTable()));
     }
 
     @Override
@@ -333,12 +322,13 @@ public class MySQLStorage extends Storage {
             user.recalculatePermissions(this.groups);
             this.manager.getEventManager().callGroupChangeEvent(user);
         }
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getMySQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getMySQLSettings().getUsersTable()));
     }
 
     @Override
     public void deleteUser(String nickName) {
-        val newUser = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+        val config = this.manager.getConfigFile();
+        val newUser = new User(nickName, config.getDefaultGroup());
         if (this.users.get(nickName) != null) {
             this.users.put(nickName, newUser);
         }
@@ -348,6 +338,7 @@ public class MySQLStorage extends Storage {
         CompletableFuture.runAsync(()-> {
             try {
                 this.userDataDao.deleteById(nickName);
+                this.broadcastPacket(MessageData.goDeleteUserPacket(nickName, config.getMySQLSettings().getUsersTable()));
             } catch (SQLException e) {
                 throw new RuntimeException("Error while delete user " + nickName + " data", e);
             }
@@ -374,7 +365,7 @@ public class MySQLStorage extends Storage {
         group.addPermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -383,7 +374,7 @@ public class MySQLStorage extends Storage {
         group.removePermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -392,7 +383,7 @@ public class MySQLStorage extends Storage {
         group.addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -401,7 +392,7 @@ public class MySQLStorage extends Storage {
         group.removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -409,7 +400,7 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.setPrefix(prefix);
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -417,7 +408,7 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.setSuffix(suffix);
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -426,6 +417,7 @@ public class MySQLStorage extends Storage {
         CompletableFuture.runAsync(()-> {
             try {
                 this.groupDataDao.deleteById(groupID);
+                this.broadcastPacket(MessageData.goDeleteGroupPacket(groupID, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
             } catch (SQLException e) {
                 throw new RuntimeException("Error while delete group " + groupID + " data", e);
             }
@@ -441,12 +433,8 @@ public class MySQLStorage extends Storage {
         this.groups.put(groupID, newGroup);
         CompletableFuture.runAsync(()-> {
             try {
-                newGroup.serializePerms();
-                newGroup.serializeParents();
-                this.groupDataDao.createOrUpdate(newGroup);
-                newGroup.truncateSerializedPerms();
-                newGroup.truncateSerializedParents();
-                this.broadcastUpdatePacket(new MessageData(newGroup, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+                this.groupDataDao.createOrUpdate(new GroupData(newGroup));
+                this.broadcastPacket(MessageData.goUpdateGroupPacket(newGroup, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
             } catch (SQLException e) {
                 throw new RuntimeException("Error while create group " + groupID + " data", e);
             }
@@ -467,9 +455,8 @@ public class MySQLStorage extends Storage {
         val list = new ArrayList<User>();
         try {
             val objectList = this.userDataDao.queryForAll();
-            for (User user : objectList) {
-                user.convert();
-                list.add(user);
+            for (UserData userData : objectList) {
+                list.add(userData.getUser());
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error while get all users data", e);
@@ -482,9 +469,8 @@ public class MySQLStorage extends Storage {
         val list = new ArrayList<Group>();
         try {
             val objectList = this.groupDataDao.queryForAll();
-            for (Group group : objectList) {
-                group.convert();
-                list.add(group);
+            for (GroupData groupData : objectList) {
+                list.add(groupData.getGroup());
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error while get all groups data", e);
@@ -494,10 +480,9 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void importUsersData(Collection<User> users) {
-        Collection<User> convertedUsers = new ArrayList<>();
+        Collection<UserData> convertedUsers = new ArrayList<>();
         for (User user : users) {
-            user.serializePerms();
-            convertedUsers.add(user);
+            convertedUsers.add(new UserData(user));
         }
         try {
             this.userDataDao.create(convertedUsers);
@@ -508,11 +493,9 @@ public class MySQLStorage extends Storage {
 
     @Override
     public void importGroupsData(Collection<Group> groups) {
-        Collection<Group> convertedGroups = new ArrayList<>();
+        Collection<GroupData> convertedGroups = new ArrayList<>();
         for (Group group : groups) {
-            group.serializePerms();
-            group.serializeParents();
-            convertedGroups.add(group);
+            convertedGroups.add(new GroupData(group));
         }
         try {
             this.groupDataDao.create(convertedGroups);

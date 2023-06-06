@@ -10,6 +10,7 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.event.velocity.VelocityEventManager;
+import ua.klesaak.mineperms.manager.utils.Platform;
 import ua.klesaak.mineperms.velocity.listeners.MPVelocityListener;
 
 import java.nio.file.Path;
@@ -32,7 +33,7 @@ public class MinePermsVelocity {
         long time = System.currentTimeMillis();
         this.server = server;
         this.logger = logger;
-        this.minePermsManager = new MinePermsManager();
+        this.minePermsManager = new MinePermsManager(Platform.VELOCITY);
         this.minePermsManager.loadConfig(dataDirectory.toFile());
         this.minePermsManager.initStorage();
         this.minePermsManager.registerEventsManager(new VelocityEventManager(this));

@@ -9,7 +9,6 @@ import ua.klesaak.mineperms.manager.storage.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.User;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
-import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageType;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.util.*;
@@ -175,7 +174,7 @@ public class RedisStorage extends Storage {
         }
         user.addPermission(permission);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getRedisSettings().getUsersKey()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getRedisSettings().getUsersKey()));
     }
 
     @Override
@@ -184,7 +183,7 @@ public class RedisStorage extends Storage {
         if (user == null) return;
         user.removePermission(permission);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, this.manager.getConfigFile().getRedisSettings().getUsersKey()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, this.manager.getConfigFile().getRedisSettings().getUsersKey()));
     }
 
     @Override
@@ -197,7 +196,7 @@ public class RedisStorage extends Storage {
         }
         user.setPrefix(prefix);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getRedisSettings().getUsersKey()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getRedisSettings().getUsersKey()));
     }
 
     @Override
@@ -210,7 +209,7 @@ public class RedisStorage extends Storage {
         }
         user.setSuffix(suffix);
         this.saveUser(nickName, user);
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getRedisSettings().getUsersKey()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getRedisSettings().getUsersKey()));
     }
 
     @Override
@@ -227,7 +226,7 @@ public class RedisStorage extends Storage {
             user.recalculatePermissions(this.groups);
             this.manager.getEventManager().callGroupChangeEvent(user);
         }
-        this.broadcastUpdatePacket(new MessageData(user, MessageType.USER_UPDATE, config.getRedisSettings().getUsersKey()));
+        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getRedisSettings().getUsersKey()));
     }
 
     @Override
@@ -246,7 +245,7 @@ public class RedisStorage extends Storage {
                 jed.select(redisConfig.getDatabase());
                 if (jed.hexists(redisConfig.getUsersKey(), nickName)) {
                     jed.hdel(redisConfig.getUsersKey(), nickName);
-                    this.broadcastUpdatePacket(new MessageData(nickName, MessageType.USER_DELETE, config.getRedisSettings().getUsersKey()));
+                    this.broadcastPacket(MessageData.goDeleteUserPacket(nickName, config.getRedisSettings().getUsersKey()));
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Error while delete user " + nickName + " data", e);
@@ -274,7 +273,7 @@ public class RedisStorage extends Storage {
         group.addPermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
     }
 
     @Override
@@ -283,7 +282,7 @@ public class RedisStorage extends Storage {
         group.removePermission(permission);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
     }
 
     @Override
@@ -292,7 +291,7 @@ public class RedisStorage extends Storage {
         group.addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
     }
 
     @Override
@@ -301,7 +300,7 @@ public class RedisStorage extends Storage {
         group.removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
     }
 
     @Override
@@ -309,7 +308,7 @@ public class RedisStorage extends Storage {
         val group = this.getGroup(groupID);
         group.setPrefix(prefix);
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
     }
 
     @Override
@@ -317,7 +316,7 @@ public class RedisStorage extends Storage {
         val group = this.getGroup(groupID);
         group.setSuffix(suffix);
         this.saveGroup(groupID);
-        this.broadcastUpdatePacket(new MessageData(group, MessageType.GROUP_UPDATE, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
+        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
     }
 
     @Override
@@ -330,7 +329,7 @@ public class RedisStorage extends Storage {
                 jed.select(redisConfig.getDatabase());
                 if (jed.hexists(redisConfig.getGroupsKey(), groupID)) {
                     jed.hdel(redisConfig.getGroupsKey(), groupID);
-                    this.broadcastUpdatePacket(new MessageData(groupID, MessageType.GROUP_DELETE, config.getRedisSettings().getGroupsKey()));
+                    this.broadcastPacket(MessageData.goDeleteGroupPacket(groupID, config.getRedisSettings().getGroupsKey()));
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Error while delete group " + groupID + " data", e);
@@ -351,7 +350,7 @@ public class RedisStorage extends Storage {
                 val redisConfig = config.getRedisSettings();
                 jed.select(redisConfig.getDatabase());
                 jed.hset(redisConfig.getGroupsKey(), groupID, JsonData.GSON.toJson(newGroup));
-                this.broadcastUpdatePacket(new MessageData(newGroup, MessageType.GROUP_UPDATE, config.getRedisSettings().getGroupsKey()));
+                this.broadcastPacket(MessageData.goUpdateGroupPacket(newGroup, config.getRedisSettings().getGroupsKey()));
             } catch (Exception e) {
                 throw new RuntimeException("Error while delete group " + groupID + " data", e);
             }

@@ -10,6 +10,7 @@ import ua.klesaak.mineperms.manager.storage.file.FileStorage;
 import ua.klesaak.mineperms.manager.storage.mysql.MySQLStorage;
 import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
 import ua.klesaak.mineperms.manager.utils.JsonData;
+import ua.klesaak.mineperms.manager.utils.Platform;
 
 import java.io.File;
 
@@ -23,8 +24,10 @@ public final class MinePermsManager {
     private IMPEventManager eventManager;
     private volatile ConfigFile configFile;
     private volatile Storage storage;
+    private final Platform platform;
 
-    public MinePermsManager() {
+    public MinePermsManager(Platform platform) {
+        this.platform = platform;
         this.minePermsCommand = new MinePermsCommand(this);
         MinePermsAPI.register(this.storage);
     }

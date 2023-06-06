@@ -21,6 +21,7 @@ import ua.klesaak.mineperms.bukkit.integration.WorldEditPermissionProvider;
 import ua.klesaak.mineperms.bukkit.integration.vault.VaultIntegration;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 import ua.klesaak.mineperms.manager.event.bukkit.BukkitEventManager;
+import ua.klesaak.mineperms.manager.utils.Platform;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -49,7 +50,7 @@ public class MinePermsBukkit extends JavaPlugin {
     @Override
     public void onEnable() {
         long time = System.currentTimeMillis();
-        this.minePermsManager = new MinePermsManager();
+        this.minePermsManager = new MinePermsManager(Platform.BUKKIT);
         this.minePermsManager.loadConfig(this.getDataFolder());
         this.minePermsManager.initStorage();
         this.getServer().getOperators().forEach(offlinePlayer -> offlinePlayer.setOp(false));

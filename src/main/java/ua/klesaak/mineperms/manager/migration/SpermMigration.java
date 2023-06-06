@@ -27,8 +27,8 @@ public class SpermMigration implements IMigrationPlugin {
         for (val spermUser : spermBackend.getAllUsers()) {
             val mpUser = new User(spermUser.getName(), spermUser.getUserGroup().getId());
             mpUser.setPermissions(new HashSet<>(spermUser.getPermissions()));
-            mpUser.setPrefix(spermUser.getPrefix() == null ? "" : spermUser.getPrefix());
-            mpUser.setSuffix(spermUser.getSuffix() == null ? "" : spermUser.getSuffix());
+            mpUser.setPrefix(spermUser.getPrefix());
+            mpUser.setSuffix(spermUser.getSuffix());
             userList.add(mpUser);
             if (userList.size() % 500 == 0) System.out.println("Migrated " + userList.size() + " users!");
         }
@@ -42,8 +42,8 @@ public class SpermMigration implements IMigrationPlugin {
             val mpGroup = new Group(spermGroup.getId());
             mpGroup.setInheritanceGroups(new HashSet<>(spermGroup.getAllParents()));
             mpGroup.setPermissions(new HashSet<>(spermGroup.getPermissions()));
-            mpGroup.setPrefix(spermGroup.getPrefix() == null ? "" : spermGroup.getPrefix());
-            mpGroup.setSuffix(spermGroup.getSuffix() == null ? "" : spermGroup.getSuffix());
+            mpGroup.setPrefix(spermGroup.getPrefix());
+            mpGroup.setSuffix(spermGroup.getSuffix());
             groupList.add(mpGroup);
             if (groupList.size() % 10 == 0) System.out.println("Migrated " + groupList.size() + " groups!");
         }

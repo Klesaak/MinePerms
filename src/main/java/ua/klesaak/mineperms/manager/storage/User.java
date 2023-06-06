@@ -1,11 +1,8 @@
 package ua.klesaak.mineperms.manager.storage;
 
-import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
-import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.util.Collections;
 import java.util.Map;
@@ -20,10 +17,7 @@ public class User {
     private volatile String prefix = "";
     private volatile String suffix = "";
     private Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-
-    ///Transient Data///
     private transient volatile Set<String> calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private transient String serializedPerms; //костыль для ORMLite
 
     public User(String playerName, String groupID) {
         this.playerName = playerName;
@@ -34,17 +28,7 @@ public class User {
     }
 
     public boolean hasPermission(String permission) {
-        val permissionLowerCase = permission.toLowerCase();
-        if (this.calculatedPermissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
-        if (!permissionLowerCase.contains(MinePermsManager.DOT_WILDCARD)) return this.calculatedPermissions.contains(permissionLowerCase);
-        if (this.calculatedPermissions.contains(permissionLowerCase)) return true;
-        String[] parts = permissionLowerCase.toLowerCase().split("\\.");
-        StringBuilder partsBuilder = new StringBuilder();
-        for (String part : parts) {
-            partsBuilder.append(part).append(MinePermsManager.DOT_WILDCARD);
-            if (this.calculatedPermissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) return true;
-        }
-        return false;
+        return Storage.hasPermission(this.calculatedPermissions, permission);
     }
 
     public boolean hasOwnPermission(String permission) {
@@ -81,17 +65,12 @@ public class User {
         this.calculatedPermissions.remove(perm);
     }
 
-    public void serializePerms() {
-        this.serializedPerms = JsonData.GSON.toJson(this.permissions);
+    public void addOwnPermission(String permission) {
+        this.permissions.add(permission.toLowerCase());
     }
 
-    public void truncateSerializedPerms() {
-        this.serializedPerms = null;
-    }
-    public void convert() {
-        this.permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        this.permissions.addAll(JsonData.GSON.fromJson(this.serializedPerms, new TypeToken<Set<String>>(){}.getType()));
-        this.truncateSerializedPerms();
+    public void removeOwnPermission(String permission) {
+        this.permissions.remove(permission.toLowerCase());
     }
 
     public void setPrefix(String prefix) {
@@ -124,7 +103,6 @@ public class User {
                 ", suffix='" + suffix + '\'' +
                 ", permissions=" + permissions +
                 ", calculatedPermissions=" + calculatedPermissions +
-                ", serializedPerms='" + serializedPerms + '\'' +
                 '}';
     }
 }

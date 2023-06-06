@@ -1,0 +1,62 @@
+package ua.klesaak.mineperms.manager.storage.mysql;
+
+import com.google.gson.reflect.TypeToken;
+import lombok.Setter;
+import lombok.val;
+import ua.klesaak.mineperms.manager.storage.Group;
+import ua.klesaak.mineperms.manager.utils.JsonData;
+
+import java.util.Set;
+
+@Setter
+public class GroupData {
+    private String groupID;
+    private String prefix;
+    private String suffix;
+    private String serializedInheritanceGroups;
+    private String serializedPerms;
+
+    public GroupData(String groupID, String prefix, String suffix, Set<String> inheritanceGroups, Set<String> permissions) {
+        this.groupID = groupID;
+        this.prefix = prefix;
+        this.suffix = suffix;
+        this.serializedInheritanceGroups = JsonData.GSON.toJson(inheritanceGroups);
+        this.serializedPerms = JsonData.GSON.toJson(permissions);
+    }
+
+    public GroupData(Group group) {
+        this(group.getGroupID(), group.getPrefix(), group.getSuffix(), group.getInheritanceGroups(), group.getPermissions());
+    }
+
+    protected GroupData() {
+    }
+
+    public Group getGroup() {
+        val group = new Group(this.groupID);
+        group.setPrefix(this.prefix);
+        group.setSuffix(this.suffix);
+        group.setInheritanceGroups(this.getInheritedGroups());
+        group.setPermissions(this.getPermissions());
+        return group;
+    }
+
+    public Set<String> getInheritedGroups() {
+        return JsonData.GSON.fromJson(this.serializedInheritanceGroups, new TypeToken<Set<String>>(){}.getType());
+    }
+
+    public Set<String> getPermissions() {
+        return JsonData.GSON.fromJson(this.serializedPerms, new TypeToken<Set<String>>(){}.getType());
+    }
+
+    public String getGroupID() {
+        return groupID;
+    }
+
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public String getSuffix() {
+        return suffix;
+    }
+}

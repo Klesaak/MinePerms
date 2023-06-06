@@ -12,6 +12,13 @@ import ua.klesaak.mineperms.manager.storage.User;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Юзать эту миграцию на свой страх и риск.
+ * Так, как MinePerms сделан на основе никнеймов игроков, и чувствителен к их регистру, когда LuckPerms хранит ники в .toLowerCase()
+ * поэтому после миграции многие игроки обнаружат, что их привилегия теперь на никнейме shkolnik_top_killer_1337,
+ * вместо ShKolNIk_ToP_KillEr_1337
+ */
+
 public class LPMigration implements IMigrationPlugin {
     private final LuckPerms luckPerms;
 
@@ -30,17 +37,15 @@ public class LPMigration implements IMigrationPlugin {
         for (UUID uuid : userManager.getUniqueUsers().join()) {
             val lpUser = userManager.loadUser(uuid).join();
             if (lpUser == null) continue;
-            if (lpUser.getUsername() == null || lpUser.getUsername().isEmpty()) continue;
-            val lpUserCachedData = lpUser.getCachedData();
-            val mpUser = new User(lpUser.getUsername(), lpUser.getPrimaryGroup());
+            lpUser.getFriendlyName();
+            if (lpUser.getFriendlyName().isEmpty()) continue;
+            val mpUser = new User(lpUser.getFriendlyName(), lpUser.getPrimaryGroup());
             val permissions = new HashSet<String>();
             List<Node> nodes = new ArrayList<>(lpUser.getNodes());
             nodes.removeIf(NodeType.INHERITANCE.predicate(n -> n.getValue() && this.luckPerms.getGroupManager().isLoaded(n.getGroupName()))
                     .or(NodeType.META_OR_CHAT_META.predicate()));
             nodes.forEach(permissionNode -> permissions.add(permissionNode.getKey()));
             mpUser.setPermissions(permissions);
-            mpUser.setPrefix(lpUserCachedData.getMetaData().getPrefix());// TODO: 06.06.2023  fix добавляются наследованные от групп!!!
-            mpUser.setSuffix(lpUserCachedData.getMetaData().getSuffix()); // TODO: 06.06.2023  fix добавляются наследованные от групп!!!
             userList.add(mpUser);
             if (userList.size() % 500 == 0) System.out.println("Migrated " + userList.size() + " users!");
         }

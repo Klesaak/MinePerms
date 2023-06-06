@@ -4,14 +4,10 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.storage.redis.RedisPool;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.RedisMessenger;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -33,7 +29,7 @@ public abstract class Storage {
         }
     }
 
-    protected void broadcastUpdatePacket(MessageData messageData) {
+    protected void broadcastPacket(MessageData messageData) {
         if (this.redisMessenger != null) this.redisMessenger.sendOutgoingMessage(messageData);
     }
 
@@ -79,6 +75,20 @@ public abstract class Storage {
         User user = this.getUser(nickName);
         if (user != null) return user.hasPermission(permission);
         return this.getDefaultGroup().hasPermission(permission);
+    }
+
+    public static boolean hasPermission(Set<String> permissions, String permission) {
+        val permissionLowerCase = permission.toLowerCase();
+        if (permissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
+        if (!permissionLowerCase.contains(MinePermsManager.DOT_WILDCARD)) return permissions.contains(permissionLowerCase);
+        if (permissions.contains(permissionLowerCase)) return true;
+        String[] parts = permissionLowerCase.toLowerCase().split("\\.");
+        StringBuilder partsBuilder = new StringBuilder();
+        for (String part : parts) {
+            partsBuilder.append(part).append(MinePermsManager.DOT_WILDCARD);
+            if (permissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) return true;
+        }
+        return false;
     }
 
     public boolean hasPlayerInGroup(String playerName, String groupID) {
