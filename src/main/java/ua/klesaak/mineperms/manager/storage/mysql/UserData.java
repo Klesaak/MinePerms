@@ -16,7 +16,7 @@ public class UserData {
     private String suffix;
     private String serializedPerms;
 
-    public UserData(String playerName, String group, String prefix, String suffix, Set<String> permissions) {
+    private UserData(String playerName, String group, String prefix, String suffix, Set<String> permissions) {
         this.playerName = playerName;
         this.group = group;
         this.prefix = prefix;
@@ -24,8 +24,12 @@ public class UserData {
         this.serializedPerms = JsonData.GSON.toJson(permissions);
     }
 
-    public UserData(User user) {
+    private UserData(User user) {
         this(user.getPlayerName(), user.getGroup(), user.getPrefix(), user.getSuffix(), user.getPermissions());
+    }
+
+    public static UserData from(User user) {
+        return new UserData(user);
     }
 
     public User getUser() {

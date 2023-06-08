@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 
 // TODO: 06.06.2023 синхронизировать группы если не включен пуб-суб
-public abstract class Storage {
+public abstract class Storage implements AutoCloseable {
     protected final MinePermsManager manager;
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
     protected final ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
@@ -65,6 +65,7 @@ public abstract class Storage {
     public abstract void importUsersData(Collection<User> users);
     public abstract void importGroupsData(Collection<Group> groups);
 
+    @Override
     public abstract void close();
 
     public List<String> getGroupNames() {

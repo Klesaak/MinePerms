@@ -16,7 +16,7 @@ public class GroupData {
     private String serializedInheritanceGroups;
     private String serializedPerms;
 
-    public GroupData(String groupID, String prefix, String suffix, Set<String> inheritanceGroups, Set<String> permissions) {
+    private GroupData(String groupID, String prefix, String suffix, Set<String> inheritanceGroups, Set<String> permissions) {
         this.groupID = groupID;
         this.prefix = prefix;
         this.suffix = suffix;
@@ -24,8 +24,12 @@ public class GroupData {
         this.serializedPerms = JsonData.GSON.toJson(permissions);
     }
 
-    public GroupData(Group group) {
+    private GroupData(Group group) {
         this(group.getGroupID(), group.getPrefix(), group.getSuffix(), group.getInheritanceGroups(), group.getPermissions());
+    }
+
+    public static GroupData from(Group group) {
+        return new GroupData(group);
     }
 
     protected GroupData() {

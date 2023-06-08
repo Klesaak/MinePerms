@@ -19,26 +19,13 @@ public class MPBungeeListener implements Listener {
         plugin.getProxy().getPluginManager().registerListener(plugin, this);
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerPermissionCheck(PermissionCheckEvent event) {
         if (!(event.getSender() instanceof ProxiedPlayer)) return;
         Objects.requireNonNull(event.getPermission(), "permission");
         Objects.requireNonNull(event.getSender(), "sender");
         String permission = event.getPermission();
-        ProxiedPlayer player = (ProxiedPlayer) event.getSender();
-
-        event.setHasPermission(this.plugin.getMinePermsManager().hasPermission(player.getName(), permission));
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onOtherPermissionCheck(PermissionCheckEvent event) {
-        if (event.getSender() instanceof ProxiedPlayer) {
-            return;
-        }
-        Objects.requireNonNull(event.getPermission(), "permission");
-        Objects.requireNonNull(event.getSender(), "sender");
-        String permission = event.getPermission();
-
+        event.setHasPermission(this.plugin.getMinePermsManager().hasPermission(event.getSender().getName(), permission));
     }
 
     @EventHandler(priority = EventPriority.LOW)

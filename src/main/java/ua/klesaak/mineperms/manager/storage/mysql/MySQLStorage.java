@@ -189,7 +189,7 @@ public class MySQLStorage extends Storage {
     public void saveUser(String nickName, User user) {
         CompletableFuture.runAsync(()-> {
             try {
-                this.userDataDao.createOrUpdate(new UserData(user));
+                this.userDataDao.createOrUpdate(UserData.from(user));
             } catch (SQLException ex) {
                 throw new RuntimeException("Error while save user data " + nickName, ex);
             }
@@ -204,7 +204,7 @@ public class MySQLStorage extends Storage {
         val group = this.groups.get(groupID);
         CompletableFuture.runAsync(()-> {
             try {
-                this.groupDataDao.createOrUpdate(new GroupData(group));
+                this.groupDataDao.createOrUpdate(GroupData.from(group));
             } catch (SQLException ex) {
                 throw new RuntimeException("Error while save group data " + groupID, ex);
             }
@@ -433,7 +433,7 @@ public class MySQLStorage extends Storage {
         this.groups.put(groupID, newGroup);
         CompletableFuture.runAsync(()-> {
             try {
-                this.groupDataDao.createOrUpdate(new GroupData(newGroup));
+                this.groupDataDao.createOrUpdate(GroupData.from(newGroup));
                 this.broadcastPacket(MessageData.goUpdateGroupPacket(newGroup, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
             } catch (SQLException e) {
                 throw new RuntimeException("Error while create group " + groupID + " data", e);
@@ -482,7 +482,7 @@ public class MySQLStorage extends Storage {
     public void importUsersData(Collection<User> users) {
         Collection<UserData> convertedUsers = new ArrayList<>();
         for (User user : users) {
-            convertedUsers.add(new UserData(user));
+            convertedUsers.add(UserData.from(user));
         }
         try {
             this.userDataDao.create(convertedUsers);
@@ -495,7 +495,7 @@ public class MySQLStorage extends Storage {
     public void importGroupsData(Collection<Group> groups) {
         Collection<GroupData> convertedGroups = new ArrayList<>();
         for (Group group : groups) {
-            convertedGroups.add(new GroupData(group));
+            convertedGroups.add(GroupData.from(group));
         }
         try {
             this.groupDataDao.create(convertedGroups);

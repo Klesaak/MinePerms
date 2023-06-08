@@ -64,7 +64,4 @@ public final class MinePermsManager {
     public boolean hasPermission(String nickName, String permission) {
         return this.storage.hasPermission(nickName, permission);
     }
-
-    //todo метод на dump из одной базы в другую
-
 }

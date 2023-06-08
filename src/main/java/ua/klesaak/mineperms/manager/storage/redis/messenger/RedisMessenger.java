@@ -12,7 +12,7 @@ import ua.klesaak.mineperms.manager.storage.redis.RedisPool;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class RedisMessenger {
+public class RedisMessenger implements AutoCloseable {
     public static UUID SERVER_UUID = UUID.randomUUID(); //Уникальный идентификатор сервера для корректного обмена сообщениями через Redis-pub-sub
     private final MinePermsManager minePermsManager;
     private final Storage storage;
@@ -37,7 +37,7 @@ public class RedisMessenger {
         }
     }
 
-
+    @Override
     public void close() {
         this.closing = true;
         this.sub.unsubscribe();

@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
  * вместо ShKolNIk_ToP_KillEr_1337
  */
 
-public class LPMigration implements IMigrationPlugin {
-    private final LuckPerms luckPerms;
+public class LPMigration implements IMigrationPlugin, AutoCloseable {
+    private LuckPerms luckPerms;
 
     public LPMigration() {
         try {
@@ -79,5 +79,10 @@ public class LPMigration implements IMigrationPlugin {
             if (groupList.size() % 10 == 0) System.out.println("Migrated " + groupList.size() + " groups!");
         }
         return groupList;
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.luckPerms = null;
     }
 }
