@@ -13,6 +13,7 @@ import ua.klesaak.mineperms.manager.utils.JsonData;
 import ua.klesaak.mineperms.manager.utils.Platform;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
 @Getter
 public final class MinePermsManager {
@@ -20,6 +21,7 @@ public final class MinePermsManager {
     public static final String ROOT_WILDCARD = "*";
     public static final String ROOT_WILDCARD_WITH_QUOTES = "'*'";
     public static final String DOT_WILDCARD = ".";
+    public static final Pattern DOT_WILDCARD_PATTERN = Pattern.compile("\\.", Pattern.LITERAL);
     private final MinePermsCommand minePermsCommand;
     private IMPEventManager eventManager;
     private volatile ConfigFile configFile;
