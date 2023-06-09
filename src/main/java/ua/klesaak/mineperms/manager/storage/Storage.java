@@ -98,12 +98,12 @@ public abstract class Storage implements AutoCloseable {
         return false;
     }
 
-    public boolean hasPlayerInGroup(String playerName, String groupID) {
-        Group group = this.getGroup(groupID);
+    public boolean hasPlayerInGroup(String playerName, String groupId) {
+        Group group = this.getGroup(groupId);
         if (group == null) return false;
         User user = this.getUser(playerName);
-        if (user == null) return this.getDefaultGroup().getGroupID().equalsIgnoreCase(groupID);
-        return user.hasGroup(groupID);
+        if (user == null) return this.getDefaultGroup().getGroupID().equalsIgnoreCase(groupId);
+        return user.hasGroup(groupId);
     }
 
     public String getUserGroup(String playerName) {
@@ -112,16 +112,16 @@ public abstract class Storage implements AutoCloseable {
         return user.getGroup();
     }
 
-    public Group getGroupOrDefault(String groupID) {
-        Group group = this.groups.get(groupID.toLowerCase());
+    public Group getGroupOrDefault(String groupId) {
+        Group group = this.groups.get(groupId.toLowerCase());
         if (group == null) {
             group = this.groups.get(this.manager.getConfigFile().getDefaultGroup());
         }
         return group;
     }
 
-    public Group getGroup(String groupID) {
-        return this.groups.get(groupID.toLowerCase());
+    public Group getGroup(String groupId) {
+        return this.groups.get(groupId.toLowerCase());
     }
 
     public Group getDefaultGroup() {
