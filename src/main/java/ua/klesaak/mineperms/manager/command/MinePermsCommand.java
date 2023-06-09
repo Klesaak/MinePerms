@@ -21,15 +21,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class MinePermsCommand {
+public final class MinePermsCommand extends MPTabCompleter {
     public static final String MAIN_PERMISSION = "mineperms.admin";
     private final MinePermsManager manager;
-    private final MPTabCompleter mpTabCompleter;
 
     public MinePermsCommand(MinePermsManager manager) {
-        this.manager = manager;
-        this.mpTabCompleter = new MPTabCompleter();
-    }
+        this.manager = manager;}
 
     public void onExecute(IMPCommandSource commandSource, String label, String[] args) {
         if (args.length == 0) {
@@ -588,23 +585,23 @@ public final class MinePermsCommand {
     public List<String> onTabComplete(Collection<String> onlinePlayers, String[] args) {
         switch (args.length) {
             case 0: return Collections.emptyList();
-            case 1: return this.mpTabCompleter.onMainCommand(args);
+            case 1: return this.onMainCommand(args);
         }
         switch (args[0].toLowerCase()) {
             case "user": {
-                return this.mpTabCompleter.onUserCommand(onlinePlayers, this.manager.getStorage().getGroupNames(), args);
+                return this.onUserCommand(onlinePlayers, this.manager.getStorage().getGroupNames(), args);
             }
             case "group": {
-                return this.mpTabCompleter.onGroupCommand(this.manager.getStorage().getGroupNames(), args);
+                return this.onGroupCommand(this.manager.getStorage().getGroupNames(), args);
             }
             case "find": {
-                return this.mpTabCompleter.onFindCommand(args);
+                return this.onFindCommand(args);
             }
             case "export": {
-                return this.mpTabCompleter.onExportCommand(args);
+                return this.onExportCommand(args);
             }
             case "migrate": {
-                return this.mpTabCompleter.onMigrateCommand(args);
+                return this.onMigrateCommand(args);
             }
         }
         return Collections.emptyList();

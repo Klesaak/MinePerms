@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 
 import java.util.*;
 
-public class MPTabCompleter {
+abstract class MPTabCompleter {
     public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "find", "export", "migrate");
     public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "set-group", "delete", "prefix",
             "suffix", "clear-prefix", "clear-suffix");
@@ -16,10 +16,6 @@ public class MPTabCompleter {
 
     public static final List<String> EXPORT_SUB_COMMANDS = Arrays.asList("file", "mysql", "redis");
     public static final List<String> MIGRATE_SUB_COMMANDS = Arrays.asList("simpleperms", "pex", "luckperms");
-
-
-    protected MPTabCompleter() {
-    }
 
     public List<String> onMainCommand(String[] args) {
         return this.copyPartialMatches(args[0].toLowerCase(), SUB_COMMANDS_0, new ArrayList<>());
