@@ -1,8 +1,9 @@
-package ua.klesaak.mineperms.manager.storage;
+package ua.klesaak.mineperms.manager.storage.entity;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+import ua.klesaak.mineperms.manager.storage.Storage;
 
 import java.util.Collections;
 import java.util.Map;
@@ -11,26 +12,32 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Getter @Setter
-public class User {
-    private String playerName;
+public class User extends AbstractEntity {
     private volatile String group;
-    private volatile String prefix = "";
-    private volatile String suffix = "";
-    private Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private transient volatile Set<String> calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    public User(String playerName, String groupID) {
-        this.playerName = playerName;
-        this.group = groupID;
+    public User(String playerName, String groupId) {
+        super(playerName);
+        this.group = groupId;
     }
 
+    @Override
     public boolean hasPermission(String permission) {
         return Storage.hasPermission(this.calculatedPermissions, permission);
     }
 
-    public boolean hasOwnPermission(String permission) {
-        val permissionLowerCase = permission.toLowerCase();
-        return this.permissions.contains(permissionLowerCase);
+    @Override
+    public void addPermission(String permission) {
+        val perm = permission.toLowerCase();
+        this.permissions.add(perm);
+        this.calculatedPermissions.add(perm);
+    }
+
+    @Override
+    public void removePermission(String permission) {
+        val perm = permission.toLowerCase();
+        this.permissions.remove(perm);
+        this.calculatedPermissions.remove(perm);
     }
 
     public boolean hasGroup(String groupID) {
@@ -50,51 +57,26 @@ public class User {
         }
     }
 
-    public void addPermission(String permission) {
-        val perm = permission.toLowerCase();
-        this.permissions.add(perm);
-        this.calculatedPermissions.add(perm);
-    }
-
-    public void removePermission(String permission) {
-        val perm = permission.toLowerCase();
-        this.permissions.remove(perm);
-        this.calculatedPermissions.remove(perm);
-    }
-
-    public void addOwnPermission(String permission) {
-        this.permissions.add(permission.toLowerCase());
-    }
-
-    public void removeOwnPermission(String permission) {
-        this.permissions.remove(permission.toLowerCase());
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix == null ? "": prefix;
-    }
-
-    public void setSuffix(String suffix) {
-        this.suffix = suffix == null ? "": suffix;
+    public String getPlayerName() {
+        return this.entityId;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return playerName.equals(user.playerName);
+        return this.entityId.equals(user.entityId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(playerName);
+        return Objects.hash(this.entityId);
     }
 
     @Override
     public String toString() {
         return "User{" +
-                "playerName='" + playerName + '\'' +
+                "playerName='" + entityId + '\'' +
                 ", group='" + group + '\'' +
                 ", prefix='" + prefix + '\'' +
                 ", suffix='" + suffix + '\'' +

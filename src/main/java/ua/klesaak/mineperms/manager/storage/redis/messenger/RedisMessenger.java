@@ -5,7 +5,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Storage;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redis.RedisConfig;
 import ua.klesaak.mineperms.manager.storage.redis.RedisPool;
 

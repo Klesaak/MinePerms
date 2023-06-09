@@ -3,8 +3,8 @@ package ua.klesaak.mineperms.manager.migration;
 import lombok.val;
 import ru.Den_Abr.SimplePerms.Backends.Backend;
 import ru.Den_Abr.SimplePerms.SimplePermsCommon;
-import ua.klesaak.mineperms.manager.storage.Group;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 
 import java.util.ArrayList;
 import java.util.Collection;

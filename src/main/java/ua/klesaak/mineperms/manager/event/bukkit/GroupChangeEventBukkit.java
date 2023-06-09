@@ -1,7 +1,7 @@
 package ua.klesaak.mineperms.manager.event.bukkit;
 
 import lombok.Getter;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 
 @Getter
 public class GroupChangeEventBukkit extends AbstractBukkitEvent {

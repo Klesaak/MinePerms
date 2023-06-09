@@ -6,8 +6,8 @@ import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.node.Node;
 import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.InheritanceNode;
-import ua.klesaak.mineperms.manager.storage.Group;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 
 import java.util.*;
 import java.util.stream.Collectors;

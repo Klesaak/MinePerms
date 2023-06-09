@@ -2,7 +2,7 @@ package ua.klesaak.mineperms.bukkit.integration.vault;
 
 import org.bukkit.OfflinePlayer;
 import ua.klesaak.mineperms.bukkit.MinePermsBukkit;
-import ua.klesaak.mineperms.manager.storage.Group;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
 
 public abstract class ModernPermImpl extends BasicPermImpl {
 

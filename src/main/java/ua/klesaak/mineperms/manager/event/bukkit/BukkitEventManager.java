@@ -1,7 +1,7 @@
 package ua.klesaak.mineperms.manager.event.bukkit;
 
 import ua.klesaak.mineperms.manager.event.IMPEventManager;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 
 public class BukkitEventManager implements IMPEventManager {
 

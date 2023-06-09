@@ -3,7 +3,7 @@ package ua.klesaak.mineperms.manager.event.bungee;
 import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Event;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 
 @Getter
 public class GroupChangeEventBungee extends Event {

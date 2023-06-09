@@ -1,8 +1,8 @@
 package ua.klesaak.mineperms.manager.storage.redis.messenger;
 
 import lombok.Setter;
-import ua.klesaak.mineperms.manager.storage.Group;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.util.UUID;

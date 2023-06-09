@@ -5,8 +5,8 @@ import ru.tehkode.permissions.PermissionGroup;
 import ru.tehkode.permissions.PermissionManager;
 import ru.tehkode.permissions.PermissionUser;
 import ru.tehkode.permissions.bukkit.PermissionsEx;
-import ua.klesaak.mineperms.manager.storage.Group;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 
 import java.util.*;
 

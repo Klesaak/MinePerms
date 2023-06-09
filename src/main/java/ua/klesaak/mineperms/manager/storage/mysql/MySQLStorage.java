@@ -10,9 +10,9 @@ import com.j256.ormlite.table.TableUtils;
 import lombok.Getter;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.storage.Group;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 
 import java.sql.SQLException;

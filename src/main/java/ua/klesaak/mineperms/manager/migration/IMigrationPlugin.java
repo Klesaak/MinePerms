@@ -1,7 +1,7 @@
 package ua.klesaak.mineperms.manager.migration;
 
-import ua.klesaak.mineperms.manager.storage.Group;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 
 import java.util.Collection;
 

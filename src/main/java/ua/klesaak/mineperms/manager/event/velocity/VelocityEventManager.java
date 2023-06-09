@@ -1,7 +1,7 @@
 package ua.klesaak.mineperms.manager.event.velocity;
 
 import ua.klesaak.mineperms.manager.event.IMPEventManager;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.velocity.MinePermsVelocity;
 
 public class VelocityEventManager implements IMPEventManager {

@@ -4,6 +4,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.RedisMessenger;
 
@@ -20,7 +22,7 @@ public abstract class Storage implements AutoCloseable {
             .expireAfterWrite(1, TimeUnit.MINUTES).build(); //Временный кеш, чтобы уменьшить кол-во запросов в бд.
     protected RedisMessenger redisMessenger;
 
-    public Storage(MinePermsManager manager) {
+    protected Storage(MinePermsManager manager) {
         this.manager = manager;
         if (manager.getConfigFile().isUseRedisPubSub()) {
             this.redisMessenger = new RedisMessenger(manager, this);

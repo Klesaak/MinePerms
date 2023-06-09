@@ -5,9 +5,9 @@ import lombok.val;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.storage.Group;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 

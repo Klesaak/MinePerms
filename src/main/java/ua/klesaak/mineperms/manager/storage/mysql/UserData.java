@@ -3,7 +3,7 @@ package ua.klesaak.mineperms.manager.storage.mysql;
 import com.google.gson.reflect.TypeToken;
 import lombok.Setter;
 import lombok.val;
-import ua.klesaak.mineperms.manager.storage.User;
+import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.util.Set;
