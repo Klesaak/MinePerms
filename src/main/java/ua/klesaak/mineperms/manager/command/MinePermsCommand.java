@@ -1,7 +1,6 @@
 package ua.klesaak.mineperms.manager.command;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.config.StorageType;
@@ -9,37 +8,30 @@ import ua.klesaak.mineperms.manager.migration.IMigrationPlugin;
 import ua.klesaak.mineperms.manager.migration.LPMigration;
 import ua.klesaak.mineperms.manager.migration.PEXMigration;
 import ua.klesaak.mineperms.manager.migration.SpermMigration;
-import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.file.FileStorage;
 import ua.klesaak.mineperms.manager.storage.mysql.MySQLStorage;
 import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class MinePermsCommand {
     public static final String MAIN_PERMISSION = "mineperms.admin";
-
-    public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "find", "export", "migrate");
-    public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "set-group", "delete", "prefix",
-            "suffix", "clear-prefix", "clear-suffix");
-    public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "delete", "prefix",
-            "suffix", "clear-prefix", "clear-suffix", "create", "add-parent", "remove-parent");
-
-    public static final List<String> FIND_SUB_COMMANDS_0 = Arrays.asList("user", "group", "all");
-    public static final List<String> FIND_SUB_COMMANDS_1 = Arrays.asList("permission", "parent-group");
-
-    public static final List<String> EXPORT_SUB_COMMANDS = Arrays.asList("file", "mysql", "redis");
-    public static final List<String> MIGRATE_SUB_COMMANDS = Arrays.asList("simpleperms", "pex", "luckperms");
     private final MinePermsManager manager;
+    private final MPTabCompleter mpTabCompleter;
 
     public MinePermsCommand(MinePermsManager manager) {
         this.manager = manager;
+        this.mpTabCompleter = new MPTabCompleter();
     }
 
-    public void invoke(IMPCommandSource commandSource, String label, String[] args) {
+    public void onExecute(IMPCommandSource commandSource, String label, String[] args) {
         if (args.length == 0) {
             commandSource.sendMessage("§6MinePerms by Klesaak §cv1.0 - BETA");
             commandSource.sendMessage("");
@@ -446,7 +438,9 @@ public final class MinePermsCommand {
                 break;
             }
             default: {
-                migrationPlugin = new SpermMigration();
+                commandSource.sendMessage("§cERROR: Unknown plugin type: " + plugin);
+                commandSource.sendMessage("§cAvailable plugins to migrating: §6" + Joiner.on(", ").join(MPTabCompleter.MIGRATE_SUB_COMMANDS));
+                return;
             }
         }
         val groupsCollection = migrationPlugin.getAllGroups();
@@ -592,60 +586,25 @@ public final class MinePermsCommand {
     }
 
     public List<String> onTabComplete(Collection<String> onlinePlayers, String[] args) {
-        if (args.length == 0) return Collections.emptyList(); //fix Velocity termi-Anal error
-        if (args.length == 1) {
-            return this.copyPartialMatches(args[0].toLowerCase(), SUB_COMMANDS_0, new ArrayList<>());
+        switch (args.length) {
+            case 0: return Collections.emptyList();
+            case 1: return this.mpTabCompleter.onMainCommand(args);
         }
-        if (args[0].equalsIgnoreCase("user")) {
-            switch (args.length) {
-                case 2: {
-                    return this.copyPartialMatches(args[1].toLowerCase(), USER_SUB_COMMANDS_0, new ArrayList<>());
-                }
-                case 3: {
-                    return this.copyPartialMatches(args[2].toLowerCase(), onlinePlayers, new ArrayList<>());
-                }
-                case 4: {
-                    if (args[1].equalsIgnoreCase("set-group")) {
-                        return this.copyPartialMatches(args[3].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
-                    }
-                }
+        switch (args[0].toLowerCase()) {
+            case "user": {
+                return this.mpTabCompleter.onUserCommand(onlinePlayers, this.manager.getStorage().getGroupNames(), args);
             }
-        }
-        if (args[0].equalsIgnoreCase("group")) {
-            switch (args.length) {
-                case 2: {
-                    return this.copyPartialMatches(args[1].toLowerCase(), GROUP_SUB_COMMANDS_0, new ArrayList<>());
-                }
-                case 3: {
-                    return this.copyPartialMatches(args[2].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
-                }
-                case 4: {
-                    if (args[1].equalsIgnoreCase("add-parent")) {
-                        return this.copyPartialMatches(args[3].toLowerCase(), this.manager.getStorage().getGroupNames(), new ArrayList<>());
-                    }
-                }
+            case "group": {
+                return this.mpTabCompleter.onGroupCommand(this.manager.getStorage().getGroupNames(), args);
             }
-        }
-
-        if (args[0].equalsIgnoreCase("find")) {
-            switch (args.length) {
-                case 2: {
-                    return this.copyPartialMatches(args[1].toLowerCase(), FIND_SUB_COMMANDS_0, new ArrayList<>());
-                }
-                case 3: {
-                    return this.copyPartialMatches(args[2].toLowerCase(), FIND_SUB_COMMANDS_1, new ArrayList<>());
-                }
+            case "find": {
+                return this.mpTabCompleter.onFindCommand(args);
             }
-        }
-
-        if (args[0].equalsIgnoreCase("export")) {
-            if (args.length == 2) {
-                return this.copyPartialMatches(args[1].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
+            case "export": {
+                return this.mpTabCompleter.onExportCommand(args);
             }
-        }
-        if (args[0].equalsIgnoreCase("migrate")) {
-            if (args.length == 2) {
-                return this.copyPartialMatches(args[1].toLowerCase(), MIGRATE_SUB_COMMANDS, new ArrayList<>());
+            case "migrate": {
+                return this.mpTabCompleter.onMigrateCommand(args);
             }
         }
         return Collections.emptyList();
@@ -660,19 +619,6 @@ public final class MinePermsCommand {
             builder.append(args[i]);
         }
         return builder.toString();
-    }
-
-    private <T extends Collection<? super String>> T copyPartialMatches(String token, Iterable<String> originals, T collection) {
-        Preconditions.checkNotNull(token, "Search token cannot be null");
-        Preconditions.checkNotNull(collection, "Collection cannot be null");
-        Preconditions.checkNotNull(originals, "Originals cannot be null");
-        originals.forEach(string -> { if (startsWithIgnoreCase(string, token)) collection.add(string);});
-        return collection;
-    }
-
-    private boolean startsWithIgnoreCase(String string, String prefix) {
-        Preconditions.checkNotNull(string, "Cannot check a null string for a match");
-        return string.length() >= prefix.length() && string.regionMatches(true, 0, prefix, 0, prefix.length());
     }
 
     private boolean checkSuperPermission(IMPCommandSource commandSource, String permission) {

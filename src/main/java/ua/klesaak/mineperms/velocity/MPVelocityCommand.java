@@ -31,7 +31,7 @@ public final class MPVelocityCommand implements SimpleCommand {
     public void execute(Invocation invocation) {
         CommandSource source = invocation.source();
         String[] args = invocation.arguments();
-        this.minePermsCommand.invoke(new VelocityCommandSource(source), invocation.alias(), args);
+        this.minePermsCommand.onExecute(new VelocityCommandSource(source), invocation.alias(), args);
     }
 
 

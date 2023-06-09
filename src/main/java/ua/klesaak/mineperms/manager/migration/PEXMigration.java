@@ -10,8 +10,8 @@ import ua.klesaak.mineperms.manager.storage.entity.User;
 
 import java.util.*;
 
-public class PEXMigration implements IMigrationPlugin, AutoCloseable {
-    private PermissionManager permissionManager;
+public class PEXMigration implements IMigrationPlugin {
+    private final PermissionManager permissionManager;
 
     public PEXMigration() {
         try {
@@ -82,10 +82,5 @@ public class PEXMigration implements IMigrationPlugin, AutoCloseable {
         list = new ArrayList<>(list);
         Collections.sort(list);
         return list.get(0).getIdentifier();
-    }
-
-    @Override
-    public void close() throws Exception {
-        this.permissionManager = null;
     }
 }

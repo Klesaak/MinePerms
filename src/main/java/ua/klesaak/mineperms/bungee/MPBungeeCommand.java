@@ -21,7 +21,7 @@ public class MPBungeeCommand extends Command implements TabExecutor {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        this.minePermsCommand.invoke(new BungeeCommandSource(sender), this.getName(), args);
+        this.minePermsCommand.onExecute(new BungeeCommandSource(sender), this.getName(), args);
     }
 
 

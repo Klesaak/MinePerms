@@ -26,7 +26,7 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String[] args) {
-        this.minePermsCommand.invoke(new BukkitCommandSource(sender), label, args);
+        this.minePermsCommand.onExecute(new BukkitCommandSource(sender), label, args);
         return true;
     }
 

@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
-public class SpermMigration implements IMigrationPlugin, AutoCloseable {
-    private Backend spermBackend;
+public class SpermMigration implements IMigrationPlugin {
+    private final Backend spermBackend;
 
     public SpermMigration() {
         try {
@@ -48,10 +48,5 @@ public class SpermMigration implements IMigrationPlugin, AutoCloseable {
             if (groupList.size() % 10 == 0) System.out.println("Migrated " + groupList.size() + " groups!");
         }
         return groupList;
-    }
-
-    @Override
-    public void close() throws Exception {
-        this.spermBackend = null;
     }
 }
