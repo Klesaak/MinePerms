@@ -1,7 +1,6 @@
 package ua.klesaak.mineperms.manager.storage.entity;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.val;
 import ua.klesaak.mineperms.manager.storage.Storage;
 
@@ -11,9 +10,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Getter @Setter
+@Getter
 public class User extends AbstractEntity {
-    private volatile String group;
+    private String group;
     private transient volatile Set<String> calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public User(String playerName, String groupId) {
@@ -42,6 +41,10 @@ public class User extends AbstractEntity {
 
     public boolean hasGroup(String groupID) {
         return this.group.equalsIgnoreCase(groupID);
+    }
+
+    public void setGroup(String groupId) {
+        this.group = groupId;
     }
 
     public void recalculatePermissions(Map<String, Group> groupsMap) {

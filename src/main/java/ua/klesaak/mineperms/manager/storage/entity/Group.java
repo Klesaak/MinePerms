@@ -1,7 +1,6 @@
 package ua.klesaak.mineperms.manager.storage.entity;
 
 import lombok.Getter;
-import lombok.Setter;
 import ua.klesaak.mineperms.manager.storage.Storage;
 
 import java.util.Collections;
@@ -9,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Getter @Setter
+@Getter
 public class Group extends AbstractEntity {
     private Set<String> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
@@ -42,6 +41,12 @@ public class Group extends AbstractEntity {
 
     public void removeInheritanceGroup(String groupId) {
         inheritanceGroups.remove(groupId.toLowerCase());
+    }
+
+    public void setInheritanceGroups(Set<String> inheritanceGroups) {
+        Set<String> groups = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        groups.addAll(inheritanceGroups);
+        this.inheritanceGroups = groups;
     }
 
     public String getGroupID() {
