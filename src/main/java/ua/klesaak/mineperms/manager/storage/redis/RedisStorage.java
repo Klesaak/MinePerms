@@ -436,6 +436,7 @@ public class RedisStorage extends Storage {
     @Override
     public void close() {
         this.redisPool.getRedis().close();
+        this.redisPool.getJedisPool().destroy();
         if (this.redisMessenger != null) this.redisMessenger.close();
     }
 }

@@ -41,6 +41,8 @@ public class RedisMessenger implements AutoCloseable {
     public void close() {
         this.closing = true;
         this.sub.unsubscribe();
+        this.redisPool.getRedis().close();
+        this.redisPool.getJedisPool().destroy();
     }
 
     private class Subscription extends JedisPubSub implements Runnable {
