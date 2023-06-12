@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static ua.klesaak.mineperms.manager.storage.mysql.DatabaseConstants.*;
+
 @Getter
 public class MySQLStorage extends Storage {
     private final JdbcPooledConnectionSource connectionSource;
@@ -65,34 +67,34 @@ public class MySQLStorage extends Storage {
             DatabaseFieldConfig playerName = new DatabaseFieldConfig("playerName");
             playerName.setId(true);
             playerName.setCanBeNull(false);
-            playerName.setColumnName(DatabaseConstants.USER_NAME_COLUMN);
+            playerName.setColumnName(USER_NAME_COLUMN);
             usersFieldConfigs.add(playerName);
 
             DatabaseFieldConfig groupField = new DatabaseFieldConfig("group");
             groupField.setCanBeNull(false);
             groupField.setDataType(DataType.STRING);
             groupField.setDefaultValue(this.manager.getConfigFile().getDefaultGroup());
-            groupField.setColumnName(DatabaseConstants.USER_GROUP_COLUMN);
+            groupField.setColumnName(USER_GROUP_COLUMN);
             usersFieldConfigs.add(groupField);
 
             DatabaseFieldConfig prefixField = new DatabaseFieldConfig("prefix");
             prefixField.setCanBeNull(false);
             prefixField.setDataType(DataType.STRING);
             prefixField.setDefaultValue("");
-            prefixField.setColumnName(DatabaseConstants.PREFIX_COLUMN);
+            prefixField.setColumnName(PREFIX_COLUMN);
             usersFieldConfigs.add(prefixField);
 
             DatabaseFieldConfig suffixField = new DatabaseFieldConfig("suffix");
             suffixField.setCanBeNull(false);
             suffixField.setDataType(DataType.STRING);
             suffixField.setDefaultValue("");
-            suffixField.setColumnName(DatabaseConstants.SUFFIX_COLUMN);
+            suffixField.setColumnName(SUFFIX_COLUMN);
             usersFieldConfigs.add(suffixField);
 
             DatabaseFieldConfig permsField = new DatabaseFieldConfig("serializedPerms");
             permsField.setCanBeNull(false);
             permsField.setDataType(DataType.LONG_STRING);
-            permsField.setColumnName(DatabaseConstants.PERMISSIONS_COLUMN);
+            permsField.setColumnName(PERMISSIONS_COLUMN);
             usersFieldConfigs.add(permsField);
 
             DatabaseTableConfig<UserData> usersTableConfig = new DatabaseTableConfig<>(UserData.class, config.getUsersTable(), usersFieldConfigs);
@@ -111,33 +113,33 @@ public class MySQLStorage extends Storage {
             DatabaseFieldConfig groupID = new DatabaseFieldConfig("groupID");
             groupID.setId(true);
             groupID.setCanBeNull(false);
-            groupID.setColumnName(DatabaseConstants.GROUP_ID_COLUMN);
+            groupID.setColumnName(GROUP_ID_COLUMN);
             groupsFiledConfigs.add(groupID);
 
             DatabaseFieldConfig prefixField = new DatabaseFieldConfig("prefix");
             prefixField.setCanBeNull(false);
             prefixField.setDataType(DataType.STRING);
             prefixField.setDefaultValue("");
-            prefixField.setColumnName(DatabaseConstants.PREFIX_COLUMN);
+            prefixField.setColumnName(PREFIX_COLUMN);
             groupsFiledConfigs.add(prefixField);
 
             DatabaseFieldConfig suffixField = new DatabaseFieldConfig("suffix");
             suffixField.setCanBeNull(false);
             suffixField.setDataType(DataType.STRING);
             suffixField.setDefaultValue("");
-            suffixField.setColumnName(DatabaseConstants.SUFFIX_COLUMN);
+            suffixField.setColumnName(SUFFIX_COLUMN);
             groupsFiledConfigs.add(suffixField);
 
             DatabaseFieldConfig parentField = new DatabaseFieldConfig("serializedInheritanceGroups");
             parentField.setCanBeNull(false);
             parentField.setDataType(DataType.LONG_STRING);
-            parentField.setColumnName(DatabaseConstants.GROUP_PARENTS_COLUMN);
+            parentField.setColumnName(GROUP_PARENTS_COLUMN);
             groupsFiledConfigs.add(parentField);
 
             DatabaseFieldConfig permsField = new DatabaseFieldConfig("serializedPerms");
             permsField.setCanBeNull(false);
             permsField.setDataType(DataType.LONG_STRING);
-            permsField.setColumnName(DatabaseConstants.PERMISSIONS_COLUMN);
+            permsField.setColumnName(PERMISSIONS_COLUMN);
             groupsFiledConfigs.add(permsField);
 
             DatabaseTableConfig<GroupData> groupsTableConfig = new DatabaseTableConfig<>(GroupData.class, config.getGroupsTable(), groupsFiledConfigs);
