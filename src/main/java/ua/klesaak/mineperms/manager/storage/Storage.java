@@ -13,6 +13,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static ua.klesaak.mineperms.MinePermsManager.*;
+
 public abstract class Storage implements AutoCloseable {
     protected final MinePermsManager manager;
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
@@ -80,20 +82,20 @@ public abstract class Storage implements AutoCloseable {
 
     public static boolean hasPermission(Set<String> permissions, String permission) {
         val permissionLowerCase = permission.toLowerCase();
-        if (permissions.contains(MinePermsManager.ROOT_WILDCARD)) return true;
+        if (permissions.contains(ROOT_WILDCARD)) return true;
 
-        if (!MinePermsManager.DOT_WILDCARD_PATTERN.matcher(permissionLowerCase).matches()) return permissions.contains(permissionLowerCase);
+        if (!DOT_WILDCARD_PATTERN.matcher(permissionLowerCase).matches()) return permissions.contains(permissionLowerCase);
         //if (!permissionLowerCase.contains(MinePermsManager.DOT_WILDCARD)) return permissions.contains(permissionLowerCase);
 
         if (permissions.contains(permissionLowerCase)) return true;
 
         //String[] parts = permissionLowerCase.split("\\.");
-        String[] parts = MinePermsManager.DOT_WILDCARD_PATTERN.split(permissionLowerCase, 0);
+        String[] parts = DOT_WILDCARD_PATTERN.split(permissionLowerCase, 0);
 
         StringBuilder partsBuilder = new StringBuilder();
         for (String part : parts) {
-            partsBuilder.append(part).append(MinePermsManager.DOT_WILDCARD);
-            if (permissions.contains(partsBuilder + MinePermsManager.ROOT_WILDCARD)) return true;
+            partsBuilder.append(part).append(DOT_WILDCARD);
+            if (permissions.contains(partsBuilder + ROOT_WILDCARD)) return true;
         }
         return false;
     }
