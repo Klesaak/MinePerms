@@ -12,6 +12,7 @@ public abstract class AbstractEntity {
     protected volatile String prefix = "";
     protected volatile String suffix = "";
     protected Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    //todo PermissionsMatcher
 
     protected AbstractEntity(String entityId) {
         this.entityId = entityId;

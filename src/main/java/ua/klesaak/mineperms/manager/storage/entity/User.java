@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class User extends AbstractEntity {
     private String group;
     private transient volatile Set<String> calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    //todo PermissionsMatcher
 
     public User(String playerName, String groupId) {
         super(playerName);
