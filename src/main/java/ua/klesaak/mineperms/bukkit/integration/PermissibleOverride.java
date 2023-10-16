@@ -12,6 +12,7 @@ import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.bukkit.utils.BukkitUtils;
+import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -67,7 +68,7 @@ public class PermissibleOverride extends PermissibleBase {
 
     @Override
     public boolean isOp() {
-        return this.hasPermission(MinePermsManager.ROOT_WILDCARD);
+        return this.hasPermission(PermissionsMatcher.ROOT_WILDCARD);
     }
 
     @Override

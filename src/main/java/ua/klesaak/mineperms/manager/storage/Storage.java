@@ -9,11 +9,12 @@ import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.RedisMessenger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
-import static ua.klesaak.mineperms.MinePermsManager.*;
 
 public abstract class Storage implements AutoCloseable {
     protected final MinePermsManager manager;
@@ -78,26 +79,6 @@ public abstract class Storage implements AutoCloseable {
         User user = this.getUser(nickName);
         if (user != null) return user.hasPermission(permission);
         return this.getDefaultGroup().hasPermission(permission);
-    }
-
-    public static boolean hasPermission(Set<String> permissions, String permission) {
-        val permissionLowerCase = permission.toLowerCase();
-        if (permissions.contains(ROOT_WILDCARD)) return true;
-
-        if (!DOT_WILDCARD_PATTERN.matcher(permissionLowerCase).matches()) return permissions.contains(permissionLowerCase);
-        //if (!permissionLowerCase.contains(MinePermsManager.DOT_WILDCARD)) return permissions.contains(permissionLowerCase);
-
-        if (permissions.contains(permissionLowerCase)) return true;
-
-        //String[] parts = permissionLowerCase.split("\\.");
-        String[] parts = DOT_WILDCARD_PATTERN.split(permissionLowerCase, 0);
-
-        StringBuilder partsBuilder = new StringBuilder();
-        for (String part : parts) {
-            partsBuilder.append(part).append(DOT_WILDCARD);
-            if (permissions.contains(partsBuilder + ROOT_WILDCARD)) return true;
-        }
-        return false;
     }
 
     public boolean hasPlayerInGroup(String playerName, String groupId) {

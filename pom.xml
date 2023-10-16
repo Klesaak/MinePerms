@@ -39,6 +39,78 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.j256</pattern>
+                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.mysql</pattern>
+                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>redis</pattern>
+                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache</pattern>
+                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.json</pattern>
+                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.slf4j</pattern>
+                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>LICENSE</exclude>
+                                        <exclude>INFO_BIN</exclude>
+                                        <exclude>INFO_SRC</exclude>
+                                        <exclude>README</exclude>
+                                        <exclude>pom.properties</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>junit:junit</exclude>
+                                    <exclude>*:xml-apis</exclude>
+                                    <exclude>org.apache.maven:lib:tests</exclude>
+                                    <exclude>org.apache:org.apache</exclude>
+                                    <exclude>org.bukkit:bukkit</exclude>
+                                    <exclude>org.hamcrest:org.hamcrest</exclude>
+                                    <exclude>org.json:org.json</exclude>
+                                    <exclude>log4j:log4j:jar:</exclude>
+
+                                    <exclude>com.velocitypowered</exclude>
+                                    <exclude>com.sk89q.worldedit</exclude>
+                                    <exclude>org.spigotmc</exclude>
+                                    <exclude>net.md_5</exclude>
+                                    <exclude>ua.vault</exclude>
+                                    <exclude>org.projectlombok</exclude>
+                                    <exclude>ru.Den_Abr</exclude>
+                                    <exclude>ru.tehkode</exclude>
+                                    <exclude>net.luckperms</exclude>
+                                    <exclude>org.checkerframework</exclude>
+                                    <exclude>com.googlecode</exclude>
+                                    <exclude>org.hamcrest</exclude>
+                                    <exclude>com.google.protobuf</exclude>
+                                    <exclude>org.codehaus.mojo</exclude>
+                                    <exclude>org.yaml</exclude>
+                                    <exclude>com.google.errorprone</exclude>
+                                    <exclude>com.google.code</exclude>
+                                    <exclude>com.google.guava</exclude>
+                                </excludes>
+                            </artifactSet>
                         </configuration>
                     </execution>
                 </executions>
@@ -109,10 +181,11 @@
             <version>1.2.3-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.github.MilkBowl</groupId>
-            <artifactId>VaultAPI</artifactId>
-            <version>1.7</version>
-            <scope>provided</scope>
+            <groupId>ua.vault</groupId>
+            <artifactId>vault</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>D:/EclipseWS/Vault.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

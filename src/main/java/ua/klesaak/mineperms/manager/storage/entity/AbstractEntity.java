@@ -1,6 +1,7 @@
 package ua.klesaak.mineperms.manager.storage.entity;
 
 import lombok.Getter;
+import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
 import java.util.Collections;
 import java.util.Set;
@@ -12,7 +13,7 @@ public abstract class AbstractEntity {
     protected volatile String prefix = "";
     protected volatile String suffix = "";
     protected Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    //todo PermissionsMatcher
+    protected transient volatile PermissionsMatcher permissionsMatcher = new PermissionsMatcher();
 
     protected AbstractEntity(String entityId) {
         this.entityId = entityId;

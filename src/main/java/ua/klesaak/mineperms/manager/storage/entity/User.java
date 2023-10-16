@@ -2,19 +2,14 @@ package ua.klesaak.mineperms.manager.storage.entity;
 
 import lombok.Getter;
 import lombok.val;
-import ua.klesaak.mineperms.manager.storage.Storage;
+import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 public class User extends AbstractEntity {
     private String group;
-    private transient volatile Set<String> calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    //todo PermissionsMatcher
 
     public User(String playerName, String groupId) {
         super(playerName);
@@ -23,21 +18,22 @@ public class User extends AbstractEntity {
 
     @Override
     public boolean hasPermission(String permission) {
-        return Storage.hasPermission(this.calculatedPermissions, permission);
+        return this.permissionsMatcher.hasPermission(permission);
     }
 
     @Override
     public void addPermission(String permission) {
         val perm = permission.toLowerCase();
         this.permissions.add(perm);
-        this.calculatedPermissions.add(perm);
+        this.permissionsMatcher.add(perm);
     }
 
     @Override
     public void removePermission(String permission) {
         val perm = permission.toLowerCase();
         this.permissions.remove(perm);
-        this.calculatedPermissions.remove(perm);
+        this.permissionsMatcher = new PermissionsMatcher();
+        this.permissionsMatcher.add(this.permissions);
     }
 
     public boolean hasGroup(String groupID) {
@@ -49,14 +45,14 @@ public class User extends AbstractEntity {
     }
 
     public void recalculatePermissions(Map<String, Group> groupsMap) {
-        this.calculatedPermissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        this.calculatedPermissions.addAll(this.permissions);
+        this.permissionsMatcher = new PermissionsMatcher();
+        this.permissionsMatcher.add(this.permissions);
         val group = groupsMap.get(this.group);
         if (group != null) {
-            this.calculatedPermissions.addAll(group.getPermissions());
+            this.permissionsMatcher.add(group.getPermissions());
             group.getInheritanceGroups().forEach(groupID -> {
                 val inheritanceGroup = groupsMap.get(groupID);
-                if (inheritanceGroup != null) this.calculatedPermissions.addAll(inheritanceGroup.getPermissions());
+                if (inheritanceGroup != null) this.permissionsMatcher.add(inheritanceGroup.getPermissions());
             });
         }
     }
@@ -85,7 +81,6 @@ public class User extends AbstractEntity {
                 ", prefix='" + prefix + '\'' +
                 ", suffix='" + suffix + '\'' +
                 ", permissions=" + permissions +
-                ", calculatedPermissions=" + calculatedPermissions +
                 '}';
     }
 }

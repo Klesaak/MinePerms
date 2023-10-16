@@ -14,6 +14,7 @@ import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.file.FileStorage;
 import ua.klesaak.mineperms.manager.storage.mysql.MySQLStorage;
 import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
+import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -619,7 +620,7 @@ public final class MinePermsCommand extends MPTabCompleter {
     }
 
     private boolean checkSuperPermission(IMPCommandSource commandSource, String permission) {
-        if (permission.equals(MinePermsManager.ROOT_WILDCARD) && !commandSource.hasPermission(MinePermsManager.ROOT_WILDCARD)) {
+        if (permission.equals(PermissionsMatcher.ROOT_WILDCARD) && !commandSource.hasPermission(PermissionsMatcher.ROOT_WILDCARD)) {
             commandSource.sendMessage("§cYou can't add super-permission because you don't have it!");
             return true;
         }
