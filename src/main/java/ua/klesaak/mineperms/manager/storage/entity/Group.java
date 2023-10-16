@@ -32,7 +32,7 @@ public class Group extends AbstractEntity {
     @Override
     public void removePermission(String permission) {
         this.permissions.remove(permission.toLowerCase());
-        this.permissionsMatcher = new PermissionsMatcher();
+        this.permissionsMatcher.clear();
         this.permissionsMatcher.add(this.permissions);
     }
 

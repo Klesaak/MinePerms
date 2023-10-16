@@ -32,7 +32,7 @@ public class User extends AbstractEntity {
     public void removePermission(String permission) {
         val perm = permission.toLowerCase();
         this.permissions.remove(perm);
-        this.permissionsMatcher = new PermissionsMatcher();
+        this.permissionsMatcher.clear();
         this.permissionsMatcher.add(this.permissions);
     }
 
