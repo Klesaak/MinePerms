@@ -45,6 +45,18 @@
                                     <shadedPattern>ua.klesaak.libs</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>com.google.gson</pattern>
+                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google.j2objc</pattern>
+                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javax.annotation</pattern>
+                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>com.mysql</pattern>
                                     <shadedPattern>ua.klesaak.libs</shadedPattern>
                                 </relocation>
