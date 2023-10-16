@@ -1,7 +1,6 @@
 package ua.klesaak.mineperms.manager.storage.entity;
 
 import lombok.Getter;
-import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
 import java.util.Collections;
@@ -19,6 +18,10 @@ public class Group extends AbstractEntity {
 
     @Override
     public boolean hasPermission(String permission) {
+        if (this.permissionsMatcher == null) {
+            this.permissionsMatcher = new PermissionsMatcher();
+            this.permissionsMatcher.add(this.permissions);
+        }
         return this.permissionsMatcher.hasPermission(permission);
     }
 
@@ -26,12 +29,20 @@ public class Group extends AbstractEntity {
     public void addPermission(String permission) {
         String perm = permission.toLowerCase();
         this.permissions.add(perm);
+        if (this.permissionsMatcher == null) {
+            this.permissionsMatcher = new PermissionsMatcher();
+            this.permissionsMatcher.add(this.permissions);
+            return;
+        }
         this.permissionsMatcher.add(perm);
     }
 
     @Override
     public void removePermission(String permission) {
         this.permissions.remove(permission.toLowerCase());
+        if (this.permissionsMatcher == null) {
+            this.permissionsMatcher = new PermissionsMatcher();
+        }
         this.permissionsMatcher.clear();
         this.permissionsMatcher.add(this.permissions);
     }

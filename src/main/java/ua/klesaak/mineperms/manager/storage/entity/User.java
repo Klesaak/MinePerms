@@ -33,7 +33,6 @@ public class User extends AbstractEntity {
         val perm = permission.toLowerCase();
         this.permissions.remove(perm);
         this.permissionsMatcher.clear();
-        this.permissionsMatcher.add(this.permissions);
     }
 
     public boolean hasGroup(String groupID) {
@@ -45,7 +44,10 @@ public class User extends AbstractEntity {
     }
 
     public void recalculatePermissions(Map<String, Group> groupsMap) {
-        this.permissionsMatcher = new PermissionsMatcher();
+        if (this.permissionsMatcher == null) {
+            this.permissionsMatcher = new PermissionsMatcher();
+        }
+        this.permissionsMatcher.clear();
         this.permissionsMatcher.add(this.permissions);
         val group = groupsMap.get(this.group);
         if (group != null) {

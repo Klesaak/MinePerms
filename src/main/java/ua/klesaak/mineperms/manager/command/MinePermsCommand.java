@@ -89,7 +89,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                         String nickName = args[2];
                         String permission = args[3];
                         if (this.checkSuperPermission(commandSource, permission)) return;
-                        storage.addUserPermission(nickName, permission);
+                        if (this.checkAsteriskPermission(commandSource, () -> storage.addUserPermission(nickName, permission))) return;
                         commandSource.sendMessage("§6Permission §c" + permission + " §6added to §a" + nickName);
                         return;
                     }
@@ -230,7 +230,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                             return;
                         }
                         if (this.checkSuperPermission(commandSource, permission)) return;
-                        storage.addGroupPermission(groupID, permission);
+                        if (this.checkAsteriskPermission(commandSource, ()-> storage.addGroupPermission(groupID, permission))) return;
                         commandSource.sendMessage("§6Permission §c" + permission + " §6added to group §a" + groupID);
                         return;
                     }
@@ -622,6 +622,16 @@ public final class MinePermsCommand extends MPTabCompleter {
     private boolean checkSuperPermission(IMPCommandSource commandSource, String permission) {
         if (permission.equals(PermissionsMatcher.ROOT_WILDCARD) && !commandSource.hasPermission(PermissionsMatcher.ROOT_WILDCARD)) {
             commandSource.sendMessage("§cYou can't add super-permission because you don't have it!");
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkAsteriskPermission(IMPCommandSource commandSource, Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (IllegalArgumentException exception) {
+            commandSource.sendMessage("§c" + exception.getMessage());
             return true;
         }
         return false;
