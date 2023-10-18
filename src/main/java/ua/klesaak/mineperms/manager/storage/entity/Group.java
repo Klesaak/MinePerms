@@ -42,6 +42,8 @@ public class Group extends AbstractEntity {
         this.permissions.remove(permission.toLowerCase());
         if (this.permissionsMatcher == null) {
             this.permissionsMatcher = new PermissionsMatcher();
+            this.permissionsMatcher.add(this.permissions);
+            return;
         }
         this.permissionsMatcher.clear();
         this.permissionsMatcher.add(this.permissions);

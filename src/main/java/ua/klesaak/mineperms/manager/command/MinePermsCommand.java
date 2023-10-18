@@ -42,6 +42,15 @@ public final class MinePermsCommand extends MPTabCompleter {
         }
         Storage storage = this.manager.getStorage();
         switch (args[0].toLowerCase()) {
+            case "testperm": {
+                if (args.length != 2) {
+                    commandSource.sendMessage("§6/" + label +" testperm <permission> - show info of permission which you have.");
+                    return;
+                }
+                String permission = args[1];
+                commandSource.sendMessage("§6Permission: §c" + permission + " §6== §c" + commandSource.hasPermission(permission));
+                return;
+            }
             case "user": {
                 if (args.length == 1) {
                     commandSource.sendMessage("§6MinePerms User command help:");

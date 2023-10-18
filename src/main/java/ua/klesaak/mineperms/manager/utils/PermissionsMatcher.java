@@ -32,18 +32,13 @@ public final class PermissionsMatcher implements Cloneable {
             return false;
         }
         if (dotLocation > 0) {
-            boolean bl;
-            int n = 0;
-            String perm = permission.substring(n, dotLocation);
+            String perm = permission.substring(0, dotLocation);
             PermissionsMatcher child = this.exclusionsChild.get(perm.toLowerCase());
             if (child == null) {
-                bl = this.allowed;
-            } else {
-                n = dotLocation + 1;
-                perm = permission.substring(n);
-                bl = child.hasPermission(perm);
+                return this.allowed;
             }
-            return bl;
+            perm = permission.substring(dotLocation + 1);
+            return child.hasPermission(perm);
         }
         String permissionLC = permission.toLowerCase();
         return permissionLC.equals(ROOT_WILDCARD) ? this.allowed && this.exclusions.isEmpty() && this.exclusionsChild.isEmpty() : this.exclusions.contains(permissionLC) != this.allowed;
@@ -65,8 +60,7 @@ public final class PermissionsMatcher implements Cloneable {
             throw new IllegalArgumentException("Permission can't start or end with dot: " + permission);
         }
         if (dotLocation > 0) {
-            int n = 0;
-            String perm = permission.substring(n, dotLocation);
+            String perm = permission.substring(0, dotLocation);
             String beforeDot = perm.toLowerCase();
             if (beforeDot.contains(ROOT_WILDCARD)) {
                 throw new IllegalArgumentException("Parent permission can't have asterisk: " + permission);
@@ -80,15 +74,11 @@ public final class PermissionsMatcher implements Cloneable {
                 child.allowed = this.allowed;
                 this.exclusionsChild.put(beforeDot, child);
             }
-            int n2 = dotLocation + 1;
-            child.add(permission.substring(n2), flag);
+            child.add(permission.substring(dotLocation + 1), flag);
             if (child.allowed == this.allowed && child.exclusions.isEmpty() && child.exclusionsChild.isEmpty()) {
                 this.exclusionsChild.remove(beforeDot);
             }
             return;
-        }
-        if (!permission.equalsIgnoreCase(ROOT_WILDCARD) && permission.contains(ROOT_WILDCARD)) {
-            throw new IllegalArgumentException("Permission can't have asterisks: " + permission);
         }
         String permissionLC = permission.toLowerCase();
         if (permissionLC.equalsIgnoreCase(ROOT_WILDCARD)) {

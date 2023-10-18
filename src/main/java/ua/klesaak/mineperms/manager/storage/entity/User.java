@@ -32,7 +32,6 @@ public class User extends AbstractEntity {
     public void removePermission(String permission) {
         val perm = permission.toLowerCase();
         this.permissions.remove(perm);
-        this.permissionsMatcher.clear();
     }
 
     public boolean hasGroup(String groupID) {

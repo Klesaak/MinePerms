@@ -280,6 +280,7 @@ public class MySQLStorage extends Storage {
         User user = this.getUser(nickName);
         if (user == null) return;
         user.removePermission(permission);
+        user.recalculatePermissions(this.groups);
         this.saveUser(nickName, user);
         this.broadcastPacket(MessageData.goUpdateUserPacket(user, this.manager.getConfigFile().getMySQLSettings().getUsersTable()));
     }
