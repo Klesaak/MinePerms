@@ -27,7 +27,8 @@ public final class MinePermsCommand extends MPTabCompleter {
     private final MinePermsManager manager;
 
     public MinePermsCommand(MinePermsManager manager) {
-        this.manager = manager;}
+        this.manager = manager;
+    }
 
     public void onExecute(IMPCommandSource commandSource, String label, String[] args) {
         if (args.length == 0) {
@@ -38,17 +39,19 @@ public final class MinePermsCommand extends MPTabCompleter {
             commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|parent-group> <identifier> - find user/group with special permission/group command.");
             commandSource.sendMessage("§6/" + label + " export <backend> - export data from current backend to another backend.");
             commandSource.sendMessage("§6/" + label + " migrate <simpleperms|pex|luckperms> - migrate data from another perm-plugin to current backend.");
+            commandSource.sendMessage("§6/" + label + " test-perm <permission> - show info of permission which you have.");
             return;
         }
         Storage storage = this.manager.getStorage();
         switch (args[0].toLowerCase()) {
-            case "testperm": {
+            case "test-perm": {
                 if (args.length != 2) {
-                    commandSource.sendMessage("§6/" + label +" testperm <permission> - show info of permission which you have.");
+                    commandSource.sendMessage("§6/" + label +" test-perm <permission> - show info of permission which you have.");
                     return;
                 }
-                String permission = args[1];
-                commandSource.sendMessage("§6Permission: §c" + permission + " §6== §c" + commandSource.hasPermission(permission));
+                String permission = args[1].toLowerCase();
+                boolean hasPerm = commandSource.hasPermission(permission);
+                commandSource.sendMessage("§6Permission: §c" + permission + " §6== " + (hasPerm ? "§a" : "§c") + hasPerm);
                 return;
             }
             case "user": {
@@ -393,6 +396,7 @@ public final class MinePermsCommand extends MPTabCompleter {
             }
             case "reload": {
                 // TODO: 06.06.2023 reload method
+                this.manager.reload();
                 commandSource.sendMessage("§aMinePerms reload successful!");
                 return;
             }

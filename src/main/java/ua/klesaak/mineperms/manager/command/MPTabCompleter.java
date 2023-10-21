@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import java.util.*;
 
 abstract class MPTabCompleter {
-    public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "find", "export", "migrate");
+    public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "reload", "find", "export", "migrate", "test-perm");
     public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "set-group", "delete", "prefix",
             "suffix", "clear-prefix", "clear-suffix");
     public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "delete", "prefix",

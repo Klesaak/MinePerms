@@ -9,6 +9,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 
 import java.io.File;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -55,7 +56,6 @@ public class JsonData {
             T storage = GSON.fromJson(new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8), clazz);
             storage.setFile(file);
             return storage;
-
         }
         if (!file.getParentFile().exists()) Files.createDirectory(file.getParentFile().toPath());
         if (!file.exists()) Files.createFile(file.toPath());
@@ -63,6 +63,18 @@ public class JsonData {
         storage.setFile(file);
         storage.write(storage, true);
         return storage;
+    }
+
+    @SneakyThrows
+    public void reload() {
+        val clazz = this.getClass();
+        val newClazz = load(this.file, clazz);
+        for (val field : clazz.getDeclaredFields()) {
+            val modifiers = field.getModifiers();
+            if (Modifier.isTransient(modifiers)) continue;
+            field.setAccessible(true);
+            field.set(this, field.get(newClazz));
+        }
     }
 
     public static <T, V> Pair<T, V> pairOf(T key, V value) {
