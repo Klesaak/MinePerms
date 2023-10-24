@@ -21,10 +21,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class MinePermsCommand extends MPTabCompleter {
     public static final String MAIN_PERMISSION = "mineperms.admin";
     private final MinePermsManager manager;
+    private final AtomicBoolean isLock = new AtomicBoolean(false);
 
     public MinePermsCommand(MinePermsManager manager) {
         this.manager = manager;
@@ -395,9 +397,14 @@ public final class MinePermsCommand extends MPTabCompleter {
                 break;
             }
             case "reload": {
+                if (this.checkLock(commandSource)) return;
+                this.isLock.set(true);
+
                 // TODO: 06.06.2023 reload method
                 this.manager.reload();
                 commandSource.sendMessage("§aMinePerms reload successful!");
+
+                this.isLock.set(false);
                 return;
             }
             case "find": {
@@ -422,7 +429,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                 return;
             }
         }
-        commandSource.sendMessage("§cUnknown operation.");
+        commandSource.sendMessage("§cUnknown operation: §6" + args[0]);
     }
 
     private void onMigrate(IMPCommandSource commandSource, String label, String[] args) {
@@ -431,8 +438,6 @@ public final class MinePermsCommand extends MPTabCompleter {
             return;
         }
         val plugin = args[1].toLowerCase();
-        commandSource.sendMessage("§cStart migrating data...");
-        commandSource.sendMessage("§cPlease don't use commands...");
         long start = System.currentTimeMillis();
         IMigrationPlugin migrationPlugin;
         switch (plugin) {
@@ -454,6 +459,9 @@ public final class MinePermsCommand extends MPTabCompleter {
                 return;
             }
         }
+        if (this.checkLock(commandSource)) return;
+        commandSource.sendMessage("§cStart migrating data...");
+        this.isLock.set(true);
         val groupsCollection = migrationPlugin.getAllGroups();
         val storage = this.manager.getStorage();
         storage.importGroupsData(groupsCollection);
@@ -461,6 +469,7 @@ public final class MinePermsCommand extends MPTabCompleter {
         storage.importUsersData(usersCollection);
         commandSource.sendMessage("§aMigrating complete! (" + (System.currentTimeMillis() - start) + "ms.)");
         commandSource.sendMessage("§aYou must delete old permission plugin and restart your server!");
+        this.isLock.set(false);
     }
 
     private void onExport(IMPCommandSource commandSource, String label, String[] args) {
@@ -482,9 +491,10 @@ public final class MinePermsCommand extends MPTabCompleter {
             commandSource.sendMessage("§cYou can't export data from current backend to current :-/");
             return;
         }
+        if (this.checkLock(commandSource)) return;
         long start = System.currentTimeMillis();
         commandSource.sendMessage("§cStart exporting data...");
-        commandSource.sendMessage("§cPlease don't use commands...");
+        this.isLock.set(true);
         switch (storageType) {
             case FILE: {
                 newStorage = new FileStorage(this.manager);
@@ -505,6 +515,7 @@ public final class MinePermsCommand extends MPTabCompleter {
         commandSource.sendMessage("§aExporting complete! (" + (System.currentTimeMillis() - start) + "ms.)");
         commandSource.sendMessage("§aTo cross the §6" + storageType + "§a backend, you must change field 'storageType' in file config.json and restart you server!");
         newStorage.close();
+        this.isLock.set(false);
     }
 
     private void onFind(IMPCommandSource commandSource, String label, String[] args) {
@@ -512,8 +523,10 @@ public final class MinePermsCommand extends MPTabCompleter {
             commandSource.sendMessage("§6/" + label + " find <group|user|all> <permission|parent-group> <identifier> - find user/group with special permission/group command.");
             return;
         }
+        if (this.checkLock(commandSource)) return;
         switch (args[1].toLowerCase()) {
             case "group": {
+                this.isLock.set(true);
                 long start = System.currentTimeMillis();
                 commandSource.sendMessage("§cStart finding...");
                 val groups = this.manager.getStorage().getAllGroupsData();
@@ -535,9 +548,11 @@ public final class MinePermsCommand extends MPTabCompleter {
                 }
                 commandSource.sendMessage("§aFinding Group's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
                 commandSource.sendMessage(found.isEmpty() ? "§cNothing..." : "§aResults: " + Joiner.on(", ").join(found));
+                this.isLock.set(false);
                 return;
             }
             case "user": {
+                this.isLock.set(true);
                 long start = System.currentTimeMillis();
                 commandSource.sendMessage("§cStart finding...");
                 val users = this.manager.getStorage().getAllUsersData();
@@ -559,9 +574,11 @@ public final class MinePermsCommand extends MPTabCompleter {
                 }
                 commandSource.sendMessage("§aFinding User's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
                 commandSource.sendMessage(found.isEmpty() ? "§cNothing..." : "§aResults: " + Joiner.on(", ").join(found));
+                this.isLock.set(false);
                 return;
             }
             case "all": {
+                this.isLock.set(true);
                 long start = System.currentTimeMillis();
                 commandSource.sendMessage("§cStart finding...");
                 val users = this.manager.getStorage().getAllUsersData();
@@ -592,6 +609,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                 val groupsResult =  groupsFound.isEmpty() ? "§cNothing..." : Joiner.on(", ").join(groupsFound);
                 commandSource.sendMessage("§aResults for Users: " + usersResult);
                 commandSource.sendMessage("§aResults for Groups: " + groupsResult);
+                this.isLock.set(false);
             }
         }
     }
@@ -645,6 +663,14 @@ public final class MinePermsCommand extends MPTabCompleter {
             runnable.run();
         } catch (IllegalArgumentException exception) {
             commandSource.sendMessage("§c" + exception.getMessage());
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkLock(IMPCommandSource commandSource) {
+        if (this.isLock.get()) {
+            commandSource.sendMessage("§cYou cannot run more than one heavy operation for security reasons, please wait.");
             return true;
         }
         return false;
