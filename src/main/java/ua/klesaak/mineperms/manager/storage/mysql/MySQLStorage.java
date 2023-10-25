@@ -5,13 +5,15 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseFieldConfig;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
+import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.table.DatabaseTableConfig;
 import com.j256.ormlite.table.TableUtils;
 import lombok.Getter;
+import lombok.Synchronized;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 
@@ -414,12 +416,40 @@ public class MySQLStorage extends Storage {
         this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
     }
 
+    @Synchronized
     @Override
     public void deleteGroup(String groupID) {
         this.groups.remove(groupID);
+        val defaultGroupId = this.getDefaultGroup().getGroupID();
+        for (val user : this.users.values()) {
+            if (user.hasGroup(groupID)) {
+                user.setGroup(defaultGroupId);
+            }
+        }
+        for (val user : this.temporalUsersCache.asMap().values()) {
+            if (user.hasGroup(groupID)) {
+                user.setGroup(defaultGroupId);
+            }
+        }
+        this.recalculateUsersPermissions();
         CompletableFuture.runAsync(()-> {
             try {
-                this.groupDataDao.deleteById(groupID);
+                val groupIDLC = groupID.toLowerCase();
+                UpdateBuilder<UserData, String> updateUsersBuilder = this.userDataDao.updateBuilder();
+                updateUsersBuilder.updateColumnValue(USER_GROUP_COLUMN, defaultGroupId);
+                updateUsersBuilder.where().eq(USER_GROUP_COLUMN, groupIDLC);
+                updateUsersBuilder.update();
+                this.groupDataDao.deleteById(groupIDLC);
+
+                UpdateBuilder<GroupData, String> updateGroupsBuilder = this.groupDataDao.updateBuilder();
+                for (val group : this.groups.values()) {
+                    if (group.hasGroup(groupID)) {
+                        group.removeInheritanceGroup(groupID);
+                        updateGroupsBuilder.updateColumnValue(GROUP_PARENTS_COLUMN, GroupData.from(group).getSerializedInheritanceGroups());
+                        updateGroupsBuilder.where().eq(GROUP_ID_COLUMN, group.getGroupID());
+                        updateGroupsBuilder.update();
+                    }
+                }
                 this.broadcastPacket(MessageData.goDeleteGroupPacket(groupID, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
             } catch (SQLException e) {
                 throw new RuntimeException("Error while delete group " + groupID + " data", e);

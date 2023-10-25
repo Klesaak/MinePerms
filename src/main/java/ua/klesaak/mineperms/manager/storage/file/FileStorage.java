@@ -204,6 +204,18 @@ public class FileStorage extends Storage {
     @Override
     public void deleteGroup(String groupID) {
         this.groups.remove(groupID.toLowerCase());
+        for (val user : this.users.values()) {
+            if (user.hasGroup(groupID)) {
+                user.setGroup(this.getDefaultGroup().getGroupID());
+            }
+        }
+        for (val group : this.groups.values()) {
+            if (group.hasGroup(groupID)) {
+                group.removeInheritanceGroup(groupID);
+            }
+        }
+        this.recalculateUsersPermissions();
+        this.saveUser(null);
         this.saveGroup(groupID);
     }
 

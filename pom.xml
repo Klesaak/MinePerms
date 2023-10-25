@@ -72,10 +72,6 @@
                                     <pattern>org.json</pattern>
                                     <shadedPattern>ua.klesaak.libs</shadedPattern>
                                 </relocation>
-                                <relocation>
-                                    <pattern>org.slf4j</pattern>
-                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
-                                </relocation>
                             </relocations>
                             <filters>
                                 <filter>
@@ -121,6 +117,7 @@
                                     <exclude>com.google.errorprone</exclude>
                                     <exclude>com.google.code</exclude>
                                     <exclude>com.google.guava</exclude>
+                                    <exclude>org.slf4j</exclude>
                                 </excludes>
                             </artifactSet>
                         </configuration>

@@ -145,6 +145,7 @@ public abstract class Storage implements AutoCloseable {
     }
 
     public void recalculateUsersPermissions() {
+        //this.temporalUsersCache.asMap().values().forEach(user -> user.recalculatePermissions(this.groups));
         this.users.values().forEach(user -> user.recalculatePermissions(this.groups));
     }
 }

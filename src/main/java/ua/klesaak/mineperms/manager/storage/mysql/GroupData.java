@@ -1,6 +1,7 @@
 package ua.klesaak.mineperms.manager.storage.mysql;
 
 import com.google.gson.reflect.TypeToken;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
@@ -8,7 +9,7 @@ import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.util.Set;
 
-@Setter
+@Setter @Getter
 public class GroupData {
     private String groupID;
     private String prefix;
@@ -50,17 +51,5 @@ public class GroupData {
 
     public Set<String> getPermissions() {
         return JsonData.GSON.fromJson(this.serializedPerms, new TypeToken<Set<String>>(){}.getType());
-    }
-
-    public String getGroupID() {
-        return groupID;
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public String getSuffix() {
-        return suffix;
     }
 }

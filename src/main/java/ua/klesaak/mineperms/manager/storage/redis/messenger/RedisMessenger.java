@@ -88,6 +88,8 @@ public class RedisMessenger implements AutoCloseable {
             if (messageData.getUuid().equals(SERVER_UUID)) return;
             val storage = RedisMessenger.this.storage;
             val config = RedisMessenger.this.minePermsManager.getConfigFile();
+            val temporalUserCache = storage.getTemporalUsersCache();
+            val defaultGroupId = storage.getDefaultGroup().getGroupID();
             String usersSubChannel = "";
             String groupsSubChannel = "";
             switch (config.getStorageType()) {
@@ -118,12 +120,12 @@ public class RedisMessenger implements AutoCloseable {
                     if (!usersSubChannel.equalsIgnoreCase(messageData.getSubChannel())) return;
                     val userName = messageData.getStringObject();
                     if (storage.getUsers().get(userName) != null) {
-                        storage.getUsers().put(userName, new User(userName, storage.getDefaultGroup().getGroupID()));
+                        storage.getUsers().put(userName, new User(userName, defaultGroupId));
                         break;
 
                     }
-                    if (storage.getTemporalUsersCache().getIfPresent(userName) != null) {
-                        storage.getTemporalUsersCache().put(userName, new User(userName, storage.getDefaultGroup().getGroupID()));
+                    if (temporalUserCache.getIfPresent(userName) != null) {
+                        temporalUserCache.put(userName, new User(userName, defaultGroupId));
                     }
                     break;
                 }
@@ -136,7 +138,23 @@ public class RedisMessenger implements AutoCloseable {
                 case GROUP_DELETE: {
                     if (!groupsSubChannel.equalsIgnoreCase(messageData.getSubChannel())) return;
                     val groupID = messageData.getStringObject();
-                    storage.getGroups().remove(groupID);
+                    val groupsCache = storage.getGroups();
+                    groupsCache.remove(groupID);
+                    for (val user : storage.getUsers().values()) {
+                        if (user.hasGroup(groupID)) {
+                            user.setGroup(defaultGroupId);
+                        }
+                    }
+                    for (val user : temporalUserCache.asMap().values()) {
+                        if (user.hasGroup(groupID)) {
+                            user.setGroup(defaultGroupId);
+                        }
+                    }
+                    for (val group : groupsCache.values()) {
+                        if (group.hasGroup(groupID)) {
+                            group.removeInheritanceGroup(groupID);
+                        }
+                    }
                     storage.recalculateUsersPermissions();
                     break;
                 }

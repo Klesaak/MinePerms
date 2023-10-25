@@ -1,6 +1,7 @@
 package ua.klesaak.mineperms.manager.storage.redis;
 
 import lombok.Getter;
+import lombok.Synchronized;
 import lombok.val;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
@@ -46,7 +47,7 @@ public class RedisStorage extends Storage {
     }
 
     @Override
-    public void cacheUser(String nickName) { // TODO: 06.06.2023 поместить в евенты(Velocity)!
+    public void cacheUser(String nickName) {
         val tempUser = this.temporalUsersCache.getIfPresent(nickName);
         User user = tempUser != null ? tempUser : this.getUser(nickName);
         if (!this.manager.getConfigFile().isUseRedisPubSub()) { //загружаем игрока из бд при каждом заходе, чтобы была актуальность данных!
@@ -69,7 +70,7 @@ public class RedisStorage extends Storage {
      * чтобы в случае быстрого перезахода игрока не тратить лишние ресурсы на его подгрузку из БД
      */
     @Override
-    public void unCacheUser(String nickName) { // TODO: 06.06.2023 поместить в евенты(Velocity)!
+    public void unCacheUser(String nickName) {
         User user = this.users.remove(nickName);
         this.temporalUsersCache.put(nickName, user);
     }
@@ -320,10 +321,12 @@ public class RedisStorage extends Storage {
         this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getRedisSettings().getGroupsKey()));
     }
 
+    @Synchronized
     @Override
     public void deleteGroup(String groupID) {
         val config = this.manager.getConfigFile();
         this.groups.remove(groupID);
+        //todo удалить у всех юзеров и групgh
         CompletableFuture.runAsync(()-> {
             try (Jedis jed = this.redisPool.getRedis()) {
                 val redisConfig = config.getRedisSettings();
