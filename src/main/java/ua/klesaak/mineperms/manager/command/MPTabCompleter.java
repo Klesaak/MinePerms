@@ -1,6 +1,7 @@
 package ua.klesaak.mineperms.manager.command;
 
 import com.google.common.base.Preconditions;
+import ua.klesaak.mineperms.manager.config.StorageType;
 
 import java.util.*;
 
@@ -14,7 +15,7 @@ abstract class MPTabCompleter {
     public static final List<String> FIND_SUB_COMMANDS_0 = Arrays.asList("user", "group", "all");
     public static final List<String> FIND_SUB_COMMANDS_1 = Arrays.asList("permission", "parent-group");
 
-    public static final List<String> EXPORT_SUB_COMMANDS = Arrays.asList("file", "mysql", "redis");
+    public static final List<String> EXPORT_SUB_COMMANDS = new ArrayList<>(StorageType.getTypesString());
     public static final List<String> MIGRATE_SUB_COMMANDS = Arrays.asList("simpleperms", "pex", "luckperms");
 
     public List<String> onMainCommand(String[] args) {

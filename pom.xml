@@ -80,11 +80,11 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/maven/ua.klesaak/MinePerms/pom.xml</exclude>
                                         <exclude>LICENSE</exclude>
                                         <exclude>INFO_BIN</exclude>
                                         <exclude>INFO_SRC</exclude>
                                         <exclude>README</exclude>
-                                        <exclude>pom.properties</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

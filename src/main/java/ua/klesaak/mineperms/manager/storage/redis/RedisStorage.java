@@ -6,8 +6,8 @@ import lombok.val;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 import ua.klesaak.mineperms.manager.utils.JsonData;
@@ -339,11 +339,28 @@ public class RedisStorage extends Storage {
             }
         }
         CompletableFuture.runAsync(()-> {
-            /// TODO: 25.10.2023
-            
             try (Jedis jed = this.redisPool.getRedis()) {
                 val redisConfig = config.getRedisSettings();
                 jed.select(redisConfig.getDatabase());
+
+                Pipeline pip = jed.pipelined();
+                Map<String, String> groupsData = new HashMap<>();
+                Map<String, String> usersData = new HashMap<>();
+                for (val group : this.groups.values()) {
+                    if (group.hasGroup(groupID)) {
+                        group.removeInheritanceGroup(groupID);
+                        groupsData.put(group.getGroupID(), JsonData.GSON.toJson(group));
+                    }
+                }
+                for (val user : this.getAllUsersData()) {
+                    if (user.hasGroup(groupID)) {
+                        user.setGroup(defaultGroupId);
+                        usersData.put(user.getPlayerName(), JsonData.GSON.toJson(user));
+                    }
+                }
+                pip.hmset(redisConfig.getGroupsKey(), groupsData);
+                pip.hmset(redisConfig.getUsersKey(), usersData);
+                pip.sync();
                 if (jed.hexists(redisConfig.getGroupsKey(), groupID)) {
                     jed.hdel(redisConfig.getGroupsKey(), groupID);
                     this.broadcastPacket(MessageData.goDeleteGroupPacket(groupID, config.getRedisSettings().getGroupsKey()));

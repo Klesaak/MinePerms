@@ -656,7 +656,7 @@ public final class MinePermsCommand extends MPTabCompleter {
 
     private boolean checkSuperPermission(IMPCommandSource commandSource, String permission) {
         if (permission.equals(PermissionsMatcher.ROOT_WILDCARD) && !commandSource.hasPermission(PermissionsMatcher.ROOT_WILDCARD)) {
-            commandSource.sendMessage("§cYou can't add super-permission because you don't have it!");
+            commandSource.sendMessage("§cYou can't add root-permission because you don't have it!");
             return true;
         }
         return false;
