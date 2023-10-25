@@ -325,9 +325,22 @@ public class RedisStorage extends Storage {
     @Override
     public void deleteGroup(String groupID) {
         val config = this.manager.getConfigFile();
+        val defaultGroupId = this.getDefaultGroup().getGroupID();
+        if (groupID.equalsIgnoreCase(defaultGroupId)) return;
         this.groups.remove(groupID);
-        //todo удалить у всех юзеров и групgh
+        for (val user : this.users.values()) {
+            if (user.hasGroup(groupID)) {
+                user.setGroup(defaultGroupId);
+            }
+        }
+        for (val user : this.temporalUsersCache.asMap().values()) {
+            if (user.hasGroup(groupID)) {
+                user.setGroup(defaultGroupId);
+            }
+        }
         CompletableFuture.runAsync(()-> {
+            /// TODO: 25.10.2023
+            
             try (Jedis jed = this.redisPool.getRedis()) {
                 val redisConfig = config.getRedisSettings();
                 jed.select(redisConfig.getDatabase());

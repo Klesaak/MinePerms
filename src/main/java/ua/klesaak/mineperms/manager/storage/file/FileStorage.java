@@ -203,10 +203,12 @@ public class FileStorage extends Storage {
 
     @Override
     public void deleteGroup(String groupID) {
+        val defaultGroupId = this.getDefaultGroup().getGroupID();
+        if (groupID.equalsIgnoreCase(defaultGroupId)) return;
         this.groups.remove(groupID.toLowerCase());
         for (val user : this.users.values()) {
             if (user.hasGroup(groupID)) {
-                user.setGroup(this.getDefaultGroup().getGroupID());
+                user.setGroup(defaultGroupId);
             }
         }
         for (val group : this.groups.values()) {

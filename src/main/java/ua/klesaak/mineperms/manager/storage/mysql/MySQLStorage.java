@@ -419,8 +419,9 @@ public class MySQLStorage extends Storage {
     @Synchronized
     @Override
     public void deleteGroup(String groupID) {
-        this.groups.remove(groupID);
         val defaultGroupId = this.getDefaultGroup().getGroupID();
+        if (groupID.equalsIgnoreCase(defaultGroupId)) return;
+        this.groups.remove(groupID);
         for (val user : this.users.values()) {
             if (user.hasGroup(groupID)) {
                 user.setGroup(defaultGroupId);

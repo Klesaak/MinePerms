@@ -312,6 +312,10 @@ public final class MinePermsCommand extends MPTabCompleter {
                             commandSource.sendMessage("§cGroup not found!");
                             return;
                         }
+                        if (groupID.equalsIgnoreCase(storage.getDefaultGroup().getGroupID())) {
+                            commandSource.sendMessage("§cYou can't delete default group!");
+                            return;
+                        }
                         storage.deleteGroup(groupID);
                         commandSource.sendMessage("§6Group §c" + groupID + " §6deleted!");
                         return;
