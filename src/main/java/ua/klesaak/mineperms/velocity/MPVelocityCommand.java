@@ -37,8 +37,7 @@ public final class MPVelocityCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(Invocation invocation) {
-       // return invocation.source().hasPermission(MinePermsCommand.MAIN_PERMISSION);
-        return true;//todo починить цвета в чате
+        return invocation.source().hasPermission(MinePermsCommand.MAIN_PERMISSION);
     }
 
     @Override

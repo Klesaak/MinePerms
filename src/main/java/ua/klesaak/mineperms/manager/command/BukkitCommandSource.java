@@ -1,5 +1,6 @@
 package ua.klesaak.mineperms.manager.command;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 public class BukkitCommandSource implements IMPCommandSource {
@@ -16,6 +17,6 @@ public class BukkitCommandSource implements IMPCommandSource {
 
     @Override
     public void sendMessage(String message) {
-        this.sender.sendMessage(message);
+        this.sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }
 }

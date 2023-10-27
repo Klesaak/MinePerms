@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.event.velocity.VelocityEventManager;
 import ua.klesaak.mineperms.manager.utils.Platform;
-import ua.klesaak.mineperms.velocity.listeners.MPVelocityListener;
 
 import java.nio.file.Path;
 
@@ -23,7 +22,7 @@ import java.nio.file.Path;
         authors = {"Klesaak"}
 )
 @Getter
-public class MinePermsVelocity {
+public final class MinePermsVelocity {
     private final ProxyServer server;
     private final Logger logger;
     private final MinePermsManager minePermsManager;

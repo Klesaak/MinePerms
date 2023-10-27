@@ -32,8 +32,8 @@ public final class MinePermsManager {
         this.configFile = JsonData.load(new File(pluginDataFolder, "config.json"), ConfigFile.class);
     }
 
-    public void reload() {
-        this.getConfigFile().reload();
+    public void reload() { //todo
+        this.configFile.reload();
 
     }
 

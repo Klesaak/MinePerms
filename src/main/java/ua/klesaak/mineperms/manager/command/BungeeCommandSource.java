@@ -1,5 +1,6 @@
 package ua.klesaak.mineperms.manager.command;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 
@@ -17,6 +18,6 @@ public class BungeeCommandSource implements IMPCommandSource {
 
     @Override
     public void sendMessage(String message) {
-        this.sender.sendMessage(TextComponent.fromLegacyText(message));
+        this.sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', message)));
     }
 }
