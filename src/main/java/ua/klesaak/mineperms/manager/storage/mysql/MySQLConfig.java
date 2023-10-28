@@ -6,10 +6,11 @@ import lombok.val;
 @Getter
 public class MySQLConfig {
     private final int port;
-    private final String username, password, database, address, usersTable, groupsTable;
+    private final String driverName, username, password, database, address, usersTable, groupsTable;
     private final boolean isUseSSL;
 
-    public MySQLConfig(String username, String password, String database, String address, String usersTable, String groupsTable, int port, boolean isUseSSL) {
+    public MySQLConfig(String driverName, String username, String password, String database, String address, String usersTable, String groupsTable, int port, boolean isUseSSL) {
+        this.driverName = driverName.toLowerCase();
         this.username = username;
         this.password = password;
         this.database = database;
@@ -21,7 +22,9 @@ public class MySQLConfig {
     }
 
     public String getHost() {
-        val builder = new StringBuilder("jdbc:mysql://");
+        val builder = new StringBuilder("jdbc:");
+        builder.append(this.driverName);
+        builder.append("://");
         builder.append(this.username);
         builder.append(":");
         builder.append(this.password);
@@ -51,6 +54,7 @@ public class MySQLConfig {
     public String toString() {
         return "MySQLConfig{" +
                 "port=" + port +
+                ", driverName='" + driverName + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", database='" + database + '\'' +

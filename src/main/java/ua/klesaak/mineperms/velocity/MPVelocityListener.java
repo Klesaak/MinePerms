@@ -36,7 +36,7 @@ public final class MPVelocityListener {
 
     @Subscribe(order = PostOrder.FIRST)
     public void onPlayerLogin(LoginEvent event) {
-        Player player = event.getPlayer();
+       // Player player = event.getPlayer();
     }
 
     @Subscribe

@@ -19,7 +19,7 @@ public class ConfigFile extends JsonData {
         this.storageType = StorageType.FILE;
         this.defaultGroup = "default";
         this.useRedisPubSub = false;
-        this.MySQLSettings = new MySQLConfig("root", "root", "mineperms", "localhost", "mp_users", "mp_groups", 3306, false);
+        this.MySQLSettings = new MySQLConfig("mysql","root", "root", "mineperms", "localhost", "mp_users", "mp_groups", 3306, false);
         this.RedisSettings = new RedisConfig("localhost", "", "mp_groups", "mp_users", 6379,0);
     }
 
