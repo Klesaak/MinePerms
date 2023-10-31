@@ -42,35 +42,59 @@
                             <relocations>
                                 <relocation>
                                     <pattern>com.j256</pattern>
-                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                    <shadedPattern>ua.klesaak.libs.com.j256</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.postgresql</pattern>
+                                    <shadedPattern>ua.klesaak.libs.org.postgresql</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>waffle</pattern>
+                                    <shadedPattern>ua.klesaak.libs.waffle</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.sun</pattern>
+                                    <shadedPattern>ua.klesaak.libs.com.sun</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.mariadb.jdbc</pattern>
+                                    <shadedPattern>ua.klesaak.libs.org.mariadb</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.google.gson</pattern>
-                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                    <shadedPattern>ua.klesaak.libs.com.google</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.google.j2objc</pattern>
-                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                    <shadedPattern>ua.klesaak.libs.com.google</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>javax.annotation</pattern>
-                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                    <shadedPattern>ua.klesaak.libs.javax</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.mysql</pattern>
-                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                    <shadedPattern>ua.klesaak.libs.com.mysql</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>redis</pattern>
-                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                    <shadedPattern>ua.klesaak.libs.redis</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache</pattern>
-                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                    <shadedPattern>ua.klesaak.libs.org.apache</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.json</pattern>
-                                    <shadedPattern>ua.klesaak.libs</shadedPattern>
+                                    <shadedPattern>ua.klesaak.libs.org.json</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.github</pattern>
+                                    <shadedPattern>ua.klesaak.libs.com.github</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>waffle</pattern>
+                                    <shadedPattern>ua.klesaak.libs.waffle</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
@@ -220,6 +244,19 @@
             <artifactId>mysql-connector-j</artifactId>
             <version>8.0.32</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.6.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client -->
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
         <dependency>
             <groupId>redis.clients</groupId>
