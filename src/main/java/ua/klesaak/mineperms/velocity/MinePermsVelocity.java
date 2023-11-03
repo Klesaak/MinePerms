@@ -33,9 +33,7 @@ public final class MinePermsVelocity {
         this.server = server;
         this.logger = logger;
         this.minePermsManager = new MinePermsManager(Platform.VELOCITY);
-        this.minePermsManager.loadConfig(dataDirectory.toFile());
-        this.minePermsManager.initStorage();
-        this.minePermsManager.registerEventsManager(new VelocityEventManager(this));
+        this.minePermsManager.init(dataDirectory.toFile(), new VelocityEventManager(this));
         this.logger.info("Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }
 

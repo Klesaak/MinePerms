@@ -28,20 +28,8 @@ public final class MinePermsManager {
         MinePermsAPI.register(this.storage);
     }
 
-    public void loadConfig(File pluginDataFolder) {
+    public void init(File pluginDataFolder, IMPEventManager eventManager) {
         this.configFile = JsonData.load(new File(pluginDataFolder, "config.json"), ConfigFile.class);
-    }
-
-    public void reload() { //todo
-        this.configFile.reload();
-
-    }
-
-    public void registerEventsManager(IMPEventManager eventManager) {
-        this.eventManager = eventManager;
-    }
-
-    public void initStorage() {
         switch (this.configFile.getStorageType()) {
             case FILE: {
                 this.storage = new FileStorage(this);
@@ -60,6 +48,13 @@ public final class MinePermsManager {
             }
         }
         this.storage.init();
+        this.eventManager = eventManager;
+
+    }
+
+    public void reload() { //todo
+        this.configFile.reload();
+
     }
 
     public boolean hasPermission(String nickName, String permission) {

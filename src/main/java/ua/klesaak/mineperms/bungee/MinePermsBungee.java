@@ -15,11 +15,9 @@ public class MinePermsBungee extends Plugin {
     public void onEnable() {
         long time = System.currentTimeMillis();
         this.minePermsManager = new MinePermsManager(Platform.BUNGEECORD);
-        this.minePermsManager.loadConfig(this.getDataFolder());
-        this.minePermsManager.initStorage();
+        this.minePermsManager.init(this.getDataFolder(), new BungeeEventManager());
         new MPBungeeCommand(this);
         new MPBungeeListener(this);
-        this.minePermsManager.registerEventsManager(new BungeeEventManager());
         this.getLogger().info(ChatColor.GREEN + "Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }
 

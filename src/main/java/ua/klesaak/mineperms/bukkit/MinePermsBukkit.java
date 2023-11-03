@@ -51,8 +51,7 @@ public class MinePermsBukkit extends JavaPlugin {
     public void onEnable() {
         long time = System.currentTimeMillis();
         this.minePermsManager = new MinePermsManager(Platform.BUKKIT);
-        this.minePermsManager.loadConfig(this.getDataFolder());
-        this.minePermsManager.initStorage();
+        this.minePermsManager.init(this.getDataFolder(), new BukkitEventManager());
         this.getServer().getOperators().forEach(offlinePlayer -> offlinePlayer.setOp(false));
         //регистрируем классы-интеграции
         if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null) {
@@ -71,7 +70,6 @@ public class MinePermsBukkit extends JavaPlugin {
         });
         new MPBukkitListener(this);
         new MPBukkitCommand(this);
-        this.minePermsManager.registerEventsManager(new BukkitEventManager());
         this.getLogger().log(Level.INFO, "Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }
 

@@ -35,9 +35,9 @@ public class MySQLStorage extends Storage {
         super(manager);
         val config = this.manager.getConfigFile().getMySQLSettings();
         try {
-            this.connectionSource = new JdbcPooledConnectionSource(config.getHost());
+            this.connectionSource = new JdbcPooledConnectionSource(config.getHost(), config.getUsername(), config.getPassword());
         } catch (SQLException ex) {
-            throw new RuntimeException("Error while init MySQL", ex);
+            throw new RuntimeException("Error while init MySQL, check your connection settings in config.json", ex);
         }
         this.createUsersTable(config);
         this.createGroupsTable(config);

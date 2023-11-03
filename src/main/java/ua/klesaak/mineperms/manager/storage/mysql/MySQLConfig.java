@@ -25,11 +25,9 @@ public class MySQLConfig {
         val builder = new StringBuilder("jdbc:");
         builder.append(this.driverName);
         builder.append("://");
-        builder.append(this.username);
-        builder.append(":");
-        builder.append(this.password);
-        builder.append("@");
         builder.append(this.address);
+        builder.append(":");
+        builder.append(this.port);
         builder.append("/");
         builder.append(this.database);
         builder.append("?useUnicode=true&");
