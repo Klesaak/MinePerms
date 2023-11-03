@@ -18,20 +18,20 @@ abstract class MPTabCompleter {
     public static final List<String> EXPORT_SUB_COMMANDS = new ArrayList<>(StorageType.getTypesString());
     public static final List<String> MIGRATE_SUB_COMMANDS = Arrays.asList("simpleperms", "pex", "luckperms");
 
-    public List<String> onMainCommand(String[] args) {
+    public List<String> suggestMainCommand(String[] args) {
         return this.copyPartialMatches(args[0].toLowerCase(), SUB_COMMANDS_0, new ArrayList<>());
     }
 
-    public List<String> onUserCommand(Collection<String> onlinePlayers, List<String> groupNames, String[] args) {
+    public List<String> suggestUserCommand(Collection<String> onlinePlayers, List<String> groupNames, String[] args) {
         switch (args.length) {
             case 2: {
-                return this.copyPartialMatches(args[1].toLowerCase(), USER_SUB_COMMANDS_0, new ArrayList<>());
+                return this.copyPartialMatches(args[1].toLowerCase(), onlinePlayers, new ArrayList<>());
             }
             case 3: {
-                return this.copyPartialMatches(args[2].toLowerCase(), onlinePlayers, new ArrayList<>());
+                return this.copyPartialMatches(args[2].toLowerCase(), USER_SUB_COMMANDS_0, new ArrayList<>());
             }
             case 4: {
-                if (args[1].equalsIgnoreCase("set-group")) {
+                if (args[2].equalsIgnoreCase("set-group")) {
                     return this.copyPartialMatches(args[3].toLowerCase(), groupNames, new ArrayList<>());
                 }
             }
@@ -39,16 +39,16 @@ abstract class MPTabCompleter {
         return Collections.emptyList();
     }
 
-    public List<String> onGroupCommand(List<String> groupNames, String[] args) {
+    public List<String> suggestGroupCommand(List<String> groupNames, String[] args) {
         switch (args.length) {
             case 2: {
-                return this.copyPartialMatches(args[1].toLowerCase(), GROUP_SUB_COMMANDS_0, new ArrayList<>());
+                return this.copyPartialMatches(args[1].toLowerCase(), groupNames, new ArrayList<>());
             }
             case 3: {
-                return this.copyPartialMatches(args[2].toLowerCase(), groupNames, new ArrayList<>());
+                return this.copyPartialMatches(args[2].toLowerCase(), GROUP_SUB_COMMANDS_0, new ArrayList<>());
             }
             case 4: {
-                if (args[1].equalsIgnoreCase("add-parent")) {
+                if (args[2].equalsIgnoreCase("add-parent")) {
                     return this.copyPartialMatches(args[3].toLowerCase(), groupNames, new ArrayList<>());
                 }
             }
@@ -56,7 +56,7 @@ abstract class MPTabCompleter {
         return Collections.emptyList();
     }
 
-    public List<String> onFindCommand(String[] args) {
+    public List<String> suggestFindCommand(String[] args) {
         switch (args.length) {
             case 2: {
                 return this.copyPartialMatches(args[1].toLowerCase(), FIND_SUB_COMMANDS_0, new ArrayList<>());
@@ -68,14 +68,14 @@ abstract class MPTabCompleter {
         return Collections.emptyList();
     }
 
-    public List<String> onExportCommand(String[] args) {
+    public List<String> suggestExportCommand(String[] args) {
         if (args.length == 2) {
             return this.copyPartialMatches(args[1].toLowerCase(), EXPORT_SUB_COMMANDS, new ArrayList<>());
         }
         return Collections.emptyList();
     }
 
-    public List<String> onMigrateCommand(String[] args) {
+    public List<String> suggestMigrateCommand(String[] args) {
         if (args.length == 2) {
             return this.copyPartialMatches(args[1].toLowerCase(), MIGRATE_SUB_COMMANDS, new ArrayList<>());
         }

@@ -57,27 +57,27 @@ public final class MinePermsCommand extends MPTabCompleter {
                 return;
             }
             case "user": {
-                if (args.length == 1) {
+                if (args.length < 3) {
                     commandSource.sendMessage("&6MinePerms User command help:");
                     commandSource.sendMessage("");
-                    commandSource.sendMessage("&6/" + label +" user info <nickname> - show info of a player.");
-                    commandSource.sendMessage("&6/" + label +" user add-perm <nickname> <permission> - add a specify permission.");
-                    commandSource.sendMessage("&6/" + label +" user remove-perm <nickname> <permission> - remove specify permission.");
-                    commandSource.sendMessage("&6/" + label +" user set-group <nickname> <groupID> - set a specify group.");
-                    commandSource.sendMessage("&6/" + label +" user delete <nickname> - delete specify user.");
-                    commandSource.sendMessage("&6/" + label +" user prefix <nickname> <prefix> - set user prefix.");
-                    commandSource.sendMessage("&6/" + label +" user suffix <nickname> <suffix> - set user suffix.");
-                    commandSource.sendMessage("&6/" + label +" user clear-prefix <nickname> - clear user prefix.");
-                    commandSource.sendMessage("&6/" + label +" user clear-suffix <nickname> - clear user suffix.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> info - show info of a player.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> add-perm <permission> - add a specify permission.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> remove-perm <permission> - remove specify permission.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> set-group <groupId> - set a specify group.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> delete - delete specify user.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> prefix <prefix> - set user prefix.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> suffix <suffix> - set user suffix.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> clear-prefix - clear user prefix.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> clear-suffix - clear user suffix.");
                     return;
                 }
-                switch (args[1].toLowerCase()) {
+                String nickName = args[1];
+                switch (args[2].toLowerCase()) {
                     case "info": {
                         if (args.length != 3) {
-                            commandSource.sendMessage("&6/" + label +" user info <nickname> - show info of a player.");
+                            commandSource.sendMessage("&6/" + label +" user <nickname> info - show info of a player.");
                             return;
                         }
-                        String nickName = args[2];
                         User user = this.manager.getStorage().getUser(nickName);
                         if (user == null) {
                             commandSource.sendMessage("&cUser not found!");
@@ -97,10 +97,9 @@ public final class MinePermsCommand extends MPTabCompleter {
                     }
                     case "add-perm": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("&6/" + label +" user add-perm <nickname> <permission> - add a specify permission.");
+                            commandSource.sendMessage("&6/" + label +" user <nickname> add-perm <permission> - add a specify permission.");
                             return;
                         }
-                        String nickName = args[2];
                         String permission = args[3];
                         if (this.checkSuperPermission(commandSource, permission)) return;
                         if (this.checkAsteriskPermission(commandSource, () -> storage.addUserPermission(nickName, permission))) return;
@@ -109,10 +108,9 @@ public final class MinePermsCommand extends MPTabCompleter {
                     }
                     case "remove-perm": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("&6/" + label +" user remove-perm <nickname> <permission> - remove a specify permission.");
+                            commandSource.sendMessage("&6/" + label +" user <nickname> remove-perm <permission> - remove a specify permission.");
                             return;
                         }
-                        String nickName = args[2];
                         String permission = args[3];
                         storage.removeUserPermission(nickName, permission);
                         commandSource.sendMessage("&6Permission &c" + permission + " &6removed from &a" + nickName);
@@ -120,36 +118,34 @@ public final class MinePermsCommand extends MPTabCompleter {
                     }
                     case "set-group": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("&6/" + label +" user set-group <nickname> <groupID> - set a specify group.");
+                            commandSource.sendMessage("&6/" + label +" user <nickname> set-group <groupId> - set a specify group.");
                             return;
                         }
-                        String nickName = args[2];
-                        String groupID = args[3].toLowerCase();
-                        Group group = storage.getGroup(groupID);
+                        String groupId = args[3].toLowerCase();
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
-                        storage.setUserGroup(nickName, groupID);
-                        commandSource.sendMessage("&6Group &c" + groupID + " &6set to &a" + nickName);
+                        storage.setUserGroup(nickName, groupId);
+                        commandSource.sendMessage("&6Group &c" + groupId + " &6set to &a" + nickName);
                         return;
                     }
                     case "delete": {
                         if (args.length != 3) {
-                            commandSource.sendMessage("&6/" + label +" user delete <nickname> - delete specify user.");
+                            commandSource.sendMessage("&6/" + label +" user <nickname> delete - delete specify user.");
                             return;
                         }
-                        String nickName = args[2];
                         storage.deleteUser(nickName);
                         commandSource.sendMessage("&6User &c" + nickName + " &6deleted!");
                         return;
                     }
                     case "prefix": {
                         if (args.length < 4) {
-                            commandSource.sendMessage("&6/" + label +" user prefix <nickname> <prefix> - set user prefix.");
+                            commandSource.sendMessage("&6/" + label +" user <nickname> prefix <prefix> - set user prefix.");
                             return;
                         }
-                        String nickName = args[2];
+
                         String prefix = this.getFinalArg(args, 3);
                         storage.setUserPrefix(nickName, prefix);
                         commandSource.sendMessage("&6Prefix &c" + prefix + " &6set to &a" + nickName);
@@ -157,10 +153,9 @@ public final class MinePermsCommand extends MPTabCompleter {
                     }
                     case "suffix": {
                         if (args.length < 4) {
-                            commandSource.sendMessage("&6/" + label +" user suffix <nickname> <prefix> - set user suffix.");
+                            commandSource.sendMessage("&6/" + label +" user <nickname> suffix <prefix> - set user suffix.");
                             return;
                         }
-                        String nickName = args[2];
                         String suffix = this.getFinalArg(args, 3);
                         storage.setUserSuffix(nickName, suffix);
                         commandSource.sendMessage("&6Suffix &c" + suffix + " &6set to &a" + nickName);
@@ -168,58 +163,56 @@ public final class MinePermsCommand extends MPTabCompleter {
                     }
                     case "clear-prefix": {
                         if (args.length != 3) {
-                            commandSource.sendMessage("&6/" + label +" user clear-prefix <nickname> - clear user prefix.");
+                            commandSource.sendMessage("&6/" + label +" user <nickname> clear-prefix - clear user prefix.");
                             return;
                         }
-                        String nickName = args[2];
                         storage.setUserPrefix(nickName, "");
-                        commandSource.sendMessage("&6Prefix remove from &a" + nickName);
+                        commandSource.sendMessage("&6Prefix removed from &a" + nickName);
                         return;
                     }
                     case "clear-suffix": {
                         if (args.length != 3) {
-                            commandSource.sendMessage("&6/" + label +" user clear-suffix <nickname> - clear user suffix.");
+                            commandSource.sendMessage("&6/" + label +" user <nickname> clear-suffix - clear user suffix.");
                             return;
                         }
-                        String nickName = args[2];
                         storage.setUserSuffix(nickName, "");
-                        commandSource.sendMessage("&6Suffix remove from &a" + nickName);
+                        commandSource.sendMessage("&6Suffix removed from &a" + nickName);
                         return;
                     }
                 }
                 break;
             }
             case "group": {
-                if (args.length == 1) {
+                if (args.length < 3) {
                     commandSource.sendMessage("&6MinePerms Group command help:");
                     commandSource.sendMessage("");
-                    commandSource.sendMessage("&6/" + label +" group info <groupID> - show info of a group.");
-                    commandSource.sendMessage("&6/" + label +" group add-perm <groupID> <permission> - add a specify permission.");
-                    commandSource.sendMessage("&6/" + label +" group remove-perm <groupID> <permission> - remove specify permission.");
-                    commandSource.sendMessage("&6/" + label +" group add-parent <groupID> <parentGroupID> - add a specify parent group.");
-                    commandSource.sendMessage("&6/" + label +" group remove-parent <groupID> <parentGroupID> - remove a specify parent group.");
-                    commandSource.sendMessage("&6/" + label +" group delete <groupID> - delete specify group.");
-                    commandSource.sendMessage("&6/" + label +" group create <groupID> - create specify group.");
-                    commandSource.sendMessage("&6/" + label +" group prefix <groupID> <prefix> - set group prefix.");
-                    commandSource.sendMessage("&6/" + label +" group suffix <groupID> <suffix> - set group suffix.");
-                    commandSource.sendMessage("&6/" + label +" group clear-prefix <groupID> - clear group prefix.");
-                    commandSource.sendMessage("&6/" + label +" group clear-suffix <groupID> - clear group suffix.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> info - show info of a group.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> add-perm <permission> - add a specify permission.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> remove-perm <permission> - remove specify permission.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> add-parent <parentGroupId> - add a specify parent group.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> remove-parent <parentGroupId> - remove a specify parent group.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> delete - delete specify group.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> create - create specify group.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> prefix <prefix> - set group prefix.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> suffix <suffix> - set group suffix.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> clear-prefix - clear group prefix.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> clear-suffix - clear group suffix.");
                     return;
                 }
-                switch (args[1].toLowerCase()) {
+                String groupId = args[1].toLowerCase();
+                switch (args[2].toLowerCase()) {
                     case "info": {
                         if (args.length != 3) {
-                            commandSource.sendMessage("&6/" + label +" group info <groupID> - show info of a group.");
+                            commandSource.sendMessage("&6/" + label + " group <groupId> info - show info of a group.");
                             return;
                         }
-                        String groupID = args[2];
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
                         String parents = group.getInheritanceGroups().isEmpty() ? "&cParents not set!" : Joiner.on(", ").join(group.getInheritanceGroups());
-                        commandSource.sendMessage("&aGroup " + groupID + " info:");
+                        commandSource.sendMessage("&aGroup " + groupId + " info:");
                         commandSource.sendMessage(" &aPrefix: &6" + (group.getPrefix().isEmpty() ? "&cNot set." : group.getPrefix()));
                         commandSource.sendMessage(" &aSuffix: &6" + (group.getSuffix().isEmpty() ? "&cNot set." : group.getSuffix()));
                         commandSource.sendMessage(" &aParent groups: &6" + parents);
@@ -233,45 +226,42 @@ public final class MinePermsCommand extends MPTabCompleter {
                     }
                     case "add-perm": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("&6/" + label +" group add-perm <groupID> <permission> - add a specify permission.");
+                            commandSource.sendMessage("&6/" + label +" group <groupId> add-perm <permission> - add a specify permission.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
                         String permission = args[3];
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
                         if (this.checkSuperPermission(commandSource, permission)) return;
-                        if (this.checkAsteriskPermission(commandSource, ()-> storage.addGroupPermission(groupID, permission))) return;
-                        commandSource.sendMessage("&6Permission &c" + permission + " &6added to group &a" + groupID);
+                        if (this.checkAsteriskPermission(commandSource, ()-> storage.addGroupPermission(groupId, permission))) return;
+                        commandSource.sendMessage("&6Permission &c" + permission + " &6added to group &a" + groupId);
                         return;
                     }
                     case "remove-perm": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("&6/" + label +" group remove-perm <groupID> <permission> - remove a specify permission.");
+                            commandSource.sendMessage("&6/" + label +" group <groupId> remove-perm <permission> - remove a specify permission.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
                         String permission = args[3];
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
-                        storage.removeGroupPermission(groupID, permission);
-                        commandSource.sendMessage("&6Permission &c" + permission + " &6removed from group &a" + groupID);
+                        storage.removeGroupPermission(groupId, permission);
+                        commandSource.sendMessage("&6Permission &c" + permission + " &6removed from group &a" + groupId);
                         return;
                     }
                     case "add-parent": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("&6/" + label +" group add-parent <groupID> <parentGroupID> - add a specify parent group.");
+                            commandSource.sendMessage("&6/" + label +" group <groupId> add-parent <parentGroupId> - add a specify parent group.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
                         String parent = args[3].toLowerCase();
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
@@ -281,120 +271,113 @@ public final class MinePermsCommand extends MPTabCompleter {
                             commandSource.sendMessage("&cParent group not found!");
                             return;
                         }
-                        storage.addGroupParent(groupID, parent);
-                        commandSource.sendMessage("&6Parent group &c" + parent + " &6added to group &a" + groupID);
+                        storage.addGroupParent(groupId, parent);
+                        commandSource.sendMessage("&6Parent group &c" + parent + " &6added to group &a" + groupId);
                         return;
                     }
                     case "remove-parent": {
                         if (args.length != 4) {
-                            commandSource.sendMessage("&6/" + label +" group remove-parent <groupID> <parentGroupID> - remove a specify parent group.");
+                            commandSource.sendMessage("&6/" + label +" group <groupId> remove-parent <parentGroupId> - remove a specify parent group.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
                         String parent = args[3].toLowerCase();
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
-                        storage.removeGroupParent(groupID, parent);
-                        commandSource.sendMessage("&6Parent group &c" + parent + " &6removed from group &a" + groupID);
+                        storage.removeGroupParent(groupId, parent);
+                        commandSource.sendMessage("&6Parent group &c" + parent + " &6removed from group &a" + groupId);
                         return;
                     }
                     case "delete": {
                         if (args.length != 3) {
-                            commandSource.sendMessage("&6/" + label +" group delete <groupID> - delete specify group.");
+                            commandSource.sendMessage("&6/" + label +" group <groupId> delete - delete specify group.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
-                        if (groupID.equalsIgnoreCase(storage.getDefaultGroup().getGroupID())) {
+                        if (groupId.equalsIgnoreCase(storage.getDefaultGroup().getGroupID())) {
                             commandSource.sendMessage("&cYou can't delete default group!");
                             return;
                         }
-                        storage.deleteGroup(groupID);
-                        commandSource.sendMessage("&6Group &c" + groupID + " &6deleted!");
+                        storage.deleteGroup(groupId);
+                        commandSource.sendMessage("&6Group &c" + groupId + " &6deleted!");
                         return;
                     }
                     case "create": {
                         if (args.length != 3) {
-                            commandSource.sendMessage("&6/" + label +" group create <groupID> - create specify group.");
+                            commandSource.sendMessage("&6/" + label +" group <groupId> create - create specify group.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group != null) {
                             commandSource.sendMessage("&cGroup is already exist!");
                             return;
                         }
-                        storage.createGroup(groupID);
-                        commandSource.sendMessage("&6Group &c" + groupID + " &6created!");
+                        storage.createGroup(groupId);
+                        commandSource.sendMessage("&6Group &c" + groupId + " &6created!");
                         return;
                     }
                     case "prefix": {
                         if (args.length < 4) {
-                            commandSource.sendMessage("&6/" + label +" group prefix <groupID> <prefix> - set group prefix.");
+                            commandSource.sendMessage("&6/" + label +" group <groupId> prefix <prefix> - set group prefix.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
                         String prefix = this.getFinalArg(args, 3);
-                        storage.setGroupPrefix(groupID, prefix);
-                        commandSource.sendMessage("&6Prefix &c" + prefix + " &6set to group &a" + groupID);
+                        storage.setGroupPrefix(groupId, prefix);
+                        commandSource.sendMessage("&6Prefix &c" + prefix + " &6set to group &a" + groupId);
                         return;
                     }
                     case "suffix": {
                         if (args.length < 4) {
-                            commandSource.sendMessage("&6/" + label +" group suffix <groupID> <prefix> - set group prefix.");
+                            commandSource.sendMessage("&6/" + label +" group <groupId> suffix <prefix> - set group prefix.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
                         String suffix = this.getFinalArg(args, 3);
-                        storage.setGroupPrefix(groupID, suffix);
-                        commandSource.sendMessage("&6Suffix &c" + suffix + " &6set to group &a" + groupID);
+                        storage.setGroupPrefix(groupId, suffix);
+                        commandSource.sendMessage("&6Suffix &c" + suffix + " &6set to group &a" + groupId);
                         return;
                     }
                     case "clear-prefix": {
                         if (args.length != 3) {
-                            commandSource.sendMessage("&6/" + label +" user clear-prefix <groupID> - clear group prefix.");
+                            commandSource.sendMessage("&6/" + label +" user <groupId> clear-prefix - clear group prefix.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
-                        storage.setGroupPrefix(groupID, "");
-                        commandSource.sendMessage("&6Prefix remove from group &a" + groupID);
+                        storage.setGroupPrefix(groupId, "");
+                        commandSource.sendMessage("&6Prefix removed from group &a" + groupId);
                         return;
                     }
                     case "clear-suffix": {
                         if (args.length != 3) {
-                            commandSource.sendMessage("&6/" + label +" user clear-suffix <groupID> - clear group suffix.");
+                            commandSource.sendMessage("&6/" + label +" user <groupId> clear-suffix - clear group suffix.");
                             return;
                         }
-                        String groupID = args[2].toLowerCase();
-                        Group group = storage.getGroup(groupID);
+                        Group group = storage.getGroup(groupId);
                         if (group == null) {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
-                        storage.setGroupSuffix(groupID, "");
-                        commandSource.sendMessage("&6Suffix remove from group &a" + groupID);
+                        storage.setGroupSuffix(groupId, "");
+                        commandSource.sendMessage("&6Suffix removed from group &a" + groupId);
                         return;
                     }
                 }
@@ -621,23 +604,23 @@ public final class MinePermsCommand extends MPTabCompleter {
     public List<String> onTabComplete(Collection<String> onlinePlayers, String[] args) {
         switch (args.length) {
             case 0: return Collections.emptyList();
-            case 1: return this.onMainCommand(args);
+            case 1: return this.suggestMainCommand(args);
         }
         switch (args[0].toLowerCase()) {
             case "user": {
-                return this.onUserCommand(onlinePlayers, this.manager.getStorage().getGroupNames(), args);
+                return this.suggestUserCommand(onlinePlayers, this.manager.getStorage().getGroupNames(), args);
             }
             case "group": {
-                return this.onGroupCommand(this.manager.getStorage().getGroupNames(), args);
+                return this.suggestGroupCommand(this.manager.getStorage().getGroupNames(), args);
             }
             case "find": {
-                return this.onFindCommand(args);
+                return this.suggestFindCommand(args);
             }
             case "export": {
-                return this.onExportCommand(args);
+                return this.suggestExportCommand(args);
             }
             case "migrate": {
-                return this.onMigrateCommand(args);
+                return this.suggestMigrateCommand(args);
             }
         }
         return Collections.emptyList();
@@ -655,7 +638,7 @@ public final class MinePermsCommand extends MPTabCompleter {
     }
 
     private boolean checkSuperPermission(IMPCommandSource commandSource, String permission) {
-        if (permission.equals(PermissionsMatcher.ROOT_WILDCARD) && !commandSource.hasPermission(PermissionsMatcher.ROOT_WILDCARD)) {
+        if (permission.contains(PermissionsMatcher.ROOT_WILDCARD) && !commandSource.hasPermission(PermissionsMatcher.ROOT_WILDCARD)) {
             commandSource.sendMessage("&cYou can't add root-permission because you don't have it!");
             return true;
         }
