@@ -51,7 +51,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                     commandSource.sendMessage("&6/" + label +" test-perm <permission> - show info of permission which you have.");
                     return;
                 }
-                String permission = args[1].toLowerCase();
+                String permission = args[1];
                 boolean hasPerm = commandSource.hasPermission(permission);
                 commandSource.sendMessage("&6Permission: &c" + permission + " &6== " + (hasPerm ? "&a" : "&c") + hasPerm);
                 return;
@@ -83,7 +83,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                             commandSource.sendMessage("&cUser not found!");
                             return;
                         }
-                        commandSource.sendMessage("&aUser " + nickName + " info:");
+                        commandSource.sendMessage("&aUser &c" + nickName + "&a info:");
                         commandSource.sendMessage(" &aGroup: &6" + user.getGroup());
                         commandSource.sendMessage(" &aPrefix: &6" + (user.getPrefix().isEmpty() ? "&cNot set." : user.getPrefix()));
                         commandSource.sendMessage(" &aSuffix: &6" + (user.getSuffix().isEmpty() ? "&cNot set." : user.getSuffix()));
@@ -212,7 +212,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                             return;
                         }
                         String parents = group.getInheritanceGroups().isEmpty() ? "&cParents not set!" : Joiner.on(", ").join(group.getInheritanceGroups());
-                        commandSource.sendMessage("&aGroup " + groupId + " info:");
+                        commandSource.sendMessage("&aGroup &c" + groupId + "&a info:");
                         commandSource.sendMessage(" &aPrefix: &6" + (group.getPrefix().isEmpty() ? "&cNot set." : group.getPrefix()));
                         commandSource.sendMessage(" &aSuffix: &6" + (group.getSuffix().isEmpty() ? "&cNot set." : group.getSuffix()));
                         commandSource.sendMessage(" &aParent groups: &6" + parents);
