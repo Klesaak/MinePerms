@@ -82,14 +82,12 @@ public class MySQLStorage extends Storage {
             DatabaseFieldConfig prefixField = new DatabaseFieldConfig("prefix");
             prefixField.setCanBeNull(false);
             prefixField.setDataType(DataType.LONG_STRING);
-            prefixField.setDefaultValue("");
             prefixField.setColumnName(PREFIX_COLUMN);
             usersFieldConfigs.add(prefixField);
 
             DatabaseFieldConfig suffixField = new DatabaseFieldConfig("suffix");
             suffixField.setCanBeNull(false);
             suffixField.setDataType(DataType.LONG_STRING);
-            suffixField.setDefaultValue("");
             suffixField.setColumnName(SUFFIX_COLUMN);
             usersFieldConfigs.add(suffixField);
 
@@ -121,14 +119,12 @@ public class MySQLStorage extends Storage {
             DatabaseFieldConfig prefixField = new DatabaseFieldConfig("prefix");
             prefixField.setCanBeNull(false);
             prefixField.setDataType(DataType.LONG_STRING);
-            prefixField.setDefaultValue("");
             prefixField.setColumnName(PREFIX_COLUMN);
             groupsFiledConfigs.add(prefixField);
 
             DatabaseFieldConfig suffixField = new DatabaseFieldConfig("suffix");
             suffixField.setCanBeNull(false);
             suffixField.setDataType(DataType.LONG_STRING);
-            suffixField.setDefaultValue("");
             suffixField.setColumnName(SUFFIX_COLUMN);
             groupsFiledConfigs.add(suffixField);
 
