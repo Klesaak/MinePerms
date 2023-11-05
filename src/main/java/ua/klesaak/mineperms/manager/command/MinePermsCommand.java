@@ -386,11 +386,8 @@ public final class MinePermsCommand extends MPTabCompleter {
             case "reload": {
                 if (this.checkLock(commandSource)) return;
                 this.isLock.set(true);
-
-                // TODO: 06.06.2023 reload method
                 this.manager.reload();
                 commandSource.sendMessage("&aMinePerms reload successful!");
-
                 this.isLock.set(false);
                 return;
             }
