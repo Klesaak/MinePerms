@@ -16,10 +16,7 @@ import ua.klesaak.mineperms.manager.storage.mysql.MySQLStorage;
 import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
 import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -624,14 +621,7 @@ public final class MinePermsCommand extends MPTabCompleter {
     }
 
     private String getFinalArg(String[] args, int start) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = start; i < args.length; ++i) {
-            if (i != start) {
-                builder.append(" ");
-            }
-            builder.append(args[i]);
-        }
-        return builder.toString();
+        return Joiner.on(" ").join(Arrays.copyOfRange(args, start, args.length));
     }
 
     private boolean checkSuperPermission(IMPCommandSource commandSource, String permission) {
