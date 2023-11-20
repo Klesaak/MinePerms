@@ -18,12 +18,13 @@ import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class MinePermsCommand extends MPTabCompleter {
     public static final String MAIN_PERMISSION = "mineperms.admin";
     private final MinePermsManager manager;
-    private final AtomicBoolean isLock = new AtomicBoolean(false);
+    private final ReadWriteLock highOperationsLock = new ReentrantReadWriteLock();
 
     public MinePermsCommand(MinePermsManager manager) {
         this.manager = manager;
@@ -381,11 +382,10 @@ public final class MinePermsCommand extends MPTabCompleter {
                 break;
             }
             case "reload": {
-                if (this.checkLock(commandSource)) return;
-                this.isLock.set(true);
-                this.manager.reload();
-                commandSource.sendMessage("&aMinePerms reload successful!");
-                this.isLock.set(false);
+                this.runOnLock(commandSource, ()-> {
+                    this.manager.reload();
+                    commandSource.sendMessage("&aMinePerms reload successful!");
+                });
                 return;
             }
             case "find": {
@@ -440,17 +440,16 @@ public final class MinePermsCommand extends MPTabCompleter {
                 return;
             }
         }
-        if (this.checkLock(commandSource)) return;
         commandSource.sendMessage("&cStart migrating data...");
-        this.isLock.set(true);
-        val groupsCollection = migrationPlugin.getAllGroups();
-        val storage = this.manager.getStorage();
-        storage.importGroupsData(groupsCollection);
-        val usersCollection = migrationPlugin.getAllUsers();
-        storage.importUsersData(usersCollection);
-        commandSource.sendMessage("&aMigrating complete! (" + (System.currentTimeMillis() - start) + "ms.)");
-        commandSource.sendMessage("&aYou must delete old permission plugin and restart your server!");
-        this.isLock.set(false);
+        this.runOnLock(commandSource, ()-> {
+            val groupsCollection = migrationPlugin.getAllGroups();
+            val storage = this.manager.getStorage();
+            storage.importGroupsData(groupsCollection);
+            val usersCollection = migrationPlugin.getAllUsers();
+            storage.importUsersData(usersCollection);
+            commandSource.sendMessage("&aMigrating complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+            commandSource.sendMessage("&aYou must delete old permission plugin and restart your server!");
+        });
     }
 
     private void onExport(IMPCommandSource commandSource, String label, String[] args) {
@@ -459,7 +458,6 @@ public final class MinePermsCommand extends MPTabCompleter {
             return;
         }
         val backend = args[1].toUpperCase();
-        Storage newStorage = null;
         StorageType storageType;
         try {
             storageType = Enum.valueOf(StorageType.class, backend);
@@ -472,31 +470,31 @@ public final class MinePermsCommand extends MPTabCompleter {
             commandSource.sendMessage("&cYou can't export data from current backend to current :-/");
             return;
         }
-        if (this.checkLock(commandSource)) return;
         long start = System.currentTimeMillis();
         commandSource.sendMessage("&cStart exporting data...");
-        this.isLock.set(true);
-        switch (storageType) {
-            case FILE: {
-                newStorage = new FileStorage(this.manager);
-                break;
+        this.runOnLock(commandSource, ()-> {
+            Storage newStorage = null;
+            switch (storageType) {
+                case FILE: {
+                    newStorage = new FileStorage(this.manager);
+                    break;
+                }
+                case MYSQL: {
+                    newStorage = new MySQLStorage(this.manager);
+                    break;
+                }
+                case REDIS: {
+                    newStorage = new RedisStorage(this.manager);
+                }
             }
-            case MYSQL: {
-                newStorage = new MySQLStorage(this.manager);
-                break;
-            }
-            case REDIS: {
-                newStorage = new RedisStorage(this.manager);
-            }
-        }
-        val users = this.manager.getStorage().getAllUsersData();
-        val groups = this.manager.getStorage().getAllGroupsData();
-        newStorage.importUsersData(users);
-        newStorage.importGroupsData(groups);
-        commandSource.sendMessage("&aExporting complete! (" + (System.currentTimeMillis() - start) + "ms.)");
-        commandSource.sendMessage("&aTo cross the &6" + storageType + "&a backend, you must change field 'storageType' in file config.json and restart you server!");
-        newStorage.close();
-        this.isLock.set(false);
+            val users = this.manager.getStorage().getAllUsersData();
+            val groups = this.manager.getStorage().getAllGroupsData();
+            newStorage.importUsersData(users);
+            newStorage.importGroupsData(groups);
+            commandSource.sendMessage("&aExporting complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+            commandSource.sendMessage("&aTo cross the &6" + storageType + "&a backend, you must change field 'storageType' in file config.json and restart you server!");
+            newStorage.close();
+        });
     }
 
     private void onFind(IMPCommandSource commandSource, String label, String[] args) {
@@ -504,95 +502,90 @@ public final class MinePermsCommand extends MPTabCompleter {
             commandSource.sendMessage("&6/" + label + " find <group|user|all> <permission|parent-group> <identifier> - find user/group with special permission/group command.");
             return;
         }
-        if (this.checkLock(commandSource)) return;
-        switch (args[1].toLowerCase()) {
-            case "group": {
-                this.isLock.set(true);
-                long start = System.currentTimeMillis();
-                commandSource.sendMessage("&cStart finding...");
-                val groups = this.manager.getStorage().getAllGroupsData();
-                val identifier = args[3].toLowerCase();
-                val found = new ArrayList<String>();
-                switch (args[2].toLowerCase()) {
-                    case "permission": {
-                        for (val group : groups) {
-                            if (group.hasOwnPermission(identifier)) found.add(group.getGroupID());
+        this.runOnLock(commandSource, ()-> {
+            switch (args[1].toLowerCase()) {
+                case "group": {
+                    long start = System.currentTimeMillis();
+                    commandSource.sendMessage("&cStart finding...");
+                    val groups = this.manager.getStorage().getAllGroupsData();
+                    val identifier = args[3].toLowerCase();
+                    val found = new ArrayList<String>();
+                    switch (args[2].toLowerCase()) {
+                        case "permission": {
+                            for (val group : groups) {
+                                if (group.hasOwnPermission(identifier)) found.add(group.getGroupID());
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case "parent-group": {
-                        for (val group : groups) {
-                            if (group.hasGroup(identifier)) found.add(group.getGroupID());
+                        case "parent-group": {
+                            for (val group : groups) {
+                                if (group.hasGroup(identifier)) found.add(group.getGroupID());
+                            }
+                            break;
                         }
-                        break;
                     }
+                    commandSource.sendMessage("&aFinding Group's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                    commandSource.sendMessage(found.isEmpty() ? "&cNothing..." : "&aResults: " + Joiner.on(", ").join(found));
+                    return;
                 }
-                commandSource.sendMessage("&aFinding Group's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
-                commandSource.sendMessage(found.isEmpty() ? "&cNothing..." : "&aResults: " + Joiner.on(", ").join(found));
-                this.isLock.set(false);
-                return;
-            }
-            case "user": {
-                this.isLock.set(true);
-                long start = System.currentTimeMillis();
-                commandSource.sendMessage("&cStart finding...");
-                val users = this.manager.getStorage().getAllUsersData();
-                val identifier = args[3].toLowerCase();
-                val found = new ArrayList<String>();
-                switch (args[2].toLowerCase()) {
-                    case "permission": {
-                        for (val user : users) {
-                            if (user.hasOwnPermission(identifier)) found.add(user.getPlayerName());
+                case "user": {
+                    long start = System.currentTimeMillis();
+                    commandSource.sendMessage("&cStart finding...");
+                    val users = this.manager.getStorage().getAllUsersData();
+                    val identifier = args[3].toLowerCase();
+                    val found = new ArrayList<String>();
+                    switch (args[2].toLowerCase()) {
+                        case "permission": {
+                            for (val user : users) {
+                                if (user.hasOwnPermission(identifier)) found.add(user.getPlayerName());
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case "parent-group": {
-                        for (val user : users) {
-                            if (user.hasGroup(identifier)) found.add(user.getPlayerName());
+                        case "parent-group": {
+                            for (val user : users) {
+                                if (user.hasGroup(identifier)) found.add(user.getPlayerName());
+                            }
+                            break;
                         }
-                        break;
                     }
+                    commandSource.sendMessage("&aFinding User's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                    commandSource.sendMessage(found.isEmpty() ? "&cNothing..." : "&aResults: " + Joiner.on(", ").join(found));
+                    return;
                 }
-                commandSource.sendMessage("&aFinding User's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
-                commandSource.sendMessage(found.isEmpty() ? "&cNothing..." : "&aResults: " + Joiner.on(", ").join(found));
-                this.isLock.set(false);
-                return;
-            }
-            case "all": {
-                this.isLock.set(true);
-                long start = System.currentTimeMillis();
-                commandSource.sendMessage("&cStart finding...");
-                val users = this.manager.getStorage().getAllUsersData();
-                val groups = this.manager.getStorage().getAllGroupsData();
-                val identifier = args[3].toLowerCase();
-                val usersFound = new ArrayList<String>();
-                val groupsFound = new ArrayList<String>();
-                switch (args[2].toLowerCase()) {
-                    case "permission": {
-                        for (val user : users) {
-                            if (user.hasOwnPermission(identifier)) usersFound.add(user.getPlayerName());
+                case "all": {
+                    long start = System.currentTimeMillis();
+                    commandSource.sendMessage("&cStart finding...");
+                    val users = this.manager.getStorage().getAllUsersData();
+                    val groups = this.manager.getStorage().getAllGroupsData();
+                    val identifier = args[3].toLowerCase();
+                    val usersFound = new ArrayList<String>();
+                    val groupsFound = new ArrayList<String>();
+                    switch (args[2].toLowerCase()) {
+                        case "permission": {
+                            for (val user : users) {
+                                if (user.hasOwnPermission(identifier)) usersFound.add(user.getPlayerName());
+                            }
+                            for (val group : groups) {
+                                if (group.hasOwnPermission(identifier)) groupsFound.add(group.getGroupID());
+                            }
                         }
-                        for (val group : groups) {
-                            if (group.hasOwnPermission(identifier)) groupsFound.add(group.getGroupID());
-                        }
-                    }
-                    case "parent-group": {
-                        for (val user : users) {
-                            if (user.hasGroup(identifier)) usersFound.add(user.getPlayerName());
-                        }
-                        for (val group : groups) {
-                            if (group.hasGroup(identifier)) groupsFound.add(group.getGroupID());
+                        case "parent-group": {
+                            for (val user : users) {
+                                if (user.hasGroup(identifier)) usersFound.add(user.getPlayerName());
+                            }
+                            for (val group : groups) {
+                                if (group.hasGroup(identifier)) groupsFound.add(group.getGroupID());
+                            }
                         }
                     }
+                    commandSource.sendMessage("&aFinding User's and Group's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                    val usersResult = usersFound.isEmpty() ? "&cNothing..." : Joiner.on(", ").join(usersFound);
+                    val groupsResult = groupsFound.isEmpty() ? "&cNothing..." : Joiner.on(", ").join(groupsFound);
+                    commandSource.sendMessage("&aResults for Users: " + usersResult);
+                    commandSource.sendMessage("&aResults for Groups: " + groupsResult);
                 }
-                commandSource.sendMessage("&aFinding User's and Group's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
-                val usersResult =  usersFound.isEmpty() ? "&cNothing..." : Joiner.on(", ").join(usersFound);
-                val groupsResult =  groupsFound.isEmpty() ? "&cNothing..." : Joiner.on(", ").join(groupsFound);
-                commandSource.sendMessage("&aResults for Users: " + usersResult);
-                commandSource.sendMessage("&aResults for Groups: " + groupsResult);
-                this.isLock.set(false);
             }
-        }
+        });
     }
 
     public List<String> onTabComplete(Collection<String> onlinePlayers, String[] args) {
@@ -642,11 +635,16 @@ public final class MinePermsCommand extends MPTabCompleter {
         return false;
     }
 
-    private boolean checkLock(IMPCommandSource commandSource) {
-        if (this.isLock.get()) {
+    private void runOnLock(IMPCommandSource commandSource, Runnable runnable) {
+        if (!this.highOperationsLock.writeLock().tryLock()) {
             commandSource.sendMessage("&cYou cannot run more than one heavy operation for security reasons, please wait.");
-            return true;
+            return;
         }
-        return false;
+        this.highOperationsLock.writeLock().lock();
+        try {
+            runnable.run();
+        } finally {
+            this.highOperationsLock.writeLock().unlock();
+        }
     }
 }
