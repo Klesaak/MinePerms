@@ -15,6 +15,8 @@ import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
+import ua.klesaak.mineperms.manager.storage.entity.data.GroupData;
+import ua.klesaak.mineperms.manager.storage.entity.data.UserData;
 import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 
 import java.sql.SQLException;

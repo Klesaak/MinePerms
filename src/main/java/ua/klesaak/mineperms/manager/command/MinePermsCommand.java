@@ -346,7 +346,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                             return;
                         }
                         String suffix = this.getFinalArg(args, 3);
-                        storage.setGroupPrefix(groupId, suffix);
+                        storage.setGroupSuffix(groupId, suffix);
                         commandSource.sendMessage("&6Suffix &c" + suffix + " &6set to group &a" + groupId);
                         return;
                     }
@@ -410,7 +410,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                 return;
             }
         }
-        commandSource.sendMessage("&cUnknown operation: &6" + args[0]);
+        commandSource.sendMessage("&cUnknown operation: &6" + args[args.length-1]);
     }
 
     private void onMigrate(IMPCommandSource commandSource, String label, String[] args) {

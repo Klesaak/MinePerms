@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.manager.storage.mysql;
+package ua.klesaak.mineperms.manager.storage.entity.data;
 
 import com.google.gson.reflect.TypeToken;
 import lombok.Getter;

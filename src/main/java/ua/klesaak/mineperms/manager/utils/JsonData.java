@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
+import ua.klesaak.mineperms.manager.storage.entity.User;
+import ua.klesaak.mineperms.manager.storage.entity.data.GroupDataAdapter;
+import ua.klesaak.mineperms.manager.storage.entity.data.UserDataAdapter;
 
 import java.io.File;
 import java.lang.reflect.Modifier;
@@ -18,7 +22,14 @@ import java.util.Map;
 
 @Getter @Setter
 public class JsonData {
-    public static Gson GSON = new GsonBuilder().setPrettyPrinting().serializeNulls().disableHtmlEscaping().enableComplexMapKeySerialization().create();
+    public static Gson GSON = new GsonBuilder()
+            .setPrettyPrinting()
+            .serializeNulls()
+            .disableHtmlEscaping()
+            .registerTypeAdapter(User.class, new UserDataAdapter())
+            .registerTypeAdapter(Group.class, new GroupDataAdapter())
+            .enableComplexMapKeySerialization()
+            .create();
     private transient File file;
 
     @SneakyThrows
