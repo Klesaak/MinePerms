@@ -112,20 +112,21 @@ public class SQLStorage extends Storage {
 
     @Override
     public void cacheUser(String nickName) {
-        val tempUser = this.temporalUsersCache.getIfPresent(nickName);
-        User user = tempUser != null ? tempUser : this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        val tempUser = this.temporalUsersCache.getIfPresent(nickNameLC);
+        User user = tempUser != null ? tempUser : this.getUser(nickNameLC);
         if (!this.manager.getConfigFile().isUseRedisPubSub()) { //загружаем игрока из бд при каждом заходе, чтобы была актуальность данных!
-            user = this.loadUser(nickName).join();
+            user = this.loadUser(nickNameLC).join();
         }
         if (user != null) {
             user.recalculatePermissions(this.groups);
-            this.users.put(nickName, user);
-            this.temporalUsersCache.invalidate(nickName);
+            this.users.put(nickNameLC, user);
+            this.temporalUsersCache.invalidate(nickNameLC);
             return;
         }
-        val newUser = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
+        val newUser = new User(nickNameLC, this.manager.getConfigFile().getDefaultGroup());
         newUser.recalculatePermissions(this.groups);
-        this.users.put(nickName, newUser);
+        this.users.put(nickNameLC, newUser);
     }
 
     /**
@@ -134,16 +135,18 @@ public class SQLStorage extends Storage {
      */
     @Override
     public void unCacheUser(String nickName) {
-        User user = this.users.remove(nickName);
-        this.temporalUsersCache.put(nickName, user);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.users.remove(nickNameLC);
+        this.temporalUsersCache.put(nickNameLC, user);
     }
 
     @Override
     public void saveUser(String nickName) {
-        val tempUser = this.temporalUsersCache.getIfPresent(nickName);
-        User user = tempUser != null ? tempUser : this.users.get(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        val tempUser = this.temporalUsersCache.getIfPresent(nickNameLC);
+        User user = tempUser != null ? tempUser : this.users.get(nickNameLC);
         if (user != null) {
-            this.saveUser(nickName, user);
+            this.saveUser(nickNameLC, user);
         }
     }
 
@@ -176,12 +179,13 @@ public class SQLStorage extends Storage {
 
     @Override
     public User getUser(String nickName) {
-        val tempUser = this.temporalUsersCache.getIfPresent(nickName);
-        User user = tempUser != null ? tempUser : this.users.get(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        val tempUser = this.temporalUsersCache.getIfPresent(nickNameLC);
+        User user = tempUser != null ? tempUser : this.users.get(nickNameLC);
         if (user != null) return user;
-        user = this.loadUser(nickName).join();
+        user = this.loadUser(nickNameLC).join();
         if (user != null) {
-            this.temporalUsersCache.put(nickName, user);
+            this.temporalUsersCache.put(nickNameLC, user);
             user.recalculatePermissions(this.groups);
         }
         return user;
@@ -195,14 +199,14 @@ public class SQLStorage extends Storage {
 
     @Override
     public String getUserPrefix(String nickName) {
-        User user = this.getUser(nickName);
+        User user = this.getUser(nickName.toLowerCase());
         if (user == null) return this.getDefaultGroup().getPrefix();
         return user.getPrefix().isEmpty() ? this.getGroupOrDefault(user.getGroupId()).getPrefix() : user.getPrefix();
     }
 
     @Override
     public String getUserSuffix(String nickName) {
-        User user = this.getUser(nickName);
+        User user = this.getUser(nickName.toLowerCase());
         if (user == null) return this.getDefaultGroup().getSuffix();
         return user.getSuffix().isEmpty() ? this.getGroupOrDefault(user.getGroupId()).getSuffix() : user.getSuffix();
     }
@@ -210,106 +214,162 @@ public class SQLStorage extends Storage {
     @Override
     public void addUserPermission(String nickName, String permission) {
         val config = this.manager.getConfigFile();
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickName, config.getDefaultGroup());
-            this.temporalUsersCache.put(nickName, user);
+            user = new User(nickNameLC, config.getDefaultGroup());
+            this.temporalUsersCache.put(nickNameLC, user);
         }
         user.addPermission(permission);
-        //todo sql
-        this.saveUser(nickName, user);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(INSERT_USER_PERMISSION_SQL)) {
+                statement.setString(1, nickNameLC);
+                statement.setString(2, permission.toLowerCase());
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while add perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
         //this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
     }
 
     @Override
     public void removeUserPermission(String nickName, String permission) {
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user == null) return;
         user.removePermission(permission);
         user.recalculatePermissions(this.groups);
-        //todo sql
-        this.saveUser(nickName, user);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(REMOVE_USER_PERMISSION_SQL)) {
+                statement.setString(1, nickNameLC);
+                statement.setString(2, permission.toLowerCase());
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
         //this.broadcastPacket(MessageData.goUpdateUserPacket(user, this.manager.getConfigFile().getSQLSettings().getUsersTable()));
     }
 
     @Override
     public void setUserPrefix(String nickName, String prefix) {
+        val nickNameLC = nickName.toLowerCase();
         val config = this.manager.getConfigFile();
-        User user = this.getUser(nickName);
+        User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickName, config.getDefaultGroup());
-            this.temporalUsersCache.put(nickName, user);
+            user = new User(nickNameLC, config.getDefaultGroup());
+            this.temporalUsersCache.put(nickNameLC, user);
         }
         user.setPrefix(prefix);
-        //todo sql
-        this.saveUser(nickName, user);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_USER_PREFIX_SQL)) {
+                statement.setString(1, nickNameLC);
+                statement.setString(2, prefix.isEmpty() ? null : prefix);
+                statement.setString(3, prefix.isEmpty() ? null : prefix);
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
         //this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
     }
 
     @Override
     public void setUserSuffix(String nickName, String suffix) {
         val config = this.manager.getConfigFile();
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickName, config.getDefaultGroup());
-            this.temporalUsersCache.put(nickName, user);
+            user = new User(nickNameLC, config.getDefaultGroup());
+            this.temporalUsersCache.put(nickNameLC, user);
         }
         user.setSuffix(suffix);
-        //todo sql
-        this.saveUser(nickName, user);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_USER_SUFFIX_SQL)) {
+                statement.setString(1, nickNameLC);
+                statement.setString(2, suffix.isEmpty() ? null : suffix);
+                statement.setString(3, suffix.isEmpty() ? null : suffix);
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
        // this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
     }
 
     @Override
     public void setUserGroup(String nickName, String groupID) {
         val config = this.manager.getConfigFile();
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickName, config.getDefaultGroup());
-            this.temporalUsersCache.put(nickName, user);
+            user = new User(nickNameLC, config.getDefaultGroup());
+            this.temporalUsersCache.put(nickNameLC, user);
         }
         if (this.groups.get(groupID) != null) {
             user.setGroupId(groupID);
-            this.saveUser(nickName, user);
             user.recalculatePermissions(this.groups);
             this.manager.getEventManager().callGroupChangeEvent(user);
         }
-        //todo sql
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_USER_GROUP_SQL)) {
+                statement.setString(1, nickNameLC);
+                statement.setString(2, groupID);
+                statement.setString(3, groupID);
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
         //this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
     }
 
     @Override
     public void deleteUser(String nickName) {
-        //todo sql
-       /* val config = this.manager.getConfigFile();
-        val newUser = new User(nickName, config.getDefaultGroup());
-        if (this.users.get(nickName) != null) {
-            this.users.put(nickName, newUser);
+        val nickNameLC = nickName.toLowerCase();
+       val config = this.manager.getConfigFile();
+        val newUser = new User(nickNameLC, config.getDefaultGroup());
+        if (this.users.get(nickNameLC) != null) {
+            this.users.put(nickNameLC, newUser);
         }
-        if (this.temporalUsersCache.getIfPresent(nickName) != null) {
-            this.temporalUsersCache.put(nickName, newUser);
+        if (this.temporalUsersCache.getIfPresent(nickNameLC) != null) {
+            this.temporalUsersCache.put(nickNameLC, newUser);
         }
         CompletableFuture.runAsync(()-> {
-            try {
-                this.userDataDao.deleteById(nickName);
-                this.broadcastPacket(MessageData.goDeleteUserPacket(nickName, config.getSQLSettings().getUsersTable()));
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(DELETE_USER_SQL)) {
+                statement.setString(1, nickNameLC);
+                statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while delete user " + nickName + " data", e);
+                throw new RuntimeException("Error while remove perm data", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
-        });*/
+        });
+
+        //this.broadcastPacket(MessageData.goDeleteUserPacket(nickName, config.getSQLSettings().getUsersTable()));
     }
 
     @Override
     public void updateUser(String nickName, User user) {
-        if (this.temporalUsersCache.getIfPresent(nickName) == null && this.users.get(nickName) == null) return;
+        val nickNameLC = nickName.toLowerCase();
+        if (this.temporalUsersCache.getIfPresent(nickNameLC) == null && this.users.get(nickNameLC) == null) return;
         user.recalculatePermissions(this.groups);
-        if (this.temporalUsersCache.getIfPresent(nickName) != null) {
-            this.temporalUsersCache.put(nickName, user);
+        if (this.temporalUsersCache.getIfPresent(nickNameLC) != null) {
+            this.temporalUsersCache.put(nickNameLC, user);
             return;
         }
-        this.users.put(nickName, user);
+        this.users.put(nickNameLC, user);
     }
 
     @Override
@@ -317,8 +377,17 @@ public class SQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.addPermission(permission);
         this.recalculateUsersPermissions();
-        //todo sql
-        this.saveGroup(groupID);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(INSERT_GROUP_PERMISSION_SQL)) {
+                statement.setString(1, groupID);
+                statement.setString(2, permission.toLowerCase());
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
        // this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
@@ -327,8 +396,17 @@ public class SQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.removePermission(permission);
         this.recalculateUsersPermissions();
-        //todo sql
-        this.saveGroup(groupID);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(REMOVE_GROUP_PERMISSION_SQL)) {
+                statement.setString(1, groupID);
+                statement.setString(2, permission.toLowerCase());
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
         //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
@@ -337,8 +415,17 @@ public class SQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
-        //todo sql
-        this.saveGroup(groupID);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(INSERT_GROUP_PARENT_SQL)) {
+                statement.setString(1, groupID);
+                statement.setString(2, parentID.toLowerCase());
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
         //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
@@ -347,8 +434,17 @@ public class SQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
-        //todo sql
-        this.saveGroup(groupID);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(REMOVE_GROUP_PARENT_SQL)) {
+                statement.setString(1, groupID);
+                statement.setString(2, parentID.toLowerCase());
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
        // this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
@@ -356,8 +452,18 @@ public class SQLStorage extends Storage {
     public void setGroupPrefix(String groupID, String prefix) {
         val group = this.getGroup(groupID);
         group.setPrefix(prefix);
-        //todo sql
-        this.saveGroup(groupID);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_GROUP_PREFIX_SQL)) {
+                statement.setString(1, groupID);
+                statement.setString(2, prefix.isEmpty() ? null : prefix);
+                statement.setString(3, prefix.isEmpty() ? null : prefix);
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
         //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
@@ -365,8 +471,18 @@ public class SQLStorage extends Storage {
     public void setGroupSuffix(String groupID, String suffix) {
         val group = this.getGroup(groupID);
         group.setSuffix(suffix);
-        //todo sql
-        this.saveGroup(groupID);
+        CompletableFuture.runAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_GROUP_SUFFIX_SQL)) {
+                statement.setString(1, groupID);
+                statement.setString(2, suffix.isEmpty() ? null : suffix);
+                statement.setString(3, suffix.isEmpty() ? null : suffix);
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while remove perm data", e);
+            }
+        }).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
+        });
         //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
@@ -510,7 +626,7 @@ public class SQLStorage extends Storage {
                     String prefix = rs.getString("prefix");
                     String suffix = rs.getString("suffix");
                     user = new User(nickName, group);
-                    if (group != null) user.setGroupId(this.manager.getConfigFile().getDefaultGroup());
+                    if (group == null) user.setGroupId(this.manager.getConfigFile().getDefaultGroup());
                     if (prefix != null) user.setPrefix(prefix);
                     if (suffix != null) user.setSuffix(suffix);
                 }
