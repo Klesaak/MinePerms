@@ -9,11 +9,11 @@ import java.util.Objects;
 
 @Getter
 public class User extends AbstractEntity {
-    private String group;
+    private String groupId;
 
     public User(String playerName, String groupId) {
         super(playerName);
-        this.group = groupId;
+        this.groupId = groupId;
     }
 
     @Override
@@ -35,11 +35,11 @@ public class User extends AbstractEntity {
     }
 
     public boolean hasGroup(String groupID) {
-        return this.group.equalsIgnoreCase(groupID);
+        return this.groupId.equalsIgnoreCase(groupID);
     }
 
-    public void setGroup(String groupId) {
-        this.group = groupId;
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
 
     public void recalculatePermissions(Map<String, Group> groupsMap) {
@@ -48,7 +48,7 @@ public class User extends AbstractEntity {
         }
         this.permissionsMatcher.clear();
         this.permissionsMatcher.add(this.permissions);
-        val group = groupsMap.get(this.group);
+        val group = groupsMap.get(this.groupId);
         if (group != null) {
             this.permissionsMatcher.add(group.getPermissions());
             group.getInheritanceGroups().forEach(groupID -> {
@@ -78,7 +78,7 @@ public class User extends AbstractEntity {
     public String toString() {
         return "User{" +
                 "playerName='" + entityId + '\'' +
-                ", group='" + group + '\'' +
+                ", group='" + groupId + '\'' +
                 ", prefix='" + prefix + '\'' +
                 ", suffix='" + suffix + '\'' +
                 ", permissions=" + permissions +

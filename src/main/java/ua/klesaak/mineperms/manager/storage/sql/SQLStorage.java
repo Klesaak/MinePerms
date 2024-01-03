@@ -1,13 +1,6 @@
-package ua.klesaak.mineperms.manager.storage.mysql;
+package ua.klesaak.mineperms.manager.storage.sql;
 
-import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.field.DataType;
-import com.j256.ormlite.field.DatabaseFieldConfig;
-import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
-import com.j256.ormlite.stmt.UpdateBuilder;
-import com.j256.ormlite.table.DatabaseTableConfig;
-import com.j256.ormlite.table.TableUtils;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
 import lombok.Synchronized;
 import lombok.val;
@@ -15,139 +8,106 @@ import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
-import ua.klesaak.mineperms.manager.storage.entity.data.GroupData;
-import ua.klesaak.mineperms.manager.storage.entity.data.UserData;
-import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import static ua.klesaak.mineperms.manager.storage.mysql.DatabaseConstants.*;
+import static ua.klesaak.mineperms.manager.storage.sql.DatabaseConstants.*;
 
+//todo момент с обновление в бд обьекта, которого там нет (как-то исправить)
 @Getter
-public class MySQLStorage extends Storage {
-    private final JdbcPooledConnectionSource connectionSource;
-    private Dao<UserData, String> userDataDao;
-    private Dao<GroupData, String> groupDataDao;
+public class SQLStorage extends Storage {
+    private final HikariDataSource hikariDataSource;
 
-    public MySQLStorage(MinePermsManager manager) {
+    public SQLStorage(MinePermsManager manager) {
         super(manager);
-        val config = this.manager.getConfigFile().getMySQLSettings();
-        try {
-            this.connectionSource = new JdbcPooledConnectionSource(config.getHost(), config.getUsername(), config.getPassword());
-        } catch (SQLException ex) {
-            throw new RuntimeException("Error while init MySQL, check your connection settings in config.json", ex);
-        }
-        this.createUsersTable(config);
-        this.createGroupsTable(config);
-        this.connectionSource.setTestBeforeGet(true);
+        val config = this.manager.getConfigFile().getSQLSettings();
+        this.hikariDataSource = config.getSource(manager.getStorageType());
+        applyGroupsPermissionsSuffix(config.getGroupsPermissionsTableSuffix());
+        this.createTables();
     }
 
     @Override
     public void init() {
         CompletableFuture.runAsync(() -> {
-            try {
-                val allData = this.groupDataDao.queryForAll();
-                allData.forEach(groupData -> this.groups.put(groupData.getGroupID(), groupData.getGroup()));
-                val defaultGroup = manager.getConfigFile().getDefaultGroup();
-                if (this.getGroup(defaultGroup) == null) {
-                    this.createGroup(defaultGroup);
+            Collection<Group> groups = new ArrayList<>();
+            Map<String, Collection<String>> groupsPerms = new HashMap<>();
+            Map<String, Collection<String>> groupsParents = new HashMap<>();
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_ALL_GROUPS_DATA_SQL)) {
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        String groupId = rs.getString("group_id");
+                        String prefix = rs.getString("prefix");
+                        String suffix = rs.getString("suffix");
+                        Group group = new Group(groupId);
+                        if (prefix != null) group.setPrefix(prefix);
+                        if (suffix != null) group.setSuffix(suffix);
+                        groups.add(group);
+                        groupsPerms.put(groupId, new ArrayList<>());
+                        groupsParents.put(groupId, new ArrayList<>());
+                    }
                 }
-            } catch (SQLException ex) {
-                throw new RuntimeException("Error while init MySQL", ex);
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while load groups data from MySQL ", e);
+            }
+
+            //загружаем пермишены для групп
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_ALL_GROUPS_PERMISSIONS_SQL)) {
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        String groupId = rs.getString("group_id");
+                        String permission = rs.getString("permission");
+                        groupsPerms.get(groupId).add(permission);
+                    }
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while load groups data from MySQL ", e);
+            }
+
+            //загружаем паренты
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_ALL_GROUPS_PARENTS_SQL)) {
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        String groupId = rs.getString("group_id");
+                        String parent = rs.getString("parent");
+                        groupsParents.get(groupId).add(parent);
+                    }
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while load groups data from MySQL ", e);
+            }
+
+            //складываем всё в кучу
+            groups.forEach(groupData -> {
+                val id = groupData.getGroupID();
+                val perms = groupsPerms.get(id);
+                val parents = groupsParents.get(id);
+                groupData.setPermissions(perms);
+                groupData.setInheritanceGroups(parents);
+                this.groups.put(id, groupData);
+            });
+
+            //проверяем наличие дефолт группы
+            val defaultGroup = manager.getConfigFile().getDefaultGroup();
+            if (this.getGroup(defaultGroup) == null) {
+                this.createGroup(defaultGroup);
             }
         }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+          throw new RuntimeException("Error while init SQL storage", throwable);
         });
     }
 
-    private void createUsersTable(MySQLConfig config) {
-        try {
-            List<DatabaseFieldConfig> usersFieldConfigs = new ArrayList<>();
-            DatabaseFieldConfig playerName = new DatabaseFieldConfig("playerName");
-            playerName.setId(true);
-            playerName.setCanBeNull(false);
-            playerName.setColumnName(USER_NAME_COLUMN);
-            usersFieldConfigs.add(playerName);
-
-            DatabaseFieldConfig groupField = new DatabaseFieldConfig("group");
-            groupField.setCanBeNull(false);
-            groupField.setDataType(DataType.STRING);
-            groupField.setDefaultValue(this.manager.getConfigFile().getDefaultGroup());
-            groupField.setColumnName(USER_GROUP_COLUMN);
-            usersFieldConfigs.add(groupField);
-
-            DatabaseFieldConfig prefixField = new DatabaseFieldConfig("prefix");
-            prefixField.setCanBeNull(false);
-            prefixField.setDataType(DataType.LONG_STRING);
-            prefixField.setColumnName(PREFIX_COLUMN);
-            usersFieldConfigs.add(prefixField);
-
-            DatabaseFieldConfig suffixField = new DatabaseFieldConfig("suffix");
-            suffixField.setCanBeNull(false);
-            suffixField.setDataType(DataType.LONG_STRING);
-            suffixField.setColumnName(SUFFIX_COLUMN);
-            usersFieldConfigs.add(suffixField);
-
-            DatabaseFieldConfig permsField = new DatabaseFieldConfig("serializedPerms");
-            permsField.setCanBeNull(false);
-            permsField.setDataType(DataType.LONG_STRING);
-            permsField.setColumnName(PERMISSIONS_COLUMN);
-            usersFieldConfigs.add(permsField);
-
-            DatabaseTableConfig<UserData> usersTableConfig = new DatabaseTableConfig<>(UserData.class, config.getUsersTable(), usersFieldConfigs);
-            this.userDataDao = DaoManager.createDao(this.connectionSource, usersTableConfig);
-            TableUtils.createTableIfNotExists(this.connectionSource, usersTableConfig);
-        } catch (SQLException ex) {
-            throw new RuntimeException("Error while create users table", ex);
-        }
-    }
-
-
-
-    private void createGroupsTable(MySQLConfig config) {
-        try {
-            List<DatabaseFieldConfig> groupsFiledConfigs = new ArrayList<>();
-            DatabaseFieldConfig groupID = new DatabaseFieldConfig("groupID");
-            groupID.setId(true);
-            groupID.setCanBeNull(false);
-            groupID.setColumnName(GROUP_ID_COLUMN);
-            groupsFiledConfigs.add(groupID);
-
-            DatabaseFieldConfig prefixField = new DatabaseFieldConfig("prefix");
-            prefixField.setCanBeNull(false);
-            prefixField.setDataType(DataType.LONG_STRING);
-            prefixField.setColumnName(PREFIX_COLUMN);
-            groupsFiledConfigs.add(prefixField);
-
-            DatabaseFieldConfig suffixField = new DatabaseFieldConfig("suffix");
-            suffixField.setCanBeNull(false);
-            suffixField.setDataType(DataType.LONG_STRING);
-            suffixField.setColumnName(SUFFIX_COLUMN);
-            groupsFiledConfigs.add(suffixField);
-
-            DatabaseFieldConfig parentField = new DatabaseFieldConfig("serializedInheritanceGroups");
-            parentField.setCanBeNull(false);
-            parentField.setDataType(DataType.LONG_STRING);
-            parentField.setColumnName(GROUP_PARENTS_COLUMN);
-            groupsFiledConfigs.add(parentField);
-
-            DatabaseFieldConfig permsField = new DatabaseFieldConfig("serializedPerms");
-            permsField.setCanBeNull(false);
-            permsField.setDataType(DataType.LONG_STRING);
-            permsField.setColumnName(PERMISSIONS_COLUMN);
-            groupsFiledConfigs.add(permsField);
-
-            DatabaseTableConfig<GroupData> groupsTableConfig = new DatabaseTableConfig<>(GroupData.class, config.getGroupsTable(), groupsFiledConfigs);
-            this.groupDataDao = DaoManager.createDao(this.connectionSource, groupsTableConfig);
-            TableUtils.createTableIfNotExists(this.connectionSource, groupsTableConfig);
-        } catch (SQLException ex) {
-            throw new RuntimeException("Error while create groups table", ex);
-        }
+    private void createTables() {
+        this.executeSQL(CREATE_GROUPS_TABLE_SQL);
+        this.executeSQL(CREATE_USERS_TABLE_SQL);
+        this.executeSQL(CREATE_GROUPS_PERMISSIONS_TABLE_SQL);
+        this.executeSQL(CREATE_GROUPS_PARENTS_TABLE_SQL);
+        this.executeSQL(CREATE_USERS_PERMISSIONS_TABLE_SQL);
     }
 
     @Override
@@ -188,32 +148,30 @@ public class MySQLStorage extends Storage {
     }
 
     @Override
-    public void saveUser(String nickName, User user) {
-        CompletableFuture.runAsync(()-> {
+    public void saveUser(String nickName, User user) { //todo не забудь про batch perms
+        /*CompletableFuture.runAsync(()-> {
             try {
                 this.userDataDao.createOrUpdate(UserData.from(user));
             } catch (SQLException ex) {
                 throw new RuntimeException("Error while save user data " + nickName, ex);
             }
         }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
+            throw new RuntimeException(throwable);
+        });*/
     }
 
     @Override
-    public void saveGroup(String groupID) {
+    public void saveGroup(String groupID) { //todo не забудь про batch perms
         val group = this.groups.get(groupID);
-        CompletableFuture.runAsync(()-> {
+       /* CompletableFuture.runAsync(()-> {
             try {
                 this.groupDataDao.createOrUpdate(GroupData.from(group));
             } catch (SQLException ex) {
                 throw new RuntimeException("Error while save group data " + groupID, ex);
             }
         }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
+            throw new RuntimeException(throwable);
+        });*/
     }
 
     @Override
@@ -230,36 +188,23 @@ public class MySQLStorage extends Storage {
     }
 
     private CompletableFuture<User> loadUser(String nickName) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                UserData userData = this.userDataDao.queryForId(nickName);
-                if (userData == null) return null;
-                return userData.getUser();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while load user " + nickName + " data", e);
-            }
-        }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+        return CompletableFuture.supplyAsync(() -> this.getUserFromSQL(nickName)).exceptionally(throwable -> {
+            throw new RuntimeException(throwable);
         });
     }
 
     @Override
     public String getUserPrefix(String nickName) {
         User user = this.getUser(nickName);
-        if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
-        }
-        return user.getPrefix().isEmpty() ? this.getGroupOrDefault(user.getGroup()).getPrefix() : user.getPrefix();
+        if (user == null) return this.getDefaultGroup().getPrefix();
+        return user.getPrefix().isEmpty() ? this.getGroupOrDefault(user.getGroupId()).getPrefix() : user.getPrefix();
     }
 
     @Override
     public String getUserSuffix(String nickName) {
         User user = this.getUser(nickName);
-        if (user == null) {
-            user = new User(nickName, this.manager.getConfigFile().getDefaultGroup());
-        }
-        return user.getSuffix().isEmpty() ? this.getGroupOrDefault(user.getGroup()).getSuffix() : user.getSuffix();
+        if (user == null) return this.getDefaultGroup().getSuffix();
+        return user.getSuffix().isEmpty() ? this.getGroupOrDefault(user.getGroupId()).getSuffix() : user.getSuffix();
     }
 
     @Override
@@ -271,8 +216,9 @@ public class MySQLStorage extends Storage {
             this.temporalUsersCache.put(nickName, user);
         }
         user.addPermission(permission);
+        //todo sql
         this.saveUser(nickName, user);
-        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getMySQLSettings().getUsersTable()));
+        //this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
     }
 
     @Override
@@ -281,8 +227,9 @@ public class MySQLStorage extends Storage {
         if (user == null) return;
         user.removePermission(permission);
         user.recalculatePermissions(this.groups);
+        //todo sql
         this.saveUser(nickName, user);
-        this.broadcastPacket(MessageData.goUpdateUserPacket(user, this.manager.getConfigFile().getMySQLSettings().getUsersTable()));
+        //this.broadcastPacket(MessageData.goUpdateUserPacket(user, this.manager.getConfigFile().getSQLSettings().getUsersTable()));
     }
 
     @Override
@@ -294,8 +241,9 @@ public class MySQLStorage extends Storage {
             this.temporalUsersCache.put(nickName, user);
         }
         user.setPrefix(prefix);
+        //todo sql
         this.saveUser(nickName, user);
-        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getMySQLSettings().getUsersTable()));
+        //this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
     }
 
     @Override
@@ -307,8 +255,9 @@ public class MySQLStorage extends Storage {
             this.temporalUsersCache.put(nickName, user);
         }
         user.setSuffix(suffix);
+        //todo sql
         this.saveUser(nickName, user);
-        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getMySQLSettings().getUsersTable()));
+       // this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
     }
 
     @Override
@@ -320,17 +269,19 @@ public class MySQLStorage extends Storage {
             this.temporalUsersCache.put(nickName, user);
         }
         if (this.groups.get(groupID) != null) {
-            user.setGroup(groupID);
+            user.setGroupId(groupID);
             this.saveUser(nickName, user);
             user.recalculatePermissions(this.groups);
             this.manager.getEventManager().callGroupChangeEvent(user);
         }
-        this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getMySQLSettings().getUsersTable()));
+        //todo sql
+        //this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
     }
 
     @Override
     public void deleteUser(String nickName) {
-        val config = this.manager.getConfigFile();
+        //todo sql
+       /* val config = this.manager.getConfigFile();
         val newUser = new User(nickName, config.getDefaultGroup());
         if (this.users.get(nickName) != null) {
             this.users.put(nickName, newUser);
@@ -341,14 +292,13 @@ public class MySQLStorage extends Storage {
         CompletableFuture.runAsync(()-> {
             try {
                 this.userDataDao.deleteById(nickName);
-                this.broadcastPacket(MessageData.goDeleteUserPacket(nickName, config.getMySQLSettings().getUsersTable()));
+                this.broadcastPacket(MessageData.goDeleteUserPacket(nickName, config.getSQLSettings().getUsersTable()));
             } catch (SQLException e) {
                 throw new RuntimeException("Error while delete user " + nickName + " data", e);
             }
         }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
+            throw new RuntimeException(throwable);
+        });*/
     }
 
     @Override
@@ -367,8 +317,9 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.addPermission(permission);
         this.recalculateUsersPermissions();
+        //todo sql
         this.saveGroup(groupID);
-        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+       // this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -376,8 +327,9 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.removePermission(permission);
         this.recalculateUsersPermissions();
+        //todo sql
         this.saveGroup(groupID);
-        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -385,8 +337,9 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
+        //todo sql
         this.saveGroup(groupID);
-        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
     @Override
@@ -394,30 +347,34 @@ public class MySQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
+        //todo sql
         this.saveGroup(groupID);
-        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+       // this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
     @Override
     public void setGroupPrefix(String groupID, String prefix) {
         val group = this.getGroup(groupID);
         group.setPrefix(prefix);
+        //todo sql
         this.saveGroup(groupID);
-        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
     @Override
     public void setGroupSuffix(String groupID, String suffix) {
         val group = this.getGroup(groupID);
         group.setSuffix(suffix);
+        //todo sql
         this.saveGroup(groupID);
-        this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+        //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
     }
 
     @Synchronized
     @Override
     public void deleteGroup(String groupID) {
-        val defaultGroupId = this.getDefaultGroup().getGroupID();
+        //todo sql
+      /*  val defaultGroupId = this.getDefaultGroup().getGroupID();
         if (groupID.equalsIgnoreCase(defaultGroupId)) return;
         this.groups.remove(groupID);
         for (val user : this.users.values()) {
@@ -449,30 +406,29 @@ public class MySQLStorage extends Storage {
                         updateGroupsBuilder.update();
                     }
                 }
-                this.broadcastPacket(MessageData.goDeleteGroupPacket(groupID, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+                this.broadcastPacket(MessageData.goDeleteGroupPacket(groupID, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
             } catch (SQLException e) {
                 throw new RuntimeException("Error while delete group " + groupID + " data", e);
             }
         }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
+            throw new RuntimeException(throwable);
+        });*/
     }
 
     @Override
-    public void createGroup(String groupID) {
-        val newGroup = new Group(groupID);
-        this.groups.put(groupID, newGroup);
+    public void createGroup(String groupId) {
+        val newGroup = new Group(groupId);
+        this.groups.put(groupId, newGroup);
         CompletableFuture.runAsync(()-> {
-            try {
-                this.groupDataDao.createOrUpdate(GroupData.from(newGroup));
-                this.broadcastPacket(MessageData.goUpdateGroupPacket(newGroup, this.manager.getConfigFile().getMySQLSettings().getGroupsTable()));
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(INSERT_GROUP_DEFAULT)) {
+                statement.setString(1, groupId);
+                statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while create group " + groupID + " data", e);
+                throw new RuntimeException("Error while create group ", e);
             }
+            //this.broadcastPacket(MessageData.goUpdateGroupPacket(newGroup, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
         }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+            throw new RuntimeException(throwable);
         });
     }
 
@@ -485,34 +441,34 @@ public class MySQLStorage extends Storage {
     @Override
     public Collection<User> getAllUsersData() {
         val list = new ArrayList<User>();
-        try {
+        /*try {
             val objectList = this.userDataDao.queryForAll();
             for (UserData userData : objectList) {
                 list.add(userData.getUser());
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error while get all users data", e);
-        }
+        }*/
         return list;
     }
 
     @Override
     public Collection<Group> getAllGroupsData() {
         val list = new ArrayList<Group>();
-        try {
+       /* try {
             val objectList = this.groupDataDao.queryForAll();
             for (GroupData groupData : objectList) {
                 list.add(groupData.getGroup());
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error while get all groups data", e);
-        }
+        }*/
         return list;
     }
 
     @Override
     public void importUsersData(Collection<User> users) {
-        Collection<UserData> convertedUsers = new ArrayList<>();
+       /* Collection<UserData> convertedUsers = new ArrayList<>();
         for (User user : users) {
             convertedUsers.add(UserData.from(user));
         }
@@ -520,12 +476,12 @@ public class MySQLStorage extends Storage {
             this.userDataDao.create(convertedUsers);
         } catch (SQLException e) {
             throw new RuntimeException("Error while import all users data", e);
-        }
+        }*/
     }
 
     @Override
     public void importGroupsData(Collection<Group> groups) {
-        Collection<GroupData> convertedGroups = new ArrayList<>();
+        /*Collection<GroupData> convertedGroups = new ArrayList<>();
         for (Group group : groups) {
             convertedGroups.add(GroupData.from(group));
         }
@@ -533,13 +489,52 @@ public class MySQLStorage extends Storage {
             this.groupDataDao.create(convertedGroups);
         } catch (SQLException e) {
             throw new RuntimeException("Error while import all groups data", e);
+        }*/
+    }
+
+    private void executeSQL(String sql) {
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(sql)) {
+            statement.execute();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while executeSQL data", e);
         }
+    }
+
+    private User getUserFromSQL(String nickName) {
+        User user = null;
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_USER_DATA_SQL)) {
+            statement.setString(1, nickName);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String group = rs.getString("group_id");
+                    String prefix = rs.getString("prefix");
+                    String suffix = rs.getString("suffix");
+                    user = new User(nickName, group);
+                    if (group != null) user.setGroupId(this.manager.getConfigFile().getDefaultGroup());
+                    if (prefix != null) user.setPrefix(prefix);
+                    if (suffix != null) user.setSuffix(suffix);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while load user data from MySQL " + nickName, e);
+        }
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_USER_PERMISSIONS_SQL)) {
+            statement.setString(1, nickName);
+            if (user != null) {
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        user.addPermission(rs.getString("permission"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while load user perms from MySQL " + nickName, e);
+        }
+        return user;
     }
 
     @Override
     public void close() {
-        this.userDataDao = null;
-        this.groupDataDao = null;
-        this.connectionSource.closeQuietly();
+        if (this.hikariDataSource != null) this.hikariDataSource.close();;
     }
 }

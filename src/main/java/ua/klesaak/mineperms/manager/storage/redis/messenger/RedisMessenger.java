@@ -92,8 +92,8 @@ public class RedisMessenger implements AutoCloseable {
             val defaultGroupId = storage.getDefaultGroup().getGroupID();
             String usersSubChannel = "";
             String groupsSubChannel = "";
-            switch (config.getStorageType()) {
-                case FILE: {
+            switch (config.getStorageType()) { //todo префиксы и только
+               /* case FILE: {
                     throw new UnsupportedOperationException("Don't update data by redis pub-sub, because used FileStorage! You must change field 'useRedisPubSub' to 'false' in plugin config!");
                 }
                 case REDIS: {
@@ -107,7 +107,7 @@ public class RedisMessenger implements AutoCloseable {
                     usersSubChannel = mysqlConfig.getUsersTable();
                     groupsSubChannel = mysqlConfig.getGroupsTable();
                     break;
-                }
+                }*/
             }
             switch (messageData.getMessageType()) {
                 case USER_UPDATE: {
@@ -142,12 +142,12 @@ public class RedisMessenger implements AutoCloseable {
                     groupsCache.remove(groupID);
                     for (val user : storage.getUsers().values()) {
                         if (user.hasGroup(groupID)) {
-                            user.setGroup(defaultGroupId);
+                            user.setGroupId(defaultGroupId);
                         }
                     }
                     for (val user : temporalUserCache.asMap().values()) {
                         if (user.hasGroup(groupID)) {
-                            user.setGroup(defaultGroupId);
+                            user.setGroupId(defaultGroupId);
                         }
                     }
                     for (val group : groupsCache.values()) {

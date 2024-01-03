@@ -3,7 +3,7 @@ package ua.klesaak.mineperms.manager.command;
 import com.google.common.base.Joiner;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.config.StorageType;
+import ua.klesaak.mineperms.manager.storage.StorageType;
 import ua.klesaak.mineperms.manager.migration.IMigrationPlugin;
 import ua.klesaak.mineperms.manager.migration.LPMigration;
 import ua.klesaak.mineperms.manager.migration.PEXMigration;
@@ -12,7 +12,7 @@ import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.file.FileStorage;
-import ua.klesaak.mineperms.manager.storage.mysql.MySQLStorage;
+import ua.klesaak.mineperms.manager.storage.sql.SQLStorage;
 import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
 import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
@@ -82,7 +82,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                             return;
                         }
                         commandSource.sendMessage("&aUser &c" + nickName + "&a info:");
-                        commandSource.sendMessage(" &aGroup: &6" + user.getGroup());
+                        commandSource.sendMessage(" &aGroup: &6" + user.getGroupId());
                         commandSource.sendMessage(" &aPrefix: &6" + (user.getPrefix().isEmpty() ? "&cNot set." : user.getPrefix()));
                         commandSource.sendMessage(" &aSuffix: &6" + (user.getSuffix().isEmpty() ? "&cNot set." : user.getSuffix()));
                         if (user.getPermissions().isEmpty()) {
@@ -381,24 +381,15 @@ public final class MinePermsCommand extends MPTabCompleter {
                 }
                 break;
             }
-            case "reload": {
-                this.runOnLock(commandSource, ()-> {
-                    this.manager.reload();
-                    commandSource.sendMessage("&aMinePerms reload successful!");
-                });
-                return;
-            }
             case "find": {
                 CompletableFuture.runAsync(()-> this.onFind(commandSource, label, args)).exceptionally(throwable -> {
-                    throwable.printStackTrace();
-                    return null;
+                    throw new RuntimeException("Get error while finding.", throwable);
                 });
                 return;
             }
             case "export": {
                 CompletableFuture.runAsync(()-> this.onExport(commandSource, label, args)).exceptionally(throwable -> {
-                    throwable.printStackTrace();
-                    return null;
+                    throw new RuntimeException("Get error while exporting.", throwable);
                 });
                 return;
             }
@@ -452,7 +443,7 @@ public final class MinePermsCommand extends MPTabCompleter {
         });
     }
 
-    private void onExport(IMPCommandSource commandSource, String label, String[] args) {
+    private void onExport(IMPCommandSource commandSource, String label, String[] args) { //TODO: переделать
         if (args.length != 2)  {
             commandSource.sendMessage("&6/" + label + " export <backend> - export data from current backend to another backend.");
             return;
@@ -480,7 +471,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                     break;
                 }
                 case MYSQL: {
-                    newStorage = new MySQLStorage(this.manager);
+                    newStorage = new SQLStorage(this.manager);
                     break;
                 }
                 case REDIS: {

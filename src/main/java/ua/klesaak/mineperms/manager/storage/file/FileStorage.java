@@ -14,7 +14,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
-public class FileStorage extends Storage {
+public final class FileStorage extends Storage {
+    private static final TypeToken<Collection<Group>> GROUP_TOKEN = new TypeToken<Collection<Group>>() {};
+    private static final TypeToken<Collection<User>> USER_TOKEN = new TypeToken<Collection<User>>() {};
     private final JsonData groupsFile, usersFile;
 
     public FileStorage(MinePermsManager manager) {
@@ -27,19 +29,18 @@ public class FileStorage extends Storage {
 
     public void init() {
         val configFile = this.manager.getConfigFile();
-        if (this.groupsFile.getFile().length() > 0L) {
-            Collection<Group> dataCollection = this.groupsFile.readAll(new TypeToken<Collection<Group>>() {});
-            dataCollection.forEach(group -> this.groups.put(group.getGroupID(), group));
-        } else {
+        if (this.groupsFile.getFile().length() <= 0L) {
             val defaultGroup = new Group(configFile.getDefaultGroup());
             this.groups.put(defaultGroup.getGroupID(), defaultGroup);
             this.groupsFile.write(Collections.singletonList(defaultGroup), true);
         }
+        Collection<Group> groupDataCollection = this.groupsFile.readAll(GROUP_TOKEN);
+        groupDataCollection.forEach(group -> this.groups.put(group.getGroupID(), group));
         if (this.usersFile.getFile().length() > 0L) {
-            Collection<User> dataCollection = this.usersFile.readAll(new TypeToken<Collection<User>>() {});
+            Collection<User> dataCollection = this.usersFile.readAll(USER_TOKEN);
             dataCollection.forEach(user -> {
                 user.recalculatePermissions(this.groups);
-                this.users.put(user.getPlayerName(), user);
+                this.users.put(user.getPlayerName().toLowerCase(), user);
             });
         }
     }
@@ -57,91 +58,95 @@ public class FileStorage extends Storage {
     @Override @Synchronized
     public void saveUser(String nickName) {
         CompletableFuture.runAsync(()->this.usersFile.write(this.users.values(), true)).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+            throw new RuntimeException("Error while save users.json file", throwable);
         });
     }
 
     @Override
     public void saveUser(String nickName, User user) {
-        this.users.put(nickName, user);
-        this.saveUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        this.users.put(nickNameLC, user);
+        this.saveUser(nickNameLC);
     }
 
     @Override @Synchronized
     public void saveGroup(String groupID) {
         CompletableFuture.runAsync(()->this.groupsFile.write(this.groups.values(), true)).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+            throw new RuntimeException("Error while save groups.json file", throwable);
         });
     }
 
     public User getUser(String nickName) {
-        return this.users.get(nickName);
+        return this.users.get(nickName.toLowerCase());
     }
 
     @Override
     public String getUserPrefix(String nickName) {
-        User user = this.getUser(nickName);
+        User user = this.getUser(nickName.toLowerCase());
         if (user == null) return this.getDefaultGroup().getPrefix();
-        return user.getPrefix().isEmpty() ? this.getGroup(user.getGroup()).getPrefix() : user.getPrefix();
+        return user.getPrefix().isEmpty() ? this.getGroup(user.getGroupId()).getPrefix() : user.getPrefix();
     }
 
     @Override
     public String getUserSuffix(String nickName) {
-        User user = this.getUser(nickName);
+        User user = this.getUser(nickName.toLowerCase());
         if (user == null) return this.getDefaultGroup().getSuffix();
-        return user.getSuffix().isEmpty() ? this.getGroup(user.getGroup()).getSuffix() : user.getSuffix();
+        return user.getSuffix().isEmpty() ? this.getGroup(user.getGroupId()).getSuffix() : user.getSuffix();
     }
 
     @Override
     public void addUserPermission(String nickName, String permission) {
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickName, this.getDefaultGroup().getGroupID());
+            user = new User(nickNameLC, this.getDefaultGroup().getGroupID());
         }
         user.addPermission(permission);
-        this.saveUser(nickName, user);
+        this.saveUser(nickNameLC, user);
     }
 
     @Override
     public void removeUserPermission(String nickName, String permission) {
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user == null) return;
         user.removePermission(permission);
         user.recalculatePermissions(this.groups);
-        this.saveUser(nickName, user);
+        this.saveUser(nickNameLC, user);
     }
 
     @Override
     public void setUserPrefix(String nickName, String prefix) {
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickName, this.getDefaultGroup().getGroupID());
+            user = new User(nickNameLC, this.getDefaultGroup().getGroupID());
         }
         user.setPrefix(prefix);
-        this.saveUser(nickName, user);
+        this.saveUser(nickNameLC, user);
     }
 
     @Override
     public void setUserSuffix(String nickName, String suffix) {
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickName, this.getDefaultGroup().getGroupID());
+            user = new User(nickNameLC, this.getDefaultGroup().getGroupID());
         }
         user.setSuffix(suffix);
-        this.saveUser(nickName, user);
+        this.saveUser(nickNameLC, user);
     }
 
     @Override
     public void setUserGroup(String nickName, String groupID) {
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickName, this.getDefaultGroup().getGroupID());
+            user = new User(nickNameLC, this.getDefaultGroup().getGroupID());
         }
         if (this.groups.get(groupID) != null) {
-            user.setGroup(groupID);
-            this.saveUser(nickName, user);
+            user.setGroupId(groupID);
+            this.saveUser(nickNameLC, user);
             this.manager.getEventManager().callGroupChangeEvent(user);
             user.recalculatePermissions(this.groups);
         }
@@ -149,10 +154,11 @@ public class FileStorage extends Storage {
 
     @Override
     public void deleteUser(String nickName) {
-        User user = this.getUser(nickName);
+        val nickNameLC = nickName.toLowerCase();
+        User user = this.getUser(nickNameLC);
         if (user != null) {
-            this.users.remove(nickName);
-            this.saveUser(nickName);
+            this.users.remove(nickNameLC);
+            this.saveUser(nickNameLC);
         }
     }
 
@@ -208,7 +214,7 @@ public class FileStorage extends Storage {
         this.groups.remove(groupID.toLowerCase());
         for (val user : this.users.values()) {
             if (user.hasGroup(groupID)) {
-                user.setGroup(defaultGroupId);
+                user.setGroupId(defaultGroupId);
             }
         }
         for (val group : this.groups.values()) {
@@ -246,8 +252,7 @@ public class FileStorage extends Storage {
     public void importUsersData(Collection<User> users) {
         for (User user : users) this.users.put(user.getPlayerName(), user);
         CompletableFuture.runAsync(()->this.usersFile.write(this.users.values(), true)).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+            throw new RuntimeException("Error while importing users data", throwable);
         });
     }
 
@@ -255,8 +260,7 @@ public class FileStorage extends Storage {
     public void importGroupsData(Collection<Group> groups) {
         for (Group group : groups) this.groups.put(group.getGroupID(), group);
         CompletableFuture.runAsync(()->this.groupsFile.write(this.groups.values(), true)).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+            throw new RuntimeException("Error while importing groups data", throwable);
         });
     }
 

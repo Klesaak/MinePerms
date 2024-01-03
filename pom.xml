@@ -41,60 +41,60 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <relocations>
                                 <relocation>
-                                    <pattern>com.j256</pattern>
-                                    <shadedPattern>ua.klesaak.libs.com.j256</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>org.postgresql</pattern>
-                                    <shadedPattern>ua.klesaak.libs.org.postgresql</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.org.postgresql</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>waffle</pattern>
-                                    <shadedPattern>ua.klesaak.libs.waffle</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.waffle</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.sun</pattern>
-                                    <shadedPattern>ua.klesaak.libs.com.sun</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.com.sun</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.mariadb.jdbc</pattern>
-                                    <shadedPattern>ua.klesaak.libs.org.mariadb</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.org.mariadb</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.google.gson</pattern>
-                                    <shadedPattern>ua.klesaak.libs.com.google</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.com.google</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.google.j2objc</pattern>
-                                    <shadedPattern>ua.klesaak.libs.com.google</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.com.google</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>javax.annotation</pattern>
-                                    <shadedPattern>ua.klesaak.libs.javax</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.javax</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.mysql</pattern>
-                                    <shadedPattern>ua.klesaak.libs.com.mysql</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.com.mysql</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>redis</pattern>
-                                    <shadedPattern>ua.klesaak.libs.redis</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.redis</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache</pattern>
-                                    <shadedPattern>ua.klesaak.libs.org.apache</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.org.apache</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.json</pattern>
-                                    <shadedPattern>ua.klesaak.libs.org.json</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.org.json</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.github</pattern>
-                                    <shadedPattern>ua.klesaak.libs.com.github</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.com.github</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>waffle</pattern>
-                                    <shadedPattern>ua.klesaak.libs.waffle</shadedPattern>
+                                    <shadedPattern>ua.klesaak.minelibs.waffle</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.zaxxer.hikari</pattern>
+                                    <shadedPattern>ua.klesaak.minelibs.com.zaxxer.hikari</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
@@ -226,17 +226,12 @@
             <version>1.18.22</version>
             <scope>compile</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.j256.ormlite/ormlite-jdbc -->
+
+        <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
         <dependency>
-            <groupId>com.j256.ormlite</groupId>
-            <artifactId>ormlite-jdbc</artifactId>
-            <version>6.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.j256.ormlite/ormlite-core -->
-        <dependency>
-            <groupId>com.j256.ormlite</groupId>
-            <artifactId>ormlite-core</artifactId>
-            <version>6.1</version>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>4.0.3</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
         <dependency>

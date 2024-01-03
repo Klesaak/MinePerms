@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.manager.storage.entity.data;
+package ua.klesaak.mineperms.manager.storage.entity.adapter;
 
 import com.google.gson.*;
 import ua.klesaak.mineperms.manager.storage.entity.Group;

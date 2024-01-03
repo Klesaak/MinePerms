@@ -9,8 +9,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
-import ua.klesaak.mineperms.manager.storage.entity.data.GroupDataAdapter;
-import ua.klesaak.mineperms.manager.storage.entity.data.UserDataAdapter;
+import ua.klesaak.mineperms.manager.storage.entity.adapter.GroupDataAdapter;
+import ua.klesaak.mineperms.manager.storage.entity.adapter.UserDataAdapter;
 
 import java.io.File;
 import java.lang.reflect.Modifier;

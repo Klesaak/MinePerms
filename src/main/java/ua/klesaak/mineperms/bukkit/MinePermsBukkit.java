@@ -65,8 +65,7 @@ public class MinePermsBukkit extends JavaPlugin {
             // TODO: 06.06.2023  так же если есть игроки онлайн - загрузить их в кеш из бд
             this.getServer().getOnlinePlayers().forEach(player -> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.minePermsManager, player)));
         }).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+            throw new RuntimeException("Error while inject online players ", throwable);
         });
         new MPBukkitListener(this);
         new MPBukkitCommand(this);

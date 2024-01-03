@@ -3,6 +3,7 @@ package ua.klesaak.mineperms.manager.storage.entity;
 import lombok.Getter;
 import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +36,7 @@ public abstract class AbstractEntity {
         this.permissions.remove(permission.toLowerCase());
     }
 
-    public void setPermissions(Set<String> permissions) {
+    public void setPermissions(Collection<String> permissions) {
         Set<String> perms = Collections.newSetFromMap(new ConcurrentHashMap<>());
         perms.addAll(permissions);
         this.permissions = perms;
@@ -46,10 +47,10 @@ public abstract class AbstractEntity {
     }
 
     public void setPrefix(String prefix) {
-        this.prefix = prefix == null ? "": prefix;
+        this.prefix = prefix == null ? "" : prefix;
     }
 
     public void setSuffix(String suffix) {
-        this.suffix = suffix == null ? "": suffix;
+        this.suffix = suffix == null ? "" : suffix;
     }
 }

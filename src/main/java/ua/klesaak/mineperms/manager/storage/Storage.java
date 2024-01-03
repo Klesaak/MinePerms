@@ -76,7 +76,7 @@ public abstract class Storage implements AutoCloseable {
     }
 
     public boolean hasPermission(String nickName, String permission) {
-        User user = this.getUser(nickName);
+        User user = this.getUser(nickName.toLowerCase());
         if (user != null) return user.hasPermission(permission);
         return this.getDefaultGroup().hasPermission(permission);
     }
@@ -84,15 +84,15 @@ public abstract class Storage implements AutoCloseable {
     public boolean hasPlayerInGroup(String playerName, String groupId) {
         Group group = this.getGroup(groupId);
         if (group == null) return false;
-        User user = this.getUser(playerName);
+        User user = this.getUser(playerName.toLowerCase());
         if (user == null) return this.getDefaultGroup().getGroupID().equalsIgnoreCase(groupId);
         return user.hasGroup(groupId);
     }
 
     public String getUserGroup(String playerName) {
-        User user = this.getUser(playerName);
+        User user = this.getUser(playerName.toLowerCase());
         if (user == null) return this.getDefaultGroup().getGroupID();
-        return user.getGroup();
+        return user.getGroupId();
     }
 
     public Group getGroupOrDefault(String groupId) {
@@ -113,9 +113,9 @@ public abstract class Storage implements AutoCloseable {
 
     public Collection<String> getUserInheritedGroups(String nickName) {
         val list = new ArrayList<String>();
-        val user = this.getUser(nickName);
+        val user = this.getUser(nickName.toLowerCase());
         if (user != null) {
-            val playerMainGroupID = user.getGroup();
+            val playerMainGroupID = user.getGroupId();
             list.add(playerMainGroupID);
             list.addAll(this.getGroup(playerMainGroupID).getInheritanceGroups());
         }
@@ -136,12 +136,6 @@ public abstract class Storage implements AutoCloseable {
 
     public RedisMessenger getRedisMessenger() {
         return redisMessenger;
-    }
-
-    public void recalculateUsersPermissionsByGroup(String groupId) {
-        for (User user : this.users.values()) {
-            if (user.getGroup().equalsIgnoreCase(groupId)) user.recalculatePermissions(this.groups);
-        }
     }
 
     public void recalculateUsersPermissions() {

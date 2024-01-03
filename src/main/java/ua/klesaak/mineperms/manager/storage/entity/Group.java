@@ -3,6 +3,7 @@ package ua.klesaak.mineperms.manager.storage.entity;
 import lombok.Getter;
 import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
@@ -61,7 +62,7 @@ public class Group extends AbstractEntity {
         inheritanceGroups.remove(groupId.toLowerCase());
     }
 
-    public void setInheritanceGroups(Set<String> inheritanceGroups) {
+    public void setInheritanceGroups(Collection<String> inheritanceGroups) {
         Set<String> groups = Collections.newSetFromMap(new ConcurrentHashMap<>());
         groups.addAll(inheritanceGroups);
         this.inheritanceGroups = groups;

@@ -24,8 +24,7 @@ public class MPBukkitListener implements Listener {
         Player player = event.getPlayer();
         this.plugin.getMinePermsManager().getStorage().cacheUser(player.getName());
         CompletableFuture.runAsync(()-> PermissibleOverride.injectPlayer(player, new PermissibleOverride(this.plugin.getMinePermsManager(), player))).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
+            throw new RuntimeException("Error while inject player ", throwable);
         });
     }
 

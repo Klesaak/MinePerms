@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.manager.storage.entity.data;
+package ua.klesaak.mineperms.manager.storage.entity.adapter;
 
 import com.google.gson.*;
 import ua.klesaak.mineperms.manager.storage.entity.User;
@@ -31,7 +31,7 @@ public final class UserDataAdapter implements JsonDeserializer<User>, JsonSerial
         jsonObject.addProperty("userName", user.getPlayerName());
         jsonObject.addProperty("prefix", user.getPrefix());
         jsonObject.addProperty("suffix", user.getSuffix());
-        jsonObject.addProperty("group", user.getGroup());
+        jsonObject.addProperty("group", user.getGroupId());
         JsonArray permissions = new JsonArray();
         user.getPermissions().forEach(permissions::add);
         jsonObject.add("permissions", permissions);
