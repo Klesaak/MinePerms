@@ -9,6 +9,11 @@ import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,19 +21,45 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static ua.klesaak.mineperms.manager.storage.sql.DatabaseConstants.*;
 
 //todo момент с обновление в бд обьекта, которого там нет (как-то исправить)
 @Getter
 public class SQLStorage extends Storage {
+    //create tables
+    private final String createGroupsTableSql;
+    private final String createUsersTableSql;
+    private final String createGroupsPermissionsTableSql;
+    private final String createGroupsParentsTableSql;
+    private final String createUsersPermissionsTableSql;
+
+    //fetching
+   // private final String
+   // private final String
+   // private final String
+   // private final String
+   /// private final String
+   // private final String
+   // private final String
+   // private final String
+   // private final String
+    //private final String
+   // private final String
+    //private final String
+
     private final HikariDataSource hikariDataSource;
 
     public SQLStorage(MinePermsManager manager) {
         super(manager);
         val config = this.manager.getConfigFile().getSQLSettings();
         this.hikariDataSource = config.getSource(manager.getStorageType());
-        applyGroupsPermissionsSuffix(config.getGroupsPermissionsTableSuffix());
+        this.createGroupsTableSql = this.loadSQL("createGroupsTable");
+        this.createUsersTableSql = this.loadSQL("createUsersTable");
+        this.createGroupsPermissionsTableSql = this.loadSQL("createGroupsPermissionsTable").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
+        this.createGroupsParentsTableSql = this.loadSQL("createGroupsParentsTable");
+        this.createUsersPermissionsTableSql = this.loadSQL("createUsersPermissionsTable");
         this.createTables();
     }
 
@@ -103,11 +134,11 @@ public class SQLStorage extends Storage {
     }
 
     private void createTables() {
-        this.executeSQL(CREATE_GROUPS_TABLE_SQL);
-        this.executeSQL(CREATE_USERS_TABLE_SQL);
-        this.executeSQL(CREATE_GROUPS_PERMISSIONS_TABLE_SQL);
-        this.executeSQL(CREATE_GROUPS_PARENTS_TABLE_SQL);
-        this.executeSQL(CREATE_USERS_PERMISSIONS_TABLE_SQL);
+        this.executeSQL(this.createGroupsTableSql);
+        this.executeSQL(this.createUsersTableSql);
+        this.executeSQL(this.createGroupsPermissionsTableSql);
+        this.executeSQL(this.createGroupsParentsTableSql);
+        this.executeSQL(this.createUsersPermissionsTableSql);
     }
 
     @Override
@@ -647,6 +678,19 @@ public class SQLStorage extends Storage {
             throw new RuntimeException("Error while load user perms from MySQL " + nickName, e);
         }
         return user;
+    }
+
+    private String loadSQL(String name) {
+        try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("sql/" + name + ".sql")) {
+            if (inputStream != null) {
+                val bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+                return bufferedReader.lines().collect(Collectors.joining(" "));
+                //return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)).readLine();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error while load SQL file!");
+        }
+        return "";
     }
 
     @Override

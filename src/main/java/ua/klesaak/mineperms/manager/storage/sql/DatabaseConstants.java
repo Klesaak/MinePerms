@@ -4,40 +4,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class DatabaseConstants {
-
-    ///SQL
-    ///CREATE TABLES
-    public final String CREATE_GROUPS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS `mp_groups` (group_id VARCHAR(128) NOT NULL, " +
-            "                                    prefix TEXT," +
-            "                                    suffix TEXT," +
-            "                                    PRIMARY KEY(group_id)) ENGINE = INNODB;";
-    public final String CREATE_USERS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS `mp_users` (user_name VARCHAR(128), " +
-            "                                    group_id VARCHAR(128)," +
-            "                                    prefix TEXT," +
-            "                                    suffix TEXT," +
-            "                                    PRIMARY KEY(user_name)," +
-            "                                    INDEX (group_id)," +
-            "                                    FOREIGN KEY (group_id) REFERENCES mp_groups (group_id) ON UPDATE CASCADE ON DELETE SET NULL) ENGINE = INNODB;";
-    public String CREATE_GROUPS_PERMISSIONS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS `mp_groups_permissions_%suffix%` (i BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY," +
-            "                                    group_id VARCHAR(128) NOT NULL," +
-            "                                    permission VARCHAR(255) NOT NULL," +
-            "                                    UNIQUE (group_id, permission)," +
-            "                                    INDEX (group_id)," +
-            "                                    FOREIGN KEY (group_id) REFERENCES mp_groups (group_id) ON UPDATE CASCADE ON DELETE CASCADE) ENGINE = INNODB;";
-    public final String CREATE_GROUPS_PARENTS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS `mp_groups_parents` (i BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY," +
-            "                                    group_id VARCHAR(128) NOT NULL," +
-            "                                    parent VARCHAR(255) NOT NULL," +
-            "                                    UNIQUE (group_id, parent)," +
-            "                                    INDEX (group_id), INDEX (parent)," +
-            "                                    FOREIGN KEY (parent) REFERENCES mp_groups (group_id) ON UPDATE CASCADE ON DELETE CASCADE," +
-            "                                    FOREIGN KEY (group_id) REFERENCES mp_groups (group_id) ON UPDATE CASCADE ON DELETE CASCADE) ENGINE = INNODB;";
-    public final String CREATE_USERS_PERMISSIONS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS `mp_users_permissions` (i BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY," +
-            "                                    user_name VARCHAR(128) NOT NULL," +
-            "                                    permission VARCHAR(255) NOT NULL," +
-            "                                    UNIQUE (user_name, permission)," +
-            "                                    INDEX (user_name)," +
-            "                                    FOREIGN KEY (user_name) REFERENCES mp_users (user_name) ON UPDATE CASCADE ON DELETE CASCADE) ENGINE = INNODB;";
-
     ///FETCHING
     ///GROUP
     public final String GET_GROUP_DATA_SQL = "SELECT prefix, suffix FROM `mp_groups` WHERE group_id = ?";
@@ -73,7 +39,6 @@ public class DatabaseConstants {
     public final String DELETE_GROUP_SQL = "DELETE FROM `mp_groups` WHERE group_id = ?";
 
     public void applyGroupsPermissionsSuffix(String tableSuffix) {
-        CREATE_GROUPS_PERMISSIONS_TABLE_SQL = CREATE_GROUPS_PERMISSIONS_TABLE_SQL.replace("%suffix%", tableSuffix);
         GET_GROUP_PERMISSIONS_SQL = GET_GROUP_PERMISSIONS_SQL.replace("%suffix%", tableSuffix);
         INSERT_GROUP_PERMISSION_SQL = INSERT_GROUP_PERMISSION_SQL.replace("%suffix%", tableSuffix);
         REMOVE_GROUP_PERMISSION_SQL = REMOVE_GROUP_PERMISSION_SQL.replace("%suffix%", tableSuffix);
