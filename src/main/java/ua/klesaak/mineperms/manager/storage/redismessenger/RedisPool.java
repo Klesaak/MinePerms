@@ -1,4 +1,4 @@
-package ua.klesaak.mineperms.manager.storage.redis;
+package ua.klesaak.mineperms.manager.storage.redismessenger;
 
 import lombok.val;
 import redis.clients.jedis.Jedis;

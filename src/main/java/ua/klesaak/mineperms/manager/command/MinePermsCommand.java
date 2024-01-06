@@ -13,7 +13,6 @@ import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.file.FileStorage;
 import ua.klesaak.mineperms.manager.storage.sql.SQLStorage;
-import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
 import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
 import java.util.*;
@@ -270,7 +269,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                             return;
                         }
                         if (storage.getGroup(groupId).hasGroup(parent) || groupId.equalsIgnoreCase(parent)) {
-                            commandSource.sendMessage("&cParent group &6" + parent + "&c already in &6" + groupId);
+                            commandSource.sendMessage("&6Parent group &c" + parent + "&6 already in &c" + groupId);
                             return;
                         }
                         storage.addGroupParent(groupId, parent);
@@ -447,48 +446,52 @@ public final class MinePermsCommand extends MPTabCompleter {
         });
     }
 
-    private void onExport(IMPCommandSource commandSource, String label, String[] args) { //TODO: переделать
+    private void onExport(IMPCommandSource commandSource, String label, String[] args) {
         if (args.length != 2)  {
             commandSource.sendMessage("&6/" + label + " export <backend> - export data from current backend to another backend.");
             return;
         }
-        val backend = args[1].toUpperCase();
+        val backend = args[1].toLowerCase();
         StorageType storageType;
         try {
-            storageType = Enum.valueOf(StorageType.class, backend);
-        } catch (IllegalArgumentException e) {
-            commandSource.sendMessage("&cBackend &6" + backend + " &cis not exists! Available backends: &6FILE, REDIS, MYSQL");
-            commandSource.sendMessage("&cCurrent backend: &6" + this.manager.getConfigFile().getStorageType().toString());
+            storageType = StorageType.parseWithException(backend);
+        } catch (RuntimeException e) {
+            commandSource.sendMessage("&cBackend &6" + backend + " &cis not exists! Available backends: &6FILE, MYSQL, MARIADB, POSTGRESQL");
+            commandSource.sendMessage("&cCurrent backend: &6" + this.manager.getConfigFile().getStorageType());
             return;
         }
-        if (storageType.equals(this.manager.getConfigFile().getStorageType())) {
+        if (storageType == this.manager.getStorageType()) {
             commandSource.sendMessage("&cYou can't export data from current backend to current :-/");
             return;
         }
         long start = System.currentTimeMillis();
         commandSource.sendMessage("&cStart exporting data...");
         this.runOnLock(commandSource, ()-> {
-            Storage newStorage = null; //todo auto closeable with try catch
+            Storage newStorage;
             switch (storageType) {
-                case FILE: {
+                case MARIADB:
+                case POSTGRESQL:
+                case MYSQL: {
+                    newStorage = new SQLStorage(this.manager, storageType);
+                    break;
+                }
+                default: {
                     newStorage = new FileStorage(this.manager);
                     break;
                 }
-                case MYSQL: {
-                    newStorage = new SQLStorage(this.manager);
-                    break;
-                }
-                case REDIS: {
-                    newStorage = new RedisStorage(this.manager);
-                }
+
             }
-            val users = this.manager.getStorage().getAllUsersData();
-            val groups = this.manager.getStorage().getAllGroupsData();
-            newStorage.importUsersData(users);
-            newStorage.importGroupsData(groups);
-            commandSource.sendMessage("&aExporting complete! (" + (System.currentTimeMillis() - start) + "ms.)");
-            commandSource.sendMessage("&aTo cross the &6" + storageType + "&a backend, you must change field 'storageType' in file config.json and restart you server!");
-            newStorage.close();
+            try (Storage storage = newStorage) {
+                val currentStorage = this.manager.getStorage();
+                val users = currentStorage.getAllUsersData();
+                val groups = currentStorage.getAllGroupsData();
+                storage.importUsersData(users);
+                storage.importGroupsData(groups);
+                commandSource.sendMessage("&aExporting complete! (" + (System.currentTimeMillis() - start) + "ms.)");
+                commandSource.sendMessage("&aTo cross the &6" + storageType + "&a backend, you must change field 'storageType' in file config.json and restart you server!");
+            } catch (Exception e) {
+                throw new RuntimeException("Got error while export data", e);
+            }
         });
     }
 

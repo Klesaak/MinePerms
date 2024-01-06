@@ -9,7 +9,6 @@ import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.StorageType;
 import ua.klesaak.mineperms.manager.storage.file.FileStorage;
 import ua.klesaak.mineperms.manager.storage.sql.SQLStorage;
-import ua.klesaak.mineperms.manager.storage.redis.RedisStorage;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 import ua.klesaak.mineperms.manager.utils.Platform;
 
@@ -40,11 +39,7 @@ public final class MinePermsManager {
             case POSTGRESQL:
             case MARIADB:
             case MYSQL: {
-                this.storage = new SQLStorage(this);
-                break;
-            }
-            case REDIS: {
-                this.storage = new RedisStorage(this);
+                this.storage = new SQLStorage(this, this.storageType);
                 break;
             }
         }

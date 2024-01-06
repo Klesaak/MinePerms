@@ -6,8 +6,8 @@ import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
-import ua.klesaak.mineperms.manager.storage.redis.messenger.MessageData;
-import ua.klesaak.mineperms.manager.storage.redis.messenger.RedisMessenger;
+import ua.klesaak.mineperms.manager.storage.redismessenger.MessageData;
+import ua.klesaak.mineperms.manager.storage.redismessenger.RedisMessenger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,7 +52,6 @@ public abstract class Storage implements AutoCloseable {
     public abstract void setUserSuffix(String nickName, String suffix);
     public abstract void setUserGroup(String nickName, String groupID);
     public abstract void deleteUser(String nickName);
-    public abstract void updateUser(String nickName, User user);
     //////Group operations//////
     public abstract void addGroupPermission(String groupID, String permission);
     public abstract void removeGroupPermission(String groupID, String permission);
@@ -62,7 +61,6 @@ public abstract class Storage implements AutoCloseable {
     public abstract void setGroupSuffix(String groupID, String suffix);
     public abstract void deleteGroup(String groupID);
     public abstract void createGroup(String groupID);
-    public abstract void updateGroup(String groupID, Group group);
     public abstract Collection<User> getAllUsersData();
     public abstract Collection<Group> getAllGroupsData();
     public abstract void importUsersData(Collection<User> users);

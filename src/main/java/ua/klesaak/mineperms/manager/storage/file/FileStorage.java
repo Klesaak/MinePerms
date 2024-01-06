@@ -7,6 +7,7 @@ import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.entity.User;
+import ua.klesaak.mineperms.manager.storage.redismessenger.RedisMessenger;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.io.File;
@@ -163,11 +164,6 @@ public final class FileStorage extends Storage {
     }
 
     @Override
-    public void updateUser(String nickName, User user) {
-        throw new UnsupportedOperationException("Don't update user by redis pub-sub, because used FileStorage!");
-    }
-
-    @Override
     public void addGroupPermission(String groupID, String permission) {
         this.getGroup(groupID).addPermission(permission);
         this.recalculateUsersPermissions();
@@ -207,21 +203,17 @@ public final class FileStorage extends Storage {
         this.saveGroup(groupID);
     }
 
+    @Synchronized
     @Override
     public void deleteGroup(String groupID) {
         val defaultGroupId = this.getDefaultGroup().getGroupID();
         if (groupID.equalsIgnoreCase(defaultGroupId)) return;
         this.groups.remove(groupID.toLowerCase());
-        for (val user : this.users.values()) {
-            if (user.hasGroup(groupID)) {
-                user.setGroupId(defaultGroupId);
-            }
-        }
-        for (val group : this.groups.values()) {
-            if (group.hasGroup(groupID)) {
-                group.removeInheritanceGroup(groupID);
-            }
-        }
+        this.users.values().stream().filter(user -> user.hasGroup(groupID)).forEach(user -> {
+            user.setGroupId(defaultGroupId);
+            this.manager.getEventManager().callGroupChangeEvent(user);
+        });
+        this.groups.values().stream().filter(group -> group.hasGroup(groupID)).forEach(group -> group.removeInheritanceGroup(groupID));
         this.recalculateUsersPermissions();
         this.saveUser(null);
         this.saveGroup(groupID);
@@ -231,11 +223,6 @@ public final class FileStorage extends Storage {
     public void createGroup(String groupID) {
         this.groups.put(groupID.toLowerCase(), new Group(groupID));
         this.saveGroup(groupID);
-    }
-
-    @Override
-    public void updateGroup(String groupID, Group group) {
-        throw new UnsupportedOperationException("Don't update group by redis pub-sub, because used FileStorage!");
     }
 
     @Override

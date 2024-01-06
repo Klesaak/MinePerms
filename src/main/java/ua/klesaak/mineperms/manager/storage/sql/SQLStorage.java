@@ -6,8 +6,10 @@ import lombok.Synchronized;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Storage;
+import ua.klesaak.mineperms.manager.storage.StorageType;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
+import ua.klesaak.mineperms.manager.storage.redismessenger.MessageData;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Getter
 public class SQLStorage extends Storage {
@@ -44,10 +47,10 @@ public class SQLStorage extends Storage {
 
     private final HikariDataSource hikariDataSource;
 
-    public SQLStorage(MinePermsManager manager) {
+    public SQLStorage(MinePermsManager manager, StorageType storageType) {
         super(manager);
         val config = this.manager.getConfigFile().getSQLSettings();
-        this.hikariDataSource = config.getSource(manager.getStorageType());
+        this.hikariDataSource = config.getSource(storageType);
         this.createGroupsTableSql = this.loadSQL("createGroupsTable");
         this.createUsersTableSql = this.loadSQL("createUsersTable");
         this.createGroupsPermissionsTableSql = this.loadSQL("createGroupsPermissionsTable").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
@@ -68,9 +71,9 @@ public class SQLStorage extends Storage {
         //updating
         this.insertGroupDefaultSql = this.loadSQL("update/group/insertGroupDefault");
         this.insertGroupParentSql = this.loadSQL("update/group/insertGroupParent");
-        this.insertGroupPermissionSql = this.loadSQL("update/group/insertGroupPermission");
+        this.insertGroupPermissionSql = this.loadSQL("update/group/insertGroupPermission").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
         this.removeGroupParentSql = this.loadSQL("update/group/removeGroupParent");
-        this.removeGroupPermissionSql = this.loadSQL("update/group/removeGroupPermission");
+        this.removeGroupPermissionSql = this.loadSQL("update/group/removeGroupPermission").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
         this.updateGroupPrefixSql = this.loadSQL("update/group/updateGroupPrefix");
         this.updateGroupSuffixSql = this.loadSQL("update/group/updateGroupSuffix");
         this.insertUserDefaultSql = this.loadSQL("update/user/insertUserDefault");
@@ -105,7 +108,7 @@ public class SQLStorage extends Storage {
                     }
                 }
             } catch (SQLException e) {
-                throw new RuntimeException("Error while load groups data from MySQL ", e);
+                throw new RuntimeException("Error while load groups data from SQL ", e);
             }
 
             //загружаем пермишены для групп
@@ -118,7 +121,7 @@ public class SQLStorage extends Storage {
                     }
                 }
             } catch (SQLException e) {
-                throw new RuntimeException("Error while load groups data from MySQL ", e);
+                throw new RuntimeException("Error while load groups data from SQL ", e);
             }
 
             //загружаем паренты
@@ -131,7 +134,7 @@ public class SQLStorage extends Storage {
                     }
                 }
             } catch (SQLException e) {
-                throw new RuntimeException("Error while load groups data from MySQL ", e);
+                throw new RuntimeException("Error while load groups data from SQL ", e);
             }
 
             //складываем всё в кучу
@@ -194,39 +197,17 @@ public class SQLStorage extends Storage {
 
     @Override
     public void saveUser(String nickName) {
-        val nickNameLC = nickName.toLowerCase();
-        val tempUser = this.temporalUsersCache.getIfPresent(nickNameLC);
-        User user = tempUser != null ? tempUser : this.users.get(nickNameLC);
-        if (user != null) {
-            this.saveUser(nickNameLC, user);
-        }
+        //ничего не делаем
     }
 
     @Override
-    public void saveUser(String nickName, User user) { //todo не забудь про batch perms
-        /*CompletableFuture.runAsync(()-> {
-            try {
-                this.userDataDao.createOrUpdate(UserData.from(user));
-            } catch (SQLException ex) {
-                throw new RuntimeException("Error while save user data " + nickName, ex);
-            }
-        }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
-        });*/
+    public void saveUser(String nickName, User user) {
+        //ничего не делаем
     }
 
     @Override
-    public void saveGroup(String groupID) { //todo не забудь про batch perms
-        val group = this.groups.get(groupID);
-       /* CompletableFuture.runAsync(()-> {
-            try {
-                this.groupDataDao.createOrUpdate(GroupData.from(group));
-            } catch (SQLException ex) {
-                throw new RuntimeException("Error while save group data " + groupID, ex);
-            }
-        }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
-        });*/
+    public void saveGroup(String groupID) {
+        //ничего не делаем
     }
 
     @Override
@@ -291,7 +272,7 @@ public class SQLStorage extends Storage {
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-        //this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserPermAddPacket(nickNameLC, permission));
     }
 
     @Override
@@ -312,7 +293,7 @@ public class SQLStorage extends Storage {
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-        //this.broadcastPacket(MessageData.goUpdateUserPacket(user, this.manager.getConfigFile().getSQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserPermRemovePacket(nickNameLC, permission));
     }
 
     @Override
@@ -332,12 +313,12 @@ public class SQLStorage extends Storage {
                 statement.setString(3, prefix.isEmpty() ? null : prefix);
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while set user prefix", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-        //this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserPrefixPacket(nickNameLC, prefix));
     }
 
     @Override
@@ -357,12 +338,12 @@ public class SQLStorage extends Storage {
                 statement.setString(3, suffix.isEmpty() ? null : suffix);
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while set user suffix", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-       // this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserSuffixPacket(nickNameLC, suffix));
     }
 
     @Override
@@ -386,12 +367,12 @@ public class SQLStorage extends Storage {
                 statement.setString(3, groupID);
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while set user group", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-        //this.broadcastPacket(MessageData.goUpdateUserPacket(user, config.getSQLSettings().getUsersTable()));
+        this.broadcastPacket(MessageData.goUpdateUserGroupPacket(nickNameLC, groupID));
     }
 
     @Override
@@ -410,25 +391,12 @@ public class SQLStorage extends Storage {
                 statement.setString(1, nickNameLC);
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while delete user", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-
-        //this.broadcastPacket(MessageData.goDeleteUserPacket(nickName, config.getSQLSettings().getUsersTable()));
-    }
-
-    @Override
-    public void updateUser(String nickName, User user) {
-        val nickNameLC = nickName.toLowerCase();
-        if (this.temporalUsersCache.getIfPresent(nickNameLC) == null && this.users.get(nickNameLC) == null) return;
-        user.recalculatePermissions(this.groups);
-        if (this.temporalUsersCache.getIfPresent(nickNameLC) != null) {
-            this.temporalUsersCache.put(nickNameLC, user);
-            return;
-        }
-        this.users.put(nickNameLC, user);
+        this.broadcastPacket(MessageData.goDeleteUserPacket(nickNameLC));
     }
 
     @Override
@@ -442,12 +410,12 @@ public class SQLStorage extends Storage {
                 statement.setString(2, permission.toLowerCase());
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while add group permission", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-       // this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
+       this.broadcastPacket(MessageData.goUpdateGroupPermAddPacket(groupID, permission, this.manager.getConfigFile().getSQLSettings().getGroupsPermissionsTableSuffix()));
     }
 
     @Override
@@ -461,12 +429,12 @@ public class SQLStorage extends Storage {
                 statement.setString(2, permission.toLowerCase());
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while remove group permission", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-        //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupPermRemovePacket(groupID, permission, this.manager.getConfigFile().getSQLSettings().getGroupsPermissionsTableSuffix()));
     }
 
     @Override
@@ -480,12 +448,12 @@ public class SQLStorage extends Storage {
                 statement.setString(2, parentID.toLowerCase());
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while add group parent", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-        //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupParentAddPacket(groupID, parentID));
     }
 
     @Override
@@ -499,12 +467,12 @@ public class SQLStorage extends Storage {
                 statement.setString(2, parentID.toLowerCase());
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while remove group parent", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-       // this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupParentRemovePacket(groupID, parentID));
     }
 
     @Override
@@ -518,12 +486,12 @@ public class SQLStorage extends Storage {
                 statement.setString(3, prefix.isEmpty() ? null : prefix);
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while set group prefix", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-        //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupPrefixPacket(groupID, prefix));
     }
 
     @Override
@@ -537,57 +505,38 @@ public class SQLStorage extends Storage {
                 statement.setString(3, suffix.isEmpty() ? null : suffix);
                 statement.executeUpdate();
             } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
+                throw new RuntimeException("Error while set group suffix", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-        //this.broadcastPacket(MessageData.goUpdateGroupPacket(group, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
+        this.broadcastPacket(MessageData.goUpdateGroupSuffixPacket(groupID, suffix));
     }
 
     @Synchronized
     @Override
     public void deleteGroup(String groupID) {
-        //todo sql
-      /*  val defaultGroupId = this.getDefaultGroup().getGroupID();
+        val defaultGroupId = this.getDefaultGroup().getGroupID();
         if (groupID.equalsIgnoreCase(defaultGroupId)) return;
         this.groups.remove(groupID);
-        for (val user : this.users.values()) {
-            if (user.hasGroup(groupID)) {
-                user.setGroup(defaultGroupId);
-            }
-        }
-        for (val user : this.temporalUsersCache.asMap().values()) {
-            if (user.hasGroup(groupID)) {
-                user.setGroup(defaultGroupId);
-            }
-        }
+        Stream.concat(this.users.values().stream(), this.temporalUsersCache.asMap().values().stream())
+                .filter(user -> user.hasGroup(groupID)).forEach(user -> {
+                    user.setGroupId(defaultGroupId);
+                    this.manager.getEventManager().callGroupChangeEvent(user);
+                });
+        this.groups.values().stream().filter(group -> group.hasGroup(groupID)).forEach(group -> group.removeInheritanceGroup(groupID));
         this.recalculateUsersPermissions();
         CompletableFuture.runAsync(()-> {
-            try {
-                val groupIDLC = groupID.toLowerCase();
-                UpdateBuilder<UserData, String> updateUsersBuilder = this.userDataDao.updateBuilder();
-                updateUsersBuilder.updateColumnValue(USER_GROUP_COLUMN, defaultGroupId);
-                updateUsersBuilder.where().eq(USER_GROUP_COLUMN, groupIDLC);
-                updateUsersBuilder.update();
-                this.groupDataDao.deleteById(groupIDLC);
-
-                UpdateBuilder<GroupData, String> updateGroupsBuilder = this.groupDataDao.updateBuilder();
-                for (val group : this.groups.values()) {
-                    if (group.hasGroup(groupID)) {
-                        group.removeInheritanceGroup(groupID);
-                        updateGroupsBuilder.updateColumnValue(GROUP_PARENTS_COLUMN, GroupData.from(group).getSerializedInheritanceGroups());
-                        updateGroupsBuilder.where().eq(GROUP_ID_COLUMN, group.getGroupID());
-                        updateGroupsBuilder.update();
-                    }
-                }
-                this.broadcastPacket(MessageData.goDeleteGroupPacket(groupID, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.deleteGroupSql)) {
+                statement.setString(1, groupID);
+                statement.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException("Error while delete group " + groupID + " data", e);
             }
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
-        });*/
+        });
+        this.broadcastPacket(MessageData.goDeleteGroupPacket(groupID));
     }
 
     @Override
@@ -601,70 +550,135 @@ public class SQLStorage extends Storage {
             } catch (SQLException e) {
                 throw new RuntimeException("Error while create group ", e);
             }
-            //this.broadcastPacket(MessageData.goUpdateGroupPacket(newGroup, this.manager.getConfigFile().getSQLSettings().getGroupsTable()));
         }).exceptionally(throwable -> {
             throw new RuntimeException(throwable);
         });
-    }
-
-    @Override
-    public void updateGroup(String groupID, Group group) {
-        this.groups.put(groupID, group);
-        this.recalculateUsersPermissions();
+        this.broadcastPacket(MessageData.goCreteGroupPacket(groupId));
     }
 
     @Override
     public Collection<User> getAllUsersData() {
         val list = new ArrayList<User>();
-        /*try {
-            val objectList = this.userDataDao.queryForAll();
-            for (UserData userData : objectList) {
-                list.add(userData.getUser());
+        Map<String, Collection<String>> usersPerms = new HashMap<>();
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllUsersDataSql)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String userName = rs.getString("user_name");
+                    String groupId = rs.getString("group_id");
+                    String prefix = rs.getString("prefix");
+                    String suffix = rs.getString("suffix");
+                    String group = groupId == null ? this.manager.getConfigFile().getDefaultGroup() : groupId;
+                    User user = new User(userName, group);
+                    if (prefix != null) user.setPrefix(prefix);
+                    if (suffix != null) user.setSuffix(suffix);
+                    list.add(user);
+                    usersPerms.put(userName, new ArrayList<>());
+                }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error while get all users data", e);
-        }*/
+            throw new RuntimeException("Error while load users data from SQL ", e);
+        }
+
+        //загружаем пермишены для юзеров
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllUsersPermissionsSql)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String groupId = rs.getString("user_name");
+                    String permission = rs.getString("permission");
+                    usersPerms.get(groupId).add(permission);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while load users data from SQL ", e);
+        }
+
+        //складываем всё в кучу
+        list.forEach(usersData -> {
+            val id = usersData.getPlayerName();
+            val perms = usersPerms.get(id);
+            usersData.setPermissions(perms);
+        });
         return list;
     }
 
     @Override
     public Collection<Group> getAllGroupsData() {
         val list = new ArrayList<Group>();
-       /* try {
-            val objectList = this.groupDataDao.queryForAll();
-            for (GroupData groupData : objectList) {
-                list.add(groupData.getGroup());
+        Map<String, Collection<String>> groupsPerms = new HashMap<>();
+        Map<String, Collection<String>> groupsParents = new HashMap<>();
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllGroupsDataSql)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String groupId = rs.getString("group_id");
+                    String prefix = rs.getString("prefix");
+                    String suffix = rs.getString("suffix");
+                    Group group = new Group(groupId);
+                    if (prefix != null) group.setPrefix(prefix);
+                    if (suffix != null) group.setSuffix(suffix);
+                    list.add(group);
+                    groupsPerms.put(groupId, new ArrayList<>());
+                    groupsParents.put(groupId, new ArrayList<>());
+                }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error while get all groups data", e);
-        }*/
+            throw new RuntimeException("Error while load groups data from SQL ", e);
+        }
+
+        //загружаем пермишены для групп
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllGroupsPermissionsSql)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String groupId = rs.getString("group_id");
+                    String permission = rs.getString("permission");
+                    groupsPerms.get(groupId).add(permission);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while load groups data from SQL ", e);
+        }
+
+        //загружаем паренты
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllGroupsParentsSql)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String groupId = rs.getString("group_id");
+                    String parent = rs.getString("parent");
+                    groupsParents.get(groupId).add(parent);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while load groups data from SQL ", e);
+        }
+
+        //складываем всё в кучу
+        list.forEach(groupData -> {
+            val id = groupData.getGroupID();
+            val perms = groupsPerms.get(id);
+            val parents = groupsParents.get(id);
+            groupData.setPermissions(perms);
+            groupData.setInheritanceGroups(parents);
+        });
         return list;
     }
 
     @Override
     public void importUsersData(Collection<User> users) {
-       /* Collection<UserData> convertedUsers = new ArrayList<>();
-        for (User user : users) {
-            convertedUsers.add(UserData.from(user));
-        }
-        try {
-            this.userDataDao.create(convertedUsers);
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while import all users data", e);
-        }*/
+        /**
+         * Алгоритм:
+         * Users data batch
+         * Users Perms batch
+         */
     }
 
+
     @Override
-    public void importGroupsData(Collection<Group> groups) {
-        /*Collection<GroupData> convertedGroups = new ArrayList<>();
-        for (Group group : groups) {
-            convertedGroups.add(GroupData.from(group));
-        }
-        try {
-            this.groupDataDao.create(convertedGroups);
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while import all groups data", e);
-        }*/
+    public void importGroupsData(Collection<Group> groups) { // это делаем первым, чтобы смогли импортироваться юзеры
+        /**
+         * Алгоритм:
+         * Groups data batch
+         * Groups Perms batch
+         * Groups Parents batch
+         */
     }
 
     private void executeSQL(String sql) {

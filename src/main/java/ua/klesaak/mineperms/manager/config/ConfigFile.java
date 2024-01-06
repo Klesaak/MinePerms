@@ -2,7 +2,7 @@ package ua.klesaak.mineperms.manager.config;
 
 import lombok.Getter;
 import ua.klesaak.mineperms.manager.storage.sql.SQLConfig;
-import ua.klesaak.mineperms.manager.storage.redis.RedisConfig;
+import ua.klesaak.mineperms.manager.storage.redismessenger.RedisConfig;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.io.File;
@@ -20,7 +20,7 @@ public class ConfigFile extends JsonData {
         this.defaultGroup = "default";
         this.useRedisPubSub = false;
         this.SQLSettings = new SQLConfig("root", "root", "mineperms-db", "localhost", "survival",  3306, false);
-        this.RedisSettings = new RedisConfig("localhost", "", "mp_groups", "mp_users", 6379,0);
+        this.RedisSettings = new RedisConfig("localhost", "", 6379);
     }
 
     public File getPluginDataFolder() {

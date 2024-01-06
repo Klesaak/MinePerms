@@ -10,7 +10,6 @@ import java.util.Collections;
 @Getter
 public enum StorageType {
     FILE("JSON", "file"),
-    REDIS("REDIS", "redis"),
     MYSQL("MySQL", "mysql"),
     POSTGRESQL("PostgresSQL", "postgresql"),
     MARIADB("MariaDB", "mariadb");
@@ -32,10 +31,6 @@ public enum StorageType {
         return this == MYSQL || this == MARIADB || this == POSTGRESQL;
     }
 
-    public boolean isRedis() {
-        return this == REDIS;
-    }
-
     public static StorageType parse(String name, StorageType def) {
         for (StorageType t : values()) {
             if (t.getIdentifier().equalsIgnoreCase(name)) {
@@ -43,6 +38,15 @@ public enum StorageType {
             }
         }
         return def;
+    }
+
+    public static StorageType parseWithException(String name) {
+        for (StorageType t : values()) {
+            if (t.getIdentifier().equalsIgnoreCase(name)) {
+                return t;
+            }
+        }
+        throw new RuntimeException("Error while parse storage type.");
     }
 
     public static Collection<String> getTypesString() {
