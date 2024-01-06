@@ -1,0 +1,1 @@
+INSERT INTO `mp_users` (user_name, prefix) VALUES (?, ?) ON DUPLICATE KEY UPDATE prefix = ?

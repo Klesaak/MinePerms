@@ -1,0 +1,1 @@
+INSERT INTO `mp_groups` (group_id, prefix) VALUES (?, ?) ON DUPLICATE KEY UPDATE prefix = ?

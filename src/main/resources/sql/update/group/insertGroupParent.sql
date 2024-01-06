@@ -1,0 +1,1 @@
+INSERT IGNORE INTO `mp_groups_parents` (group_id, parent) VALUES (?, ?)

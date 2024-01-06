@@ -269,6 +269,10 @@ public final class MinePermsCommand extends MPTabCompleter {
                             commandSource.sendMessage("&cParent group not found!");
                             return;
                         }
+                        if (storage.getGroup(groupId).hasGroup(parent) || groupId.equalsIgnoreCase(parent)) {
+                            commandSource.sendMessage("&cParent group &6" + parent + "&c already in &6" + groupId);
+                            return;
+                        }
                         storage.addGroupParent(groupId, parent);
                         commandSource.sendMessage("&6Parent group &c" + parent + " &6added to group &a" + groupId);
                         return;
@@ -464,7 +468,7 @@ public final class MinePermsCommand extends MPTabCompleter {
         long start = System.currentTimeMillis();
         commandSource.sendMessage("&cStart exporting data...");
         this.runOnLock(commandSource, ()-> {
-            Storage newStorage = null;
+            Storage newStorage = null; //todo auto closeable with try catch
             switch (storageType) {
                 case FILE: {
                     newStorage = new FileStorage(this.manager);

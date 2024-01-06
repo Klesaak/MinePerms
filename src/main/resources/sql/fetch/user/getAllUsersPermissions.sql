@@ -1,0 +1,1 @@
+SELECT user_name, permission FROM `mp_users_permissions`

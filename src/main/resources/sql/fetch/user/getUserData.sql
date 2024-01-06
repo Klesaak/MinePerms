@@ -1,0 +1,1 @@
+SELECT group_id, prefix, suffix FROM `mp_users` WHERE user_name = ?

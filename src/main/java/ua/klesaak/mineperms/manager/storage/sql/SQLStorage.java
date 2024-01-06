@@ -23,9 +23,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static ua.klesaak.mineperms.manager.storage.sql.DatabaseConstants.*;
-
-//todo момент с обновление в бд обьекта, которого там нет (как-то исправить)
 @Getter
 public class SQLStorage extends Storage {
     //create tables
@@ -36,18 +33,14 @@ public class SQLStorage extends Storage {
     private final String createUsersPermissionsTableSql;
 
     //fetching
-   // private final String
-   // private final String
-   // private final String
-   // private final String
-   /// private final String
-   // private final String
-   // private final String
-   // private final String
-   // private final String
-    //private final String
-   // private final String
-    //private final String
+    private final String getAllGroupsDataSql, getAllGroupsParentsSql, getAllGroupsPermissionsSql, getGroupDataSql, getGroupParentsSql, getGroupPermissionsSql;
+    private final String getAllUsersDataSql, getAllUsersPermissionsSql, getUserDataSql, getUserPermissionsSql;
+    //update
+    private final String insertGroupDefaultSql, insertGroupParentSql, insertGroupPermissionSql, removeGroupParentSql, removeGroupPermissionSql, updateGroupPrefixSql, updateGroupSuffixSql;
+    private final String insertUserDefaultSql, insertUserPermissionSql, removeUserPermissionSql, updateUserGroupSql, updateUserPrefixSql, updateUserSuffixSql;
+    //delete
+    private final String deleteGroupSql;
+    private final String deleteUserSql;
 
     private final HikariDataSource hikariDataSource;
 
@@ -60,6 +53,34 @@ public class SQLStorage extends Storage {
         this.createGroupsPermissionsTableSql = this.loadSQL("createGroupsPermissionsTable").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
         this.createGroupsParentsTableSql = this.loadSQL("createGroupsParentsTable");
         this.createUsersPermissionsTableSql = this.loadSQL("createUsersPermissionsTable");
+        //fetching
+        this.getAllGroupsDataSql = this.loadSQL("fetch/group/getAllGroupsData");
+        this.getAllGroupsParentsSql = this.loadSQL("fetch/group/getAllGroupsParents");
+        this.getAllGroupsPermissionsSql = this.loadSQL("fetch/group/getAllGroupsPermissions").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
+        this.getGroupDataSql = this.loadSQL("fetch/group/getGroupData");
+        this.getGroupParentsSql = this.loadSQL("fetch/group/getGroupParents");
+        this.getGroupPermissionsSql = this.loadSQL("fetch/group/getGroupPermissions").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
+
+        this.getAllUsersDataSql = this.loadSQL("fetch/user/getAllUsersData");
+        this.getAllUsersPermissionsSql = this.loadSQL("fetch/user/getAllUsersPermissions");
+        this.getUserDataSql = this.loadSQL("fetch/user/getUserData");
+        this.getUserPermissionsSql = this.loadSQL("fetch/user/getUserPermissions");
+        //updating
+        this.insertGroupDefaultSql = this.loadSQL("update/group/insertGroupDefault");
+        this.insertGroupParentSql = this.loadSQL("update/group/insertGroupParent");
+        this.insertGroupPermissionSql = this.loadSQL("update/group/insertGroupPermission");
+        this.removeGroupParentSql = this.loadSQL("update/group/removeGroupParent");
+        this.removeGroupPermissionSql = this.loadSQL("update/group/removeGroupPermission");
+        this.updateGroupPrefixSql = this.loadSQL("update/group/updateGroupPrefix");
+        this.updateGroupSuffixSql = this.loadSQL("update/group/updateGroupSuffix");
+        this.insertUserDefaultSql = this.loadSQL("update/user/insertUserDefault");
+        this.insertUserPermissionSql = this.loadSQL("update/user/insertUserPermission");
+        this.removeUserPermissionSql = this.loadSQL("update/user/removeUserPermission");
+        this.updateUserGroupSql = this.loadSQL("update/user/updateUserGroup");
+        this.updateUserPrefixSql = this.loadSQL("update/user/updateUserPrefix");
+        this.updateUserSuffixSql = this.loadSQL("update/user/updateUserSuffix");
+        this.deleteGroupSql = this.loadSQL("update/deleteGroup");
+        this.deleteUserSql = this.loadSQL("update/deleteUser");
         this.createTables();
     }
 
@@ -69,7 +90,7 @@ public class SQLStorage extends Storage {
             Collection<Group> groups = new ArrayList<>();
             Map<String, Collection<String>> groupsPerms = new HashMap<>();
             Map<String, Collection<String>> groupsParents = new HashMap<>();
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_ALL_GROUPS_DATA_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllGroupsDataSql)) {
                 try (ResultSet rs = statement.executeQuery()) {
                     while (rs.next()) {
                         String groupId = rs.getString("group_id");
@@ -88,7 +109,7 @@ public class SQLStorage extends Storage {
             }
 
             //загружаем пермишены для групп
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_ALL_GROUPS_PERMISSIONS_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllGroupsPermissionsSql)) {
                 try (ResultSet rs = statement.executeQuery()) {
                     while (rs.next()) {
                         String groupId = rs.getString("group_id");
@@ -101,7 +122,7 @@ public class SQLStorage extends Storage {
             }
 
             //загружаем паренты
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_ALL_GROUPS_PARENTS_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllGroupsParentsSql)) {
                 try (ResultSet rs = statement.executeQuery()) {
                     while (rs.next()) {
                         String groupId = rs.getString("group_id");
@@ -253,7 +274,14 @@ public class SQLStorage extends Storage {
         }
         user.addPermission(permission);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(INSERT_USER_PERMISSION_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertUserDefaultSql)) {
+                statement.setString(1, nickNameLC);
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error while add perm data", e);
+            }
+        }).thenRunAsync(()-> {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertUserPermissionSql)) {
                 statement.setString(1, nickNameLC);
                 statement.setString(2, permission.toLowerCase());
                 statement.executeUpdate();
@@ -274,7 +302,7 @@ public class SQLStorage extends Storage {
         user.removePermission(permission);
         user.recalculatePermissions(this.groups);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(REMOVE_USER_PERMISSION_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.removeUserPermissionSql)) {
                 statement.setString(1, nickNameLC);
                 statement.setString(2, permission.toLowerCase());
                 statement.executeUpdate();
@@ -298,7 +326,7 @@ public class SQLStorage extends Storage {
         }
         user.setPrefix(prefix);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_USER_PREFIX_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateUserPrefixSql)) {
                 statement.setString(1, nickNameLC);
                 statement.setString(2, prefix.isEmpty() ? null : prefix);
                 statement.setString(3, prefix.isEmpty() ? null : prefix);
@@ -323,7 +351,7 @@ public class SQLStorage extends Storage {
         }
         user.setSuffix(suffix);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_USER_SUFFIX_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateUserSuffixSql)) {
                 statement.setString(1, nickNameLC);
                 statement.setString(2, suffix.isEmpty() ? null : suffix);
                 statement.setString(3, suffix.isEmpty() ? null : suffix);
@@ -352,7 +380,7 @@ public class SQLStorage extends Storage {
             this.manager.getEventManager().callGroupChangeEvent(user);
         }
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_USER_GROUP_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateUserGroupSql)) {
                 statement.setString(1, nickNameLC);
                 statement.setString(2, groupID);
                 statement.setString(3, groupID);
@@ -378,7 +406,7 @@ public class SQLStorage extends Storage {
             this.temporalUsersCache.put(nickNameLC, newUser);
         }
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(DELETE_USER_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.deleteUserSql)) {
                 statement.setString(1, nickNameLC);
                 statement.executeUpdate();
             } catch (SQLException e) {
@@ -409,7 +437,7 @@ public class SQLStorage extends Storage {
         group.addPermission(permission);
         this.recalculateUsersPermissions();
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(INSERT_GROUP_PERMISSION_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertGroupPermissionSql)) {
                 statement.setString(1, groupID);
                 statement.setString(2, permission.toLowerCase());
                 statement.executeUpdate();
@@ -428,7 +456,7 @@ public class SQLStorage extends Storage {
         group.removePermission(permission);
         this.recalculateUsersPermissions();
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(REMOVE_GROUP_PERMISSION_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.removeGroupPermissionSql)) {
                 statement.setString(1, groupID);
                 statement.setString(2, permission.toLowerCase());
                 statement.executeUpdate();
@@ -447,7 +475,7 @@ public class SQLStorage extends Storage {
         group.addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(INSERT_GROUP_PARENT_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertGroupParentSql)) {
                 statement.setString(1, groupID);
                 statement.setString(2, parentID.toLowerCase());
                 statement.executeUpdate();
@@ -466,7 +494,7 @@ public class SQLStorage extends Storage {
         group.removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(REMOVE_GROUP_PARENT_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.removeGroupParentSql)) {
                 statement.setString(1, groupID);
                 statement.setString(2, parentID.toLowerCase());
                 statement.executeUpdate();
@@ -484,7 +512,7 @@ public class SQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.setPrefix(prefix);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_GROUP_PREFIX_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateGroupPrefixSql)) {
                 statement.setString(1, groupID);
                 statement.setString(2, prefix.isEmpty() ? null : prefix);
                 statement.setString(3, prefix.isEmpty() ? null : prefix);
@@ -503,7 +531,7 @@ public class SQLStorage extends Storage {
         val group = this.getGroup(groupID);
         group.setSuffix(suffix);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(UPDATE_GROUP_SUFFIX_SQL)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateGroupSuffixSql)) {
                 statement.setString(1, groupID);
                 statement.setString(2, suffix.isEmpty() ? null : suffix);
                 statement.setString(3, suffix.isEmpty() ? null : suffix);
@@ -567,7 +595,7 @@ public class SQLStorage extends Storage {
         val newGroup = new Group(groupId);
         this.groups.put(groupId, newGroup);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(INSERT_GROUP_DEFAULT)) {
+            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertGroupDefaultSql)) {
                 statement.setString(1, groupId);
                 statement.executeUpdate();
             } catch (SQLException e) {
@@ -649,7 +677,7 @@ public class SQLStorage extends Storage {
 
     private User getUserFromSQL(String nickName) {
         User user = null;
-        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_USER_DATA_SQL)) {
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getUserDataSql)) {
             statement.setString(1, nickName);
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
@@ -665,7 +693,7 @@ public class SQLStorage extends Storage {
         } catch (SQLException e) {
             throw new RuntimeException("Error while load user data from MySQL " + nickName, e);
         }
-        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(GET_USER_PERMISSIONS_SQL)) {
+        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getUserPermissionsSql)) {
             statement.setString(1, nickName);
             if (user != null) {
                 try (ResultSet rs = statement.executeQuery()) {
@@ -685,7 +713,6 @@ public class SQLStorage extends Storage {
             if (inputStream != null) {
                 val bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
                 return bufferedReader.lines().collect(Collectors.joining(" "));
-                //return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)).readLine();
             }
         } catch (IOException e) {
             throw new RuntimeException("Error while load SQL file!");

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `mp_users` (user_name VARCHAR(128),
+CREATE TABLE IF NOT EXISTS `mp_users` (user_name VARCHAR(128) NOT NULL,
         group_id VARCHAR(128),
         prefix TEXT,
         suffix TEXT,
