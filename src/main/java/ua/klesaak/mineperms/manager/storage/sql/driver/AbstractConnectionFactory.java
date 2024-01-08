@@ -20,6 +20,7 @@ public abstract class AbstractConnectionFactory {
         this.hikariConfig.setMaxLifetime(TimeUnit.MINUTES.toMillis(30L));
         this.hikariConfig.setUsername(userName);
         this.hikariConfig.setPassword(passWord);
+        this.hikariConfig.setAutoCommit(true);
         this.isUseSSL = isUseSSL;
     }
 

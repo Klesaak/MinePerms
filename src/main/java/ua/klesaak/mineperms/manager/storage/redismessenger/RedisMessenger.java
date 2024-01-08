@@ -103,8 +103,8 @@ public class RedisMessenger implements AutoCloseable {
                 User user = null;
                 User temporalUser = userCache.get(userId);
                 if (temporalUser != null) user = temporalUser;
-                User cahchedUser = userCache.get(userId);
-                if (cahchedUser != null) user = cahchedUser;
+                User cachedUser = userCache.get(userId);
+                if (cachedUser != null) user = cachedUser;
                 switch (messageData.getMessageType()) {
                     case USER_PREFIX_UPDATE: {
                         val prefix = messageData.getObject();

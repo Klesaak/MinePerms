@@ -153,7 +153,8 @@ public class SQLStorage extends Storage {
                 this.createGroup(defaultGroup);
             }
         }).exceptionally(throwable -> {
-          throw new RuntimeException("Error while init SQL storage", throwable);
+            throwable.printStackTrace();
+            return null;
         });
     }
 
@@ -270,7 +271,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while add perm data", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateUserPermAddPacket(nickNameLC, permission));
     }
@@ -291,7 +293,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while remove perm data", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateUserPermRemovePacket(nickNameLC, permission));
     }
@@ -316,7 +319,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while set user prefix", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateUserPrefixPacket(nickNameLC, prefix));
     }
@@ -341,7 +345,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while set user suffix", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateUserSuffixPacket(nickNameLC, suffix));
     }
@@ -370,7 +375,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while set user group", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateUserGroupPacket(nickNameLC, groupID));
     }
@@ -394,7 +400,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while delete user", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goDeleteUserPacket(nickNameLC));
     }
@@ -413,7 +420,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while add group permission", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
        this.broadcastPacket(MessageData.goUpdateGroupPermAddPacket(groupID, permission, this.manager.getConfigFile().getSQLSettings().getGroupsPermissionsTableSuffix()));
     }
@@ -432,7 +440,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while remove group permission", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateGroupPermRemovePacket(groupID, permission, this.manager.getConfigFile().getSQLSettings().getGroupsPermissionsTableSuffix()));
     }
@@ -451,7 +460,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while add group parent", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateGroupParentAddPacket(groupID, parentID));
     }
@@ -470,7 +480,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while remove group parent", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateGroupParentRemovePacket(groupID, parentID));
     }
@@ -489,7 +500,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while set group prefix", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateGroupPrefixPacket(groupID, prefix));
     }
@@ -508,7 +520,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while set group suffix", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goUpdateGroupSuffixPacket(groupID, suffix));
     }
@@ -534,7 +547,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while delete group " + groupID + " data", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goDeleteGroupPacket(groupID));
     }
@@ -551,7 +565,8 @@ public class SQLStorage extends Storage {
                 throw new RuntimeException("Error while create group ", e);
             }
         }).exceptionally(throwable -> {
-            throw new RuntimeException(throwable);
+            throwable.printStackTrace();
+            return null;
         });
         this.broadcastPacket(MessageData.goCreteGroupPacket(groupId));
     }
@@ -661,24 +676,15 @@ public class SQLStorage extends Storage {
         return list;
     }
 
+    //todo
     @Override
     public void importUsersData(Collection<User> users) {
-        /**
-         * Алгоритм:
-         * Users data batch
-         * Users Perms batch
-         */
     }
 
 
+    //todo
     @Override
     public void importGroupsData(Collection<Group> groups) { // это делаем первым, чтобы смогли импортироваться юзеры
-        /**
-         * Алгоритм:
-         * Groups data batch
-         * Groups Perms batch
-         * Groups Parents batch
-         */
     }
 
     private void executeSQL(String sql) {
@@ -726,7 +732,7 @@ public class SQLStorage extends Storage {
         try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("sql/" + name + ".sql")) {
             if (inputStream != null) {
                 val bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-                return bufferedReader.lines().collect(Collectors.joining(" "));
+                return bufferedReader.lines().filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("--")).collect(Collectors.joining(" "));
             }
         } catch (IOException e) {
             throw new RuntimeException("Error while load SQL file!");
@@ -736,6 +742,6 @@ public class SQLStorage extends Storage {
 
     @Override
     public void close() {
-        if (this.hikariDataSource != null) this.hikariDataSource.close();;
+        if (this.hikariDataSource != null) this.hikariDataSource.close();
     }
 }

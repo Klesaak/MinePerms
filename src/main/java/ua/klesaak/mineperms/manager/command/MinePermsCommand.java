@@ -234,6 +234,10 @@ public final class MinePermsCommand extends MPTabCompleter {
                         }
                         if (this.checkSuperPermission(commandSource, permission)) return;
                         if (this.checkAsteriskPermission(commandSource, ()-> storage.addGroupPermission(groupId, permission))) return;
+                        if (this.manager.getStorageType().isSQL()) {
+                            commandSource.sendMessage("&6Permission &c" + permission + " &6added to group &a" + groupId + " &6in context: &c" + this.manager.getConfigFile().getSQLSettings().getGroupsPermissionsTableSuffix());
+                            return;
+                        }
                         commandSource.sendMessage("&6Permission &c" + permission + " &6added to group &a" + groupId);
                         return;
                     }
@@ -249,6 +253,10 @@ public final class MinePermsCommand extends MPTabCompleter {
                             return;
                         }
                         storage.removeGroupPermission(groupId, permission);
+                        if (this.manager.getStorageType().isSQL()) {
+                            commandSource.sendMessage("&6Permission &c" + permission + " &6removed from group &a" + groupId + " &6in context: &c" + this.manager.getConfigFile().getSQLSettings().getGroupsPermissionsTableSuffix());
+                            return;
+                        }
                         commandSource.sendMessage("&6Permission &c" + permission + " &6removed from group &a" + groupId);
                         return;
                     }
@@ -386,13 +394,15 @@ public final class MinePermsCommand extends MPTabCompleter {
             }
             case "find": {
                 CompletableFuture.runAsync(()-> this.onFind(commandSource, label, args)).exceptionally(throwable -> {
-                    throw new RuntimeException("Get error while finding.", throwable);
+                    commandSource.sendMessage("&cError while find data: " + throwable.getMessage());
+                    return null;
                 });
                 return;
             }
             case "export": {
                 CompletableFuture.runAsync(()-> this.onExport(commandSource, label, args)).exceptionally(throwable -> {
-                    throw new RuntimeException("Get error while exporting.", throwable);
+                    commandSource.sendMessage("&cError while export data: " + throwable.getMessage());
+                    return null;
                 });
                 return;
             }
@@ -485,8 +495,8 @@ public final class MinePermsCommand extends MPTabCompleter {
                 val currentStorage = this.manager.getStorage();
                 val users = currentStorage.getAllUsersData();
                 val groups = currentStorage.getAllGroupsData();
-                storage.importUsersData(users);
                 storage.importGroupsData(groups);
+                storage.importUsersData(users);
                 commandSource.sendMessage("&aExporting complete! (" + (System.currentTimeMillis() - start) + "ms.)");
                 commandSource.sendMessage("&aTo cross the &6" + storageType + "&a backend, you must change field 'storageType' in file config.json and restart you server!");
             } catch (Exception e) {
