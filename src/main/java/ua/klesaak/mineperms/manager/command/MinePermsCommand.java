@@ -400,10 +400,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                 return;
             }
             case "export": {
-                CompletableFuture.runAsync(()-> this.onExport(commandSource, label, args)).exceptionally(throwable -> {
-                    commandSource.sendMessage("&cError while export data: " + throwable.getMessage());
-                    return null;
-                });
+                this.onExport(commandSource, label, args);
                 return;
             }
             case "migrate": {
@@ -533,7 +530,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                         }
                     }
                     commandSource.sendMessage("&aFinding Group's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
-                    commandSource.sendMessage(found.isEmpty() ? "&cNothing..." : "&aResults: " + Joiner.on(", ").join(found));
+                    commandSource.sendMessage(found.isEmpty() ? "&cNothing..." : "&aResults: &6" + Joiner.on(", ").join(found));
                     return;
                 }
                 case "user": {
@@ -557,7 +554,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                         }
                     }
                     commandSource.sendMessage("&aFinding User's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
-                    commandSource.sendMessage(found.isEmpty() ? "&cNothing..." : "&aResults: " + Joiner.on(", ").join(found));
+                    commandSource.sendMessage(found.isEmpty() ? "&cNothing..." : "&aResults: &6" + Joiner.on(", ").join(found));
                     return;
                 }
                 case "all": {
@@ -589,8 +586,8 @@ public final class MinePermsCommand extends MPTabCompleter {
                     commandSource.sendMessage("&aFinding User's and Group's with " + args[2].toUpperCase() + "=" + identifier + " complete! (" + (System.currentTimeMillis() - start) + "ms.)");
                     val usersResult = usersFound.isEmpty() ? "&cNothing..." : Joiner.on(", ").join(usersFound);
                     val groupsResult = groupsFound.isEmpty() ? "&cNothing..." : Joiner.on(", ").join(groupsFound);
-                    commandSource.sendMessage("&aResults for Users: " + usersResult);
-                    commandSource.sendMessage("&aResults for Groups: " + groupsResult);
+                    commandSource.sendMessage("&aResults for Users: &6" + usersResult);
+                    commandSource.sendMessage("&aResults for Groups: &6" + groupsResult);
                 }
             }
         });
