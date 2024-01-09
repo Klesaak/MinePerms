@@ -95,7 +95,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                             return;
                         }
                         if (user.getPermissions().isEmpty()) {
-                            commandSource.sendMessage("&cUser "+ nickName +" permissions not set!");
+                            commandSource.sendMessage("&cUser "+ nickName + " permissions not set!");
                             return;
                         }
                         val permsPages = new Paginated<>(user.getPermissions());
@@ -106,7 +106,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                         } catch (IndexOutOfBoundsException ignored) {
                         }
                         if (page > maxPages) page = 1;
-                        commandSource.sendMessage("&aUser &c" + nickName + "&a permissions (page " + page + " of " + maxPages + " - " + user.getPermissions().size() + " entries):");
+                        commandSource.sendMessage("&aUser &c" + nickName + "&a permissions: (page " + page + " of " + maxPages + " - " + user.getPermissions().size() + " entries):");
                         permsPages.getPage(page, 20).forEach(entry -> commandSource.sendMessage("  &6- " + entry.value()));
                         return;
                     }
@@ -198,6 +198,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                 break;
             }
             case "group": {
+                val groupsContext = this.manager.getConfigFile().getSQLSettings().getGroupsPermissionsTableSuffix();
                 if (args.length < 3) {
                     commandSource.sendMessage("&6MinePerms Group command help:");
                     commandSource.sendMessage("");
@@ -232,6 +233,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                         commandSource.sendMessage(" &aPrefix: &6" + (group.getPrefix().isEmpty() ? "&cNot set." : group.getPrefix()));
                         commandSource.sendMessage(" &aSuffix: &6" + (group.getSuffix().isEmpty() ? "&cNot set." : group.getSuffix()));
                         commandSource.sendMessage(" &aParent groups: &6" + parents);
+                        return;
                     }
                     case "permissions-info": {
                         Group group = storage.getGroup(groupId);
@@ -251,7 +253,12 @@ public final class MinePermsCommand extends MPTabCompleter {
                         } catch (IndexOutOfBoundsException ignored) {
                         }
                         if (page > maxPages) page = 1;
-                        commandSource.sendMessage("&Group &c" + groupId + "&a permissions (page " + page + " of " + maxPages + " - " + group.getPermissions().size() + " entries):");
+                        if (this.manager.getStorageType().isSQL()) {
+                            commandSource.sendMessage("&aGroup &c" + groupId + "&a permissions in context: &6" + groupsContext + "&a (page " + page + " of " + maxPages + " - " + group.getPermissions().size() + " entries):");
+                            permsPages.getPage(page, 20).forEach(entry -> commandSource.sendMessage("  &6- " + entry.value()));
+                            return;
+                        }
+                        commandSource.sendMessage("&aGroup &c" + groupId + "&a permissions: (page " + page + " of " + maxPages + " - " + group.getPermissions().size() + " entries):");
                         permsPages.getPage(page, 20).forEach(entry -> commandSource.sendMessage("  &6- " + entry.value()));
                         return;
                     }
@@ -269,7 +276,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                         if (this.checkSuperPermission(commandSource, permission)) return;
                         if (this.checkAsteriskPermission(commandSource, ()-> storage.addGroupPermission(groupId, permission))) return;
                         if (this.manager.getStorageType().isSQL()) {
-                            commandSource.sendMessage("&6Permission &c" + permission + " &6added to group &a" + groupId + " &6in context: &c" + this.manager.getConfigFile().getSQLSettings().getGroupsPermissionsTableSuffix());
+                            commandSource.sendMessage("&6Permission &c" + permission + " &6added to group &a" + groupId + " &6in context: &c" + groupsContext);
                             return;
                         }
                         commandSource.sendMessage("&6Permission &c" + permission + " &6added to group &a" + groupId);
