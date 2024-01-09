@@ -13,6 +13,7 @@ import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.file.FileStorage;
 import ua.klesaak.mineperms.manager.storage.sql.SQLStorage;
+import ua.klesaak.mineperms.manager.utils.Paginated;
 import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
 import java.util.*;
@@ -58,6 +59,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                     commandSource.sendMessage("&6MinePerms User command help:");
                     commandSource.sendMessage("");
                     commandSource.sendMessage("&6/" + label + " user <nickname> info - show info of a player.");
+                    commandSource.sendMessage("&6/" + label + " user <nickname> permissions-info - show info of a user permissions.");
                     commandSource.sendMessage("&6/" + label + " user <nickname> add-perm <permission> - add a specify permission.");
                     commandSource.sendMessage("&6/" + label + " user <nickname> remove-perm <permission> - remove specify permission.");
                     commandSource.sendMessage("&6/" + label + " user <nickname> set-group <groupId> - set a specify group.");
@@ -75,7 +77,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                             commandSource.sendMessage("&6/" + label +" user <nickname> info - show info of a player.");
                             return;
                         }
-                        User user = this.manager.getStorage().getUser(nickName);
+                        User user = storage.getUser(nickName);
                         if (user == null) {
                             commandSource.sendMessage("&cUser not found!");
                             return;
@@ -84,12 +86,28 @@ public final class MinePermsCommand extends MPTabCompleter {
                         commandSource.sendMessage(" &aGroup: &6" + user.getGroupId());
                         commandSource.sendMessage(" &aPrefix: &6" + (user.getPrefix().isEmpty() ? "&cNot set." : user.getPrefix()));
                         commandSource.sendMessage(" &aSuffix: &6" + (user.getSuffix().isEmpty() ? "&cNot set." : user.getSuffix()));
-                        if (user.getPermissions().isEmpty()) {
-                            commandSource.sendMessage(" &aPermissions: &cPermissions not set!");
+                        return;
+                    }
+                    case "permissions-info": {
+                        User user = storage.getUser(nickName);
+                        if (user == null) {
+                            commandSource.sendMessage("&cUser not found!");
                             return;
                         }
-                        commandSource.sendMessage(" &aPermissions:");
-                        user.getPermissions().forEach(permission -> commandSource.sendMessage("  &7- " + permission));
+                        if (user.getPermissions().isEmpty()) {
+                            commandSource.sendMessage("&cUser "+ nickName +" permissions not set!");
+                            return;
+                        }
+                        val permsPages = new Paginated<>(user.getPermissions());
+                        int maxPages = permsPages.getMaxPages(20);
+                        int page = 1;
+                        try {
+                            page = this.parsePage(commandSource, args[3]);
+                        } catch (IndexOutOfBoundsException ignored) {
+                        }
+                        if (page > maxPages) page = 1;
+                        commandSource.sendMessage("&aUser &c" + nickName + "&a permissions (page " + page + " of " + maxPages + " - " + user.getPermissions().size() + " entries):");
+                        permsPages.getPage(page, 20).forEach(entry -> commandSource.sendMessage("  &6- " + entry.value()));
                         return;
                     }
                     case "add-perm": {
@@ -184,6 +202,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                     commandSource.sendMessage("&6MinePerms Group command help:");
                     commandSource.sendMessage("");
                     commandSource.sendMessage("&6/" + label + " group <groupId> info - show info of a group.");
+                    commandSource.sendMessage("&6/" + label + " group <groupId> permissions-info - show info of a group permissions.");
                     commandSource.sendMessage("&6/" + label + " group <groupId> add-perm <permission> - add a specify permission.");
                     commandSource.sendMessage("&6/" + label + " group <groupId> remove-perm <permission> - remove specify permission.");
                     commandSource.sendMessage("&6/" + label + " group <groupId> add-parent <parentGroupId> - add a specify parent group.");
@@ -213,12 +232,27 @@ public final class MinePermsCommand extends MPTabCompleter {
                         commandSource.sendMessage(" &aPrefix: &6" + (group.getPrefix().isEmpty() ? "&cNot set." : group.getPrefix()));
                         commandSource.sendMessage(" &aSuffix: &6" + (group.getSuffix().isEmpty() ? "&cNot set." : group.getSuffix()));
                         commandSource.sendMessage(" &aParent groups: &6" + parents);
-                        if (group.getPermissions().isEmpty()) {
-                            commandSource.sendMessage(" &aPermissions: &cPermissions not set!");
+                    }
+                    case "permissions-info": {
+                        Group group = storage.getGroup(groupId);
+                        if (group == null) {
+                            commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
-                        commandSource.sendMessage(" &aPermissions:");
-                        group.getPermissions().forEach(permission -> commandSource.sendMessage("  &7- " + permission));
+                        if (group.getPermissions().isEmpty()) {
+                            commandSource.sendMessage("&cGroup "+ groupId +" permissions not set!");
+                            return;
+                        }
+                        val permsPages = new Paginated<>(group.getPermissions());
+                        int maxPages = permsPages.getMaxPages(20);
+                        int page = 1;
+                        try {
+                            page = this.parsePage(commandSource, args[3]);
+                        } catch (IndexOutOfBoundsException ignored) {
+                        }
+                        if (page > maxPages) page = 1;
+                        commandSource.sendMessage("&Group &c" + groupId + "&a permissions (page " + page + " of " + maxPages + " - " + group.getPermissions().size() + " entries):");
+                        permsPages.getPage(page, 20).forEach(entry -> commandSource.sendMessage("  &6- " + entry.value()));
                         return;
                     }
                     case "add-perm": {
@@ -651,5 +685,18 @@ public final class MinePermsCommand extends MPTabCompleter {
         } finally {
             this.highOperationsLock.writeLock().unlock();
         }
+    }
+
+    private int parsePage(IMPCommandSource commandSource, String message) {
+        int i = 1;
+        try {
+            i = Integer.parseInt(message);
+            if (i <= 0) {
+                throw new Exception();
+            }
+        } catch (Exception ignored) {
+            return 1;
+        }
+        return i;
     }
 }

@@ -7,9 +7,9 @@ import java.util.*;
 
 abstract class MPTabCompleter {
     public static final List<String> SUB_COMMANDS_0 = Arrays.asList("user", "group", "find", "export", "migrate", "test-perm");
-    public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "set-group", "delete", "prefix",
+    public static final List<String> USER_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "permissions-info", "set-group", "delete", "prefix",
             "suffix", "clear-prefix", "clear-suffix");
-    public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "delete", "prefix",
+    public static final List<String> GROUP_SUB_COMMANDS_0 = Arrays.asList("add-perm", "remove-perm", "info", "permissions-info", "delete", "prefix",
             "suffix", "clear-prefix", "clear-suffix", "create", "add-parent", "remove-parent");
 
     public static final List<String> FIND_SUB_COMMANDS_0 = Arrays.asList("user", "group", "all");

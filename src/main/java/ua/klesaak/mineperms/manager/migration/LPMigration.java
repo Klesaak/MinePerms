@@ -12,13 +12,6 @@ import ua.klesaak.mineperms.manager.storage.entity.User;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Юзать эту миграцию на свой страх и риск.
- * Так как MinePerms сделан на основе никнеймов игроков, и чувствителен к их регистру, когда LuckPerms хранит ники в .toLowerCase()
- * поэтому после миграции многие игроки обнаружат, что их привилегия теперь на никнейме shkolnik_top_killer_1337,
- * вместо ShKolNIk_ToP_KillEr_1337
- */
-
 public class LPMigration implements IMigrationPlugin {
     private final LuckPerms luckPerms;
 
