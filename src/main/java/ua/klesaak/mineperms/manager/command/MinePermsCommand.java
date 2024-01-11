@@ -3,12 +3,12 @@ package ua.klesaak.mineperms.manager.command;
 import com.google.common.base.Joiner;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.storage.StorageType;
 import ua.klesaak.mineperms.manager.migration.IMigrationPlugin;
 import ua.klesaak.mineperms.manager.migration.LPMigration;
 import ua.klesaak.mineperms.manager.migration.PEXMigration;
 import ua.klesaak.mineperms.manager.migration.SpermMigration;
 import ua.klesaak.mineperms.manager.storage.Storage;
+import ua.klesaak.mineperms.manager.storage.StorageType;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.file.FileStorage;
@@ -695,7 +695,7 @@ public final class MinePermsCommand extends MPTabCompleter {
     }
 
     private int parsePage(IMPCommandSource commandSource, String message) {
-        int i = 1;
+        int i;
         try {
             i = Integer.parseInt(message);
             if (i <= 0) {

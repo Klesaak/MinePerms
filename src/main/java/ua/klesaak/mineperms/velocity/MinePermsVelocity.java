@@ -10,6 +10,7 @@ import lombok.Getter;
 import org.slf4j.Logger;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.event.velocity.VelocityEventManager;
+import ua.klesaak.mineperms.manager.log.MPLogger;
 import ua.klesaak.mineperms.manager.utils.Platform;
 
 import java.nio.file.Path;
@@ -34,6 +35,7 @@ public final class MinePermsVelocity {
         this.logger = logger;
         this.minePermsManager = new MinePermsManager(Platform.VELOCITY);
         this.minePermsManager.init(dataDirectory.toFile(), new VelocityEventManager(this));
+        MPLogger.register(this.logger);
         this.logger.info("Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }
 

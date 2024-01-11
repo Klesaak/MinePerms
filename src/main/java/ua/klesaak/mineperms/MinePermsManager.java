@@ -12,7 +12,7 @@ import ua.klesaak.mineperms.manager.storage.sql.SQLStorage;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 import ua.klesaak.mineperms.manager.utils.Platform;
 
-import java.io.*;
+import java.io.File;
 
 @Getter
 public final class MinePermsManager {

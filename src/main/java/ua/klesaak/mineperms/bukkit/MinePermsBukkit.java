@@ -21,6 +21,7 @@ import ua.klesaak.mineperms.bukkit.integration.WorldEditPermissionProvider;
 import ua.klesaak.mineperms.bukkit.integration.vault.VaultIntegration;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
 import ua.klesaak.mineperms.manager.event.bukkit.BukkitEventManager;
+import ua.klesaak.mineperms.manager.log.MPLogger;
 import ua.klesaak.mineperms.manager.utils.Platform;
 
 import java.util.concurrent.CompletableFuture;
@@ -69,6 +70,7 @@ public class MinePermsBukkit extends JavaPlugin {
         });
         new MPBukkitListener(this);
         new MPBukkitCommand(this);
+        MPLogger.register(this.getLogger());
         this.getLogger().log(Level.INFO, "Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }
 

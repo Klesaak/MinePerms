@@ -145,7 +145,6 @@ public class RedisMessenger implements AutoCloseable {
                         if (userCache.get(userId) != null) {
                             userCache.put(userId, new User(userId, defaultGroupId));
                             break;
-
                         }
                         if (temporalUserCache.getIfPresent(userId) != null) {
                             temporalUserCache.put(userId, new User(userId, defaultGroupId));
@@ -160,79 +159,55 @@ public class RedisMessenger implements AutoCloseable {
                     case GROUP_PREFIX_UPDATE: {
                         val prefix = messageData.getObject();
                         Group group = groupsCache.get(groupId);
-                        if (group == null) {
-                            val newGroup = new Group(groupId);
-                            newGroup.setPrefix(prefix);
-                            groupsCache.put(groupId, newGroup);
-                            return;
+                        if (group != null) {
+                            group.setPrefix(prefix);
                         }
-                        group.setPrefix(prefix);
                         break;
                     }
                     case GROUP_SUFFIX_UPDATE: {
                         val suffix = messageData.getObject();
                         Group group = groupsCache.get(groupId);
-                        if (group == null) {
-                            val newGroup = new Group(groupId);
-                            newGroup.setSuffix(suffix);
-                            groupsCache.put(groupId, newGroup);
-                            return;
+                        if (group != null) {
+                            group.setSuffix(suffix);
                         }
-                        group.setSuffix(suffix);
                         break;
                     }
                     case GROUP_PARENT_ADD: {
                         val parent = messageData.getObject();
                         Group group = groupsCache.get(groupId);
-                        if (group == null) {
-                            val newGroup = new Group(groupId);
-                            newGroup.addInheritanceGroup(parent);
-                            groupsCache.put(groupId, newGroup);
-                            return;
+                        if (group != null) {
+                            group.addInheritanceGroup(parent);
+                            storage.recalculateUsersPermissions();
                         }
-                        group.addInheritanceGroup(parent);
-                        storage.recalculateUsersPermissions();
                         break;
                     }
                     case GROUP_PARENT_REMOVE: {
                         val parent = messageData.getObject();
                         Group group = groupsCache.get(groupId);
-                        if (group == null) {
-                            val newGroup = new Group(groupId);
-                            newGroup.removeInheritanceGroup(parent);
-                            groupsCache.put(groupId, newGroup);
-                            return;
+                        if (group != null) {
+                            group.removeInheritanceGroup(parent);
+                            storage.recalculateUsersPermissions();
                         }
-                        group.removeInheritanceGroup(parent);
-                        storage.recalculateUsersPermissions();
                         break;
                     }
                     case GROUP_PERMISSION_ADD: {
                         if (!subChannel.equalsIgnoreCase(messageData.getSubChannel())) return;
                         val permission = messageData.getObject();
                         Group group = groupsCache.get(groupId);
-                        if (group == null) {
-                            val newGroup = new Group(groupId);
-                            newGroup.addPermission(permission);
-                            groupsCache.put(groupId, newGroup);
-                            return;
+                        if (group != null) {
+                            group.addPermission(permission);
+                            storage.recalculateUsersPermissions();
                         }
-                        group.addPermission(permission);
-                        storage.recalculateUsersPermissions();
                         break;
                     }
                     case GROUP_PERMISSION_REMOVE: {
                         if (!subChannel.equalsIgnoreCase(messageData.getSubChannel())) return;
                         val permission = messageData.getObject();
                         Group group = groupsCache.get(groupId);
-                        if (group == null) {
-                            val newGroup = new Group(groupId);
-                            newGroup.removePermission(permission);
-                            groupsCache.put(groupId, newGroup);
-                            return;
+                        if (group != null) {
+                            group.removePermission(permission);
+                            storage.recalculateUsersPermissions();
                         }
-                        group.removePermission(permission);
-                        storage.recalculateUsersPermissions();
                         break;
                     }
                     case GROUP_CREATE: {
@@ -240,14 +215,13 @@ public class RedisMessenger implements AutoCloseable {
                         break;
                     }
                     case GROUP_DELETE: {
-                        val groupID = messageData.getEntityId();
-                        groupsCache.remove(groupID);
+                        groupsCache.remove(groupId);
                         Stream.concat(storage.getUsers().values().stream(), storage.getTemporalUsersCache().asMap().values().stream())
-                                .filter(user -> user.hasGroup(groupID)).forEach(user -> {
+                                .filter(user -> user.hasGroup(groupId)).forEach(user -> {
                                     user.setGroupId(defaultGroupId);
                                     RedisMessenger.this.minePermsManager.getEventManager().callGroupChangeEvent(user);
                                 });
-                        groupsCache.values().stream().filter(group -> group.hasGroup(groupID)).forEach(group -> group.removeInheritanceGroup(groupID));
+                        groupsCache.values().stream().filter(group -> group.hasGroup(groupId)).forEach(group -> group.removeInheritanceGroup(groupId));
                         storage.recalculateUsersPermissions();
                         break;
                     }

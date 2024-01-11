@@ -4,10 +4,10 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Synchronized;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
-import ua.klesaak.mineperms.manager.storage.entity.Group;
+import ua.klesaak.mineperms.manager.log.MPLogger;
 import ua.klesaak.mineperms.manager.storage.Storage;
+import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
-import ua.klesaak.mineperms.manager.storage.redismessenger.RedisMessenger;
 import ua.klesaak.mineperms.manager.utils.JsonData;
 
 import java.io.File;
@@ -59,7 +59,8 @@ public final class FileStorage extends Storage {
     @Override @Synchronized
     public void saveUser(String nickName) {
         CompletableFuture.runAsync(()->this.usersFile.write(this.users.values(), true)).exceptionally(throwable -> {
-            throw new RuntimeException("Error while save users.json file", throwable);
+            MPLogger.logError(new RuntimeException("Error while save users.json file", throwable));
+            return null;
         });
     }
 
@@ -239,7 +240,8 @@ public final class FileStorage extends Storage {
     public void importUsersData(Collection<User> users) {
         for (User user : users) this.users.put(user.getPlayerName(), user);
         CompletableFuture.runAsync(()->this.usersFile.write(this.users.values(), true)).exceptionally(throwable -> {
-            throw new RuntimeException("Error while importing users data", throwable);
+            MPLogger.logError(new RuntimeException("Error while importing users data", throwable));
+            return null;
         });
     }
 
@@ -247,7 +249,8 @@ public final class FileStorage extends Storage {
     public void importGroupsData(Collection<Group> groups) {
         for (Group group : groups) this.groups.put(group.getGroupID(), group);
         CompletableFuture.runAsync(()->this.groupsFile.write(this.groups.values(), true)).exceptionally(throwable -> {
-            throw new RuntimeException("Error while importing groups data", throwable);
+            MPLogger.logError(new RuntimeException("Error while importing groups data", throwable));
+            return null;
         });
     }
 
