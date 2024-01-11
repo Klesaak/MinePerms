@@ -116,8 +116,8 @@ public class SQLStorage extends Storage {
     @Override
     public User getUser(String nickName) {
         val nickNameLC = nickName.toLowerCase();
-        val tempUser = this.temporalUsersCache.getIfPresent(nickNameLC);
-        User user = tempUser != null ? tempUser : this.users.get(nickNameLC);
+        val cachedUser = this.users.get(nickNameLC);
+        User user = cachedUser != null ? cachedUser : this.temporalUsersCache.getIfPresent(nickNameLC);
         if (user != null) return user;
         user = this.loadUser(nickNameLC).join();
         if (user != null) {
