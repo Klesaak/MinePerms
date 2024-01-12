@@ -11,7 +11,8 @@ import ua.klesaak.mineperms.manager.storage.entity.User;
 
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Stream;
 
 public class RedisMessenger implements AutoCloseable {
@@ -19,6 +20,7 @@ public class RedisMessenger implements AutoCloseable {
     private final MinePermsManager minePermsManager;
     private final Storage storage;
     private final RedisPool redisPool;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
     private final Subscription sub;
     private boolean closing = false;
 
@@ -27,7 +29,7 @@ public class RedisMessenger implements AutoCloseable {
         this.storage = storage;
         this.redisPool = new RedisPool(minePermsManager.getConfigFile().getRedisSettings());
         this.sub = new Subscription();
-        CompletableFuture.runAsync(this.sub);
+        this.executorService.execute(this.sub);
     }
 
     public void sendOutgoingMessage(MessageData messageData) {
@@ -45,6 +47,7 @@ public class RedisMessenger implements AutoCloseable {
         this.sub.unsubscribe();
         this.redisPool.getRedis().close();
         this.redisPool.getJedisPool().destroy();
+        this.executorService.shutdown();
     }
 
     private class Subscription extends JedisPubSub implements Runnable {
@@ -53,7 +56,7 @@ public class RedisMessenger implements AutoCloseable {
         public void run() {
             boolean first = true;
             while (!RedisMessenger.this.closing && !Thread.interrupted() && !RedisMessenger.this.redisPool.getJedisPool().isClosed()) {
-                try (Jedis jedis = RedisMessenger.this.redisPool.getJedisPool().getResource()) {
+                try (Jedis jedis = RedisMessenger.this.redisPool.getRedis()) {
                     if (first) {
                         first = false;
                     } else {
@@ -101,44 +104,39 @@ public class RedisMessenger implements AutoCloseable {
             if (messageData.getMessageType().isUserUpdate()) {
                 val userId = messageData.getEntityId();
                 User user = null;
-                User temporalUser = userCache.get(userId);
+                User temporalUser = temporalUserCache.getIfPresent(userId);
                 if (temporalUser != null) user = temporalUser;
                 User cachedUser = userCache.get(userId);
                 if (cachedUser != null) user = cachedUser;
+                if (user == null) return;
                 switch (messageData.getMessageType()) {
                     case USER_PREFIX_UPDATE: {
                         val prefix = messageData.getObject();
-                        if (user != null) user.setPrefix(prefix);
+                        user.setPrefix(prefix);
                         break;
                     }
                     case USER_SUFFIX_UPDATE: {
                         val suffix = messageData.getObject();
-                        if (user != null) user.setSuffix(suffix);
+                        user.setSuffix(suffix);
                         break;
                     }
                     case USER_GROUP_UPDATE: {
                         val groupId = messageData.getObject();
-                        if (user != null) {
-                            user.setGroupId(groupId);
-                            user.recalculatePermissions(groupsCache);
-                            RedisMessenger.this.minePermsManager.getEventManager().callGroupChangeEvent(user);
-                        }
+                        user.setGroupId(groupId);
+                        user.recalculatePermissions(groupsCache);
+                        RedisMessenger.this.minePermsManager.getEventManager().callGroupChangeEvent(user);
                         break;
                     }
                     case USER_PERMISSION_ADD: {
                         val permission = messageData.getObject();
-                        if (user != null) {
-                            user.addPermission(permission);
-                            user.recalculatePermissions(groupsCache);
-                        }
+                        user.addPermission(permission);
+                        user.recalculatePermissions(groupsCache);
                         break;
                     }
                     case USER_PERMISSION_REMOVE: {
                         val permission = messageData.getObject();
-                        if (user != null) {
-                            user.removePermission(permission);
-                            user.recalculatePermissions(groupsCache);
-                        }
+                        user.removePermission(permission);
+                        user.recalculatePermissions(groupsCache);
                         break;
                     }
                     case USER_DELETE: {
@@ -155,10 +153,10 @@ public class RedisMessenger implements AutoCloseable {
             }
             if (!messageData.getMessageType().isUserUpdate()) {
                 val groupId = messageData.getEntityId();
+                Group group = groupsCache.get(groupId);
                 switch (messageData.getMessageType()) {
                     case GROUP_PREFIX_UPDATE: {
                         val prefix = messageData.getObject();
-                        Group group = groupsCache.get(groupId);
                         if (group != null) {
                             group.setPrefix(prefix);
                         }
@@ -166,7 +164,6 @@ public class RedisMessenger implements AutoCloseable {
                     }
                     case GROUP_SUFFIX_UPDATE: {
                         val suffix = messageData.getObject();
-                        Group group = groupsCache.get(groupId);
                         if (group != null) {
                             group.setSuffix(suffix);
                         }
@@ -174,7 +171,6 @@ public class RedisMessenger implements AutoCloseable {
                     }
                     case GROUP_PARENT_ADD: {
                         val parent = messageData.getObject();
-                        Group group = groupsCache.get(groupId);
                         if (group != null) {
                             group.addInheritanceGroup(parent);
                             storage.recalculateUsersPermissions();
@@ -183,7 +179,6 @@ public class RedisMessenger implements AutoCloseable {
                     }
                     case GROUP_PARENT_REMOVE: {
                         val parent = messageData.getObject();
-                        Group group = groupsCache.get(groupId);
                         if (group != null) {
                             group.removeInheritanceGroup(parent);
                             storage.recalculateUsersPermissions();
@@ -193,7 +188,6 @@ public class RedisMessenger implements AutoCloseable {
                     case GROUP_PERMISSION_ADD: {
                         if (!subChannel.equalsIgnoreCase(messageData.getSubChannel())) return;
                         val permission = messageData.getObject();
-                        Group group = groupsCache.get(groupId);
                         if (group != null) {
                             group.addPermission(permission);
                             storage.recalculateUsersPermissions();
@@ -203,7 +197,6 @@ public class RedisMessenger implements AutoCloseable {
                     case GROUP_PERMISSION_REMOVE: {
                         if (!subChannel.equalsIgnoreCase(messageData.getSubChannel())) return;
                         val permission = messageData.getObject();
-                        Group group = groupsCache.get(groupId);
                         if (group != null) {
                             group.removePermission(permission);
                             storage.recalculateUsersPermissions();
@@ -221,7 +214,7 @@ public class RedisMessenger implements AutoCloseable {
                                     user.setGroupId(defaultGroupId);
                                     RedisMessenger.this.minePermsManager.getEventManager().callGroupChangeEvent(user);
                                 });
-                        groupsCache.values().stream().filter(group -> group.hasGroup(groupId)).forEach(group -> group.removeInheritanceGroup(groupId));
+                        groupsCache.values().stream().filter(cachedGroup -> cachedGroup.hasGroup(groupId)).forEach(cachedGroup -> cachedGroup.removeInheritanceGroup(groupId));
                         storage.recalculateUsersPermissions();
                         break;
                     }

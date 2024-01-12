@@ -27,7 +27,7 @@ public abstract class Storage implements AutoCloseable {
 
     protected Storage(MinePermsManager manager) {
         this.manager = manager;
-        if (manager.getConfigFile().isUseRedisPubSub()) {
+        if (manager.getStorageType().isSQL() && manager.getConfigFile().isUseRedisPubSub() && this.redisMessenger == null) {
             this.redisMessenger = new RedisMessenger(manager, this);
         }
     }

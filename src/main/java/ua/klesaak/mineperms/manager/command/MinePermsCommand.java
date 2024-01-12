@@ -443,7 +443,10 @@ public final class MinePermsCommand extends MPTabCompleter {
                 return;
             }
             case "export": {
-                this.onExport(commandSource, label, args);
+                CompletableFuture.runAsync(()-> this.onExport(commandSource, label, args)).exceptionally(throwable -> {
+                    commandSource.sendMessage("&cError while export data: " + throwable.getMessage());
+                    return null;
+                });
                 return;
             }
             case "migrate": {

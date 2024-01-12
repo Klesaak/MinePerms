@@ -46,14 +46,14 @@ public class SQLStorage extends Storage {
         super(manager);
         val config = this.manager.getConfigFile().getSQLSettings();
         this.hikariDataSource = config.getSource(storageType);
-        this.createPermissionsTablesSql = this.loadSQL("createPermissionsTables").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
+        this.createPermissionsTablesSql = this.loadSQL("createPermissionsTables", "%suffix%", config.getGroupsPermissionsTableSuffix());
         //fetching
         this.getAllGroupsDataSql = this.loadSQL("fetch/group/getAllGroupsData");
         this.getAllGroupsParentsSql = this.loadSQL("fetch/group/getAllGroupsParents");
-        this.getAllGroupsPermissionsSql = this.loadSQL("fetch/group/getAllGroupsPermissions").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
+        this.getAllGroupsPermissionsSql = this.loadSQL("fetch/group/getAllGroupsPermissions", "%suffix%", config.getGroupsPermissionsTableSuffix());
         this.getGroupDataSql = this.loadSQL("fetch/group/getGroupData");
         this.getGroupParentsSql = this.loadSQL("fetch/group/getGroupParents");
-        this.getGroupPermissionsSql = this.loadSQL("fetch/group/getGroupPermissions").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
+        this.getGroupPermissionsSql = this.loadSQL("fetch/group/getGroupPermissions", "%suffix%", config.getGroupsPermissionsTableSuffix());
 
         this.getAllUsersDataSql = this.loadSQL("fetch/user/getAllUsersData");
         this.getAllUsersPermissionsSql = this.loadSQL("fetch/user/getAllUsersPermissions");
@@ -62,9 +62,9 @@ public class SQLStorage extends Storage {
         //updating
         this.insertGroupDefaultSql = this.loadSQL("update/group/insertGroupDefault");
         this.insertGroupParentSql = this.loadSQL("update/group/insertGroupParent");
-        this.insertGroupPermissionSql = this.loadSQL("update/group/insertGroupPermission").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
+        this.insertGroupPermissionSql = this.loadSQL("update/group/insertGroupPermission","%suffix%", config.getGroupsPermissionsTableSuffix());
         this.removeGroupParentSql = this.loadSQL("update/group/removeGroupParent");
-        this.removeGroupPermissionSql = this.loadSQL("update/group/removeGroupPermission").replace("%suffix%", config.getGroupsPermissionsTableSuffix());
+        this.removeGroupPermissionSql = this.loadSQL("update/group/removeGroupPermission", "%suffix%", config.getGroupsPermissionsTableSuffix());
         this.updateGroupPrefixSql = this.loadSQL("update/group/updateGroupPrefix");
         this.updateGroupSuffixSql = this.loadSQL("update/group/updateGroupSuffix");
         this.insertUserDefaultSql = this.loadSQL("update/user/insertUserDefault");
@@ -736,12 +736,23 @@ public class SQLStorage extends Storage {
         });
     }
 
-    private String loadSQL(String name) {
-        try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("sql/" + name + ".sql")) {
-            if (inputStream != null) {
-                val bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-                return bufferedReader.lines().filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("--")).collect(Collectors.joining(" "));
+    private String loadSQL(String name, String... placeholders) {
+        String sqlFile = "sql/" + name + ".sql";
+        try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(sqlFile)) {
+            if (inputStream == null) {
+                throw new IllegalArgumentException("Could not find " + sqlFile);
             }
+            val bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            String sqlLine = bufferedReader.lines().filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("--")).collect(Collectors.joining(" "));
+            if (placeholders.length == 0) return sqlLine;
+            int i = 0;
+            for (String placeholder : placeholders) {
+                if (i % 2 == 0) {
+                    sqlLine = sqlLine.replace(placeholder, placeholders[i + 1]);
+                }
+                ++i;
+            }
+            return sqlLine;
         } catch (IOException e) {
             MPLogger.logError(new RuntimeException("Error while load SQL file!"));
         }
@@ -751,5 +762,6 @@ public class SQLStorage extends Storage {
     @Override
     public void close() {
         if (this.hikariDataSource != null) this.hikariDataSource.close();
+        if (this.redisMessenger != null) this.redisMessenger.close();
     }
 }
