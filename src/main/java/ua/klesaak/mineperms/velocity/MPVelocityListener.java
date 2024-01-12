@@ -8,14 +8,14 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
-import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.manager.storage.Storage;
 
 public final class MPVelocityListener {
-    private final MinePermsManager minePermsManager;
+    private final Storage storage;
     private final MinePermsVelocity plugin;
 
     public MPVelocityListener(MinePermsVelocity plugin) {
-        this.minePermsManager = plugin.getMinePermsManager();
+        this.storage = plugin.getMinePermsManager().getStorage();
         this.plugin = plugin;
         plugin.getServer().getEventManager().register(plugin, this);
     }
@@ -29,7 +29,7 @@ public final class MPVelocityListener {
             }
             CommandSource source = (CommandSource) subject;
             String userName = ((Player)source).getUsername();
-            boolean res = this.plugin.getMinePermsManager().hasPermission(userName, permission);
+            boolean res = this.storage.hasPermission(userName, permission);
             return Tristate.fromBoolean(res);
         });
     }
@@ -44,12 +44,12 @@ public final class MPVelocityListener {
         final Player player = event.getPlayer();
 
         if (!event.getResult().isAllowed()) return;
-        this.minePermsManager.getStorage().cacheUser(player.getUsername());
+        this.storage.cacheUser(player.getUsername());
     }
 
     // Wait until the last priority to unload, so plugins can still perform permission checks on this event
     @Subscribe(order = PostOrder.LAST)
     public void onPlayerQuit(DisconnectEvent event) {
-        this.minePermsManager.getStorage().unCacheUser(event.getPlayer().getUsername());
+        this.storage.unCacheUser(event.getPlayer().getUsername());
     }
 }

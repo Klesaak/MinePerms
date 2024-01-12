@@ -11,8 +11,7 @@ import ua.klesaak.mineperms.manager.storage.entity.User;
 
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 
 public class RedisMessenger implements AutoCloseable {
@@ -20,7 +19,7 @@ public class RedisMessenger implements AutoCloseable {
     private final MinePermsManager minePermsManager;
     private final Storage storage;
     private final RedisPool redisPool;
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+    private final ForkJoinPool loaderPool = new ForkJoinPool();
     private final Subscription sub;
     private boolean closing = false;
 
@@ -29,7 +28,7 @@ public class RedisMessenger implements AutoCloseable {
         this.storage = storage;
         this.redisPool = new RedisPool(minePermsManager.getConfigFile().getRedisSettings());
         this.sub = new Subscription();
-        this.executorService.execute(this.sub);
+        this.loaderPool.execute(this.sub);
     }
 
     public void sendOutgoingMessage(MessageData messageData) {
@@ -47,7 +46,7 @@ public class RedisMessenger implements AutoCloseable {
         this.sub.unsubscribe();
         this.redisPool.getRedis().close();
         this.redisPool.getJedisPool().destroy();
-        this.executorService.shutdown();
+        this.loaderPool.shutdown();
     }
 
     private class Subscription extends JedisPubSub implements Runnable {

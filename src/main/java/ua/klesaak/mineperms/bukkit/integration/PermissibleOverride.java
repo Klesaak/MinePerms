@@ -10,8 +10,8 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
-import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.bukkit.utils.BukkitUtils;
+import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.utils.PermissionsMatcher;
 
 import java.lang.reflect.Field;
@@ -57,13 +57,13 @@ public class PermissibleOverride extends PermissibleBase {
         }
     }
 
-    private final Player player;
-    private final MinePermsManager minePermsManager;
+    private final Storage storage;
+    private final String playerName;
 
-    public PermissibleOverride(MinePermsManager minePermsManager, Player player) {
-        super(player);
-        this.minePermsManager = minePermsManager;
-        this.player = player;
+    public PermissibleOverride(String playerName, Storage storage) {
+        super(null);
+        this.storage = storage;
+        this.playerName = playerName;
     }
 
     @Override
@@ -87,7 +87,7 @@ public class PermissibleOverride extends PermissibleBase {
 
     @Override
     public boolean hasPermission(@NonNull String inName) {
-        return this.minePermsManager.hasPermission(this.player.getName(), inName);
+        return this.storage.hasPermission(this.playerName, inName);
     }
 
     @Override

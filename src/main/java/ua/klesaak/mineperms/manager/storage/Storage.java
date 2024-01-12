@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+
+//TODO: getCachedUser method
 public abstract class Storage implements AutoCloseable {
     protected final MinePermsManager manager;
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
