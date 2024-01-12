@@ -50,8 +50,10 @@ public final class MinePermsCommand extends MPTabCompleter {
                     return;
                 }
                 String permission = args[1];
+                long startTime = System.nanoTime();
                 boolean hasPerm = commandSource.hasPermission(permission);
-                commandSource.sendMessage("&6Permission: &c" + permission + " &6== " + (hasPerm ? "&a" : "&c") + hasPerm);
+                long completeTime = System.nanoTime() - startTime;
+                commandSource.sendMessage("&6Permission: &c" + permission + " &6== " + (hasPerm ? "&a" : "&c") + hasPerm +" &6(" + this.spaced((int)completeTime, " ") + ")ns");
                 return;
             }
             case "user": {
@@ -705,5 +707,21 @@ public final class MinePermsCommand extends MPTabCompleter {
             return 1;
         }
         return i;
+    }
+
+    private String spaced(int number, String symbol) {
+        String integer = String.valueOf(number);
+        StringBuilder builder = new StringBuilder();
+
+        for (int a = 0; a < integer.length(); a++) {
+            builder.append(integer.split("")[a]);
+
+            if ((integer.length() - a + 2) % 3 != 0) {
+                continue;
+            }
+            builder.append(symbol);
+        }
+
+        return builder.substring(0, builder.toString().length() - 1);
     }
 }

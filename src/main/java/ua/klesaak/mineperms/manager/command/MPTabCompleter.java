@@ -48,7 +48,7 @@ abstract class MPTabCompleter {
                 return this.copyPartialMatches(args[2].toLowerCase(), GROUP_SUB_COMMANDS_0, new ArrayList<>());
             }
             case 4: {
-                if (args[2].equalsIgnoreCase("add-parent")) {
+                if (args[2].equalsIgnoreCase("add-parent") || args[2].equalsIgnoreCase("remove-parent")) {
                     return this.copyPartialMatches(args[3].toLowerCase(), groupNames, new ArrayList<>());
                 }
             }
