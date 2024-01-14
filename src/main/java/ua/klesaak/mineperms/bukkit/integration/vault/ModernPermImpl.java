@@ -79,7 +79,7 @@ public abstract class ModernPermImpl extends BasicPermImpl {
 
 	@Override
 	public boolean playerRemoveGroup(String world, OfflinePlayer player, String groupName) {
-		this.storage.setUserGroup(player.getName(), this.storage.getDefaultGroup().getGroupID());
+		this.storage.setUserGroup(player.getName(), this.storage.getDefaultGroup().getGroupId());
 		return true;
 	}
 

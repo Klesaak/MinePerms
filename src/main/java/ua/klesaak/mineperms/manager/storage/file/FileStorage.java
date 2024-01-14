@@ -32,11 +32,11 @@ public final class FileStorage extends Storage {
         val configFile = this.manager.getConfigFile();
         if (this.groupsFile.getFile().length() <= 0L) {
             val defaultGroup = new Group(configFile.getDefaultGroup());
-            this.groups.put(defaultGroup.getGroupID(), defaultGroup);
+            this.groups.put(defaultGroup.getGroupId(), defaultGroup);
             this.groupsFile.write(Collections.singletonList(defaultGroup), true);
         }
         Collection<Group> groupDataCollection = this.groupsFile.readAll(GROUP_TOKEN);
-        groupDataCollection.forEach(group -> this.groups.put(group.getGroupID(), group));
+        groupDataCollection.forEach(group -> this.groups.put(group.getGroupId(), group));
         if (this.usersFile.getFile().length() > 0L) {
             Collection<User> dataCollection = this.usersFile.readAll(USER_TOKEN);
             dataCollection.forEach(user -> {
@@ -83,6 +83,11 @@ public final class FileStorage extends Storage {
     }
 
     @Override
+    public User getCachedUser(String nickName) {
+        throw new UnsupportedOperationException("Method getCachedUser don't supported in FileStorage");
+    }
+
+    @Override
     public String getUserPrefix(String nickName) {
         User user = this.getUser(nickName.toLowerCase());
         if (user == null) return this.getDefaultGroup().getPrefix();
@@ -101,7 +106,7 @@ public final class FileStorage extends Storage {
         val nickNameLC = nickName.toLowerCase();
         User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickNameLC, this.getDefaultGroup().getGroupID());
+            user = new User(nickNameLC, this.getDefaultGroup().getGroupId());
         }
         user.addPermission(permission);
         this.saveUser(nickNameLC, user);
@@ -122,7 +127,7 @@ public final class FileStorage extends Storage {
         val nickNameLC = nickName.toLowerCase();
         User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickNameLC, this.getDefaultGroup().getGroupID());
+            user = new User(nickNameLC, this.getDefaultGroup().getGroupId());
         }
         user.setPrefix(prefix);
         this.saveUser(nickNameLC, user);
@@ -133,7 +138,7 @@ public final class FileStorage extends Storage {
         val nickNameLC = nickName.toLowerCase();
         User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickNameLC, this.getDefaultGroup().getGroupID());
+            user = new User(nickNameLC, this.getDefaultGroup().getGroupId());
         }
         user.setSuffix(suffix);
         this.saveUser(nickNameLC, user);
@@ -144,7 +149,7 @@ public final class FileStorage extends Storage {
         val nickNameLC = nickName.toLowerCase();
         User user = this.getUser(nickNameLC);
         if (user == null) {
-            user = new User(nickNameLC, this.getDefaultGroup().getGroupID());
+            user = new User(nickNameLC, this.getDefaultGroup().getGroupId());
         }
         if (this.groups.get(groupID) != null) {
             user.setGroupId(groupID);
@@ -207,7 +212,7 @@ public final class FileStorage extends Storage {
     @Synchronized
     @Override
     public void deleteGroup(String groupID) {
-        val defaultGroupId = this.getDefaultGroup().getGroupID();
+        val defaultGroupId = this.getDefaultGroup().getGroupId();
         if (groupID.equalsIgnoreCase(defaultGroupId)) return;
         this.groups.remove(groupID.toLowerCase());
         this.users.values().stream().filter(user -> user.hasGroup(groupID)).forEach(user -> {
@@ -247,7 +252,7 @@ public final class FileStorage extends Storage {
 
     @Override
     public void importGroupsData(Collection<Group> groups) {
-        for (Group group : groups) this.groups.put(group.getGroupID(), group);
+        for (Group group : groups) this.groups.put(group.getGroupId(), group);
         CompletableFuture.runAsync(()->this.groupsFile.write(this.groups.values(), true)).exceptionally(throwable -> {
             MPLogger.logError(new RuntimeException("Error while importing groups data", throwable));
             return null;

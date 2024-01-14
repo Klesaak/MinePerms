@@ -1,6 +1,7 @@
 package ua.klesaak.mineperms.manager.config;
 
 import lombok.Getter;
+import ua.klesaak.mineperms.manager.storage.StorageType;
 import ua.klesaak.mineperms.manager.storage.sql.SQLConfig;
 import ua.klesaak.mineperms.manager.storage.redismessenger.RedisConfig;
 import ua.klesaak.mineperms.manager.utils.JsonData;
@@ -25,5 +26,9 @@ public class ConfigFile extends JsonData {
 
     public File getPluginDataFolder() {
         return this.getFile().getParentFile();
+    }
+
+    public StorageType getStorageType() {
+        return StorageType.parse(this.storageType, StorageType.FILE);
     }
 }

@@ -83,7 +83,7 @@ public class SQLStorage extends Storage {
     @Override
     public void init() {
         CompletableFuture.runAsync(() -> {
-            this.getAllGroupsData().forEach(group -> this.groups.put(group.getGroupID(), group));
+            this.getAllGroupsData().forEach(group -> this.groups.put(group.getGroupId(), group));
             //проверяем наличие дефолт группы
             val defaultGroup = manager.getConfigFile().getDefaultGroup();
             if (this.getGroup(defaultGroup) == null) {
@@ -116,8 +116,7 @@ public class SQLStorage extends Storage {
     @Override
     public User getUser(String nickName) {
         val nickNameLC = nickName.toLowerCase();
-        val cachedUser = this.users.get(nickNameLC);
-        User user = cachedUser != null ? cachedUser : this.temporalUsersCache.getIfPresent(nickNameLC);
+        User user = this.getCachedUser(nickNameLC);
         if (user != null) return user;
         user = this.loadUser(nickNameLC).join();
         if (user != null) {
@@ -125,6 +124,13 @@ public class SQLStorage extends Storage {
             user.recalculatePermissions(this.groups);
         }
         return user;
+    }
+
+    @Override
+    public User getCachedUser(String nickName) {
+        val nickNameLC = nickName.toLowerCase();
+        val cachedUser = this.users.get(nickNameLC);
+        return cachedUser != null ? cachedUser : this.temporalUsersCache.getIfPresent(nickNameLC);
     }
 
     /**
@@ -494,7 +500,7 @@ public class SQLStorage extends Storage {
     @Synchronized
     @Override
     public void deleteGroup(String groupID) {
-        val defaultGroupId = this.getDefaultGroup().getGroupID();
+        val defaultGroupId = this.getDefaultGroup().getGroupId();
         if (groupID.equalsIgnoreCase(defaultGroupId)) return;
         this.groups.remove(groupID);
         Stream.concat(this.users.values().stream(), this.temporalUsersCache.asMap().values().stream())
@@ -632,7 +638,7 @@ public class SQLStorage extends Storage {
 
         //складываем всё в кучу
         list.forEach(groupData -> {
-            val id = groupData.getGroupID();
+            val id = groupData.getGroupId();
             val perms = groupsPerms.get(id);
             val parents = groupsParents.get(id);
             groupData.setPermissions(perms);
@@ -688,7 +694,7 @@ public class SQLStorage extends Storage {
                 for (val group : groups) {
                     val prefix = group.getPrefix().isEmpty() ? null : group.getPrefix();
                     val suffix = group.getSuffix().isEmpty() ? null : group.getSuffix();
-                    insertGroupsDataStatement.setString(1, group.getGroupID());
+                    insertGroupsDataStatement.setString(1, group.getGroupId());
                     insertGroupsDataStatement.setString(2, prefix);
                     insertGroupsDataStatement.setString(3, suffix);
                     insertGroupsDataStatement.addBatch();
@@ -696,7 +702,7 @@ public class SQLStorage extends Storage {
                 insertGroupsDataStatement.executeBatch();
                 for (val group : groups) {
                     for (String parent : group.getInheritanceGroups()) {
-                        insertGroupsParentsStatement.setString(1, group.getGroupID());
+                        insertGroupsParentsStatement.setString(1, group.getGroupId());
                         insertGroupsParentsStatement.setString(2, parent);
                         insertGroupsParentsStatement.addBatch();
                     }
@@ -704,7 +710,7 @@ public class SQLStorage extends Storage {
                 insertGroupsParentsStatement.executeBatch();
                 for (val group : groups) {
                     for (String permission : group.getPermissions()) {
-                        insertGroupsPermissionsStatement.setString(1, group.getGroupID());
+                        insertGroupsPermissionsStatement.setString(1, group.getGroupId());
                         insertGroupsPermissionsStatement.setString(2, permission);
                         insertGroupsPermissionsStatement.addBatch();
                     }
@@ -763,5 +769,6 @@ public class SQLStorage extends Storage {
     public void close() {
         if (this.hikariDataSource != null) this.hikariDataSource.close();
         if (this.redisMessenger != null) this.redisMessenger.close();
+        if (this.loaderPool != null) this.loaderPool.shutdown();
     }
 }

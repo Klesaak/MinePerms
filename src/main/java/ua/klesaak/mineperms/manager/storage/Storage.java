@@ -1,7 +1,7 @@
 package ua.klesaak.mineperms.manager.storage;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
@@ -9,28 +9,31 @@ import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redismessenger.MessageData;
 import ua.klesaak.mineperms.manager.storage.redismessenger.RedisMessenger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ForkJoinPool;
 
-
-//TODO: getCachedUser method
 public abstract class Storage implements AutoCloseable {
     protected final MinePermsManager manager;
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
     protected final ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
-    protected final Cache<String, User> temporalUsersCache = CacheBuilder.newBuilder()
-            .concurrencyLevel(16)
-            .expireAfterWrite(1, TimeUnit.MINUTES).build(); //Временный кеш, чтобы уменьшить кол-во запросов в бд.
+
+    protected Cache<String, User> temporalUsersCache; //Временный кеш, чтобы уменьшить кол-во запросов в бд.
     protected RedisMessenger redisMessenger;
+    protected ForkJoinPool loaderPool = null;
 
     protected Storage(MinePermsManager manager) {
         this.manager = manager;
-        if (manager.getStorageType().isSQL() && manager.getConfigFile().isUseRedisPubSub() && this.redisMessenger == null) {
-            this.redisMessenger = new RedisMessenger(manager, this);
+        if (manager.getStorageType().isSQL()) {
+            this.loaderPool = new ForkJoinPool();
+            this.temporalUsersCache = Caffeine.newBuilder().executor(this.loaderPool).maximumSize(10_000).expireAfterWrite(Duration.ofMinutes(1)).build();
+            if (manager.getConfigFile().isUseRedisPubSub() && this.redisMessenger == null) {
+                this.redisMessenger = new RedisMessenger(manager, this);
+            }
         }
     }
 
@@ -45,6 +48,7 @@ public abstract class Storage implements AutoCloseable {
     public abstract void saveUser(String nickName, User user);
     public abstract void saveGroup(String groupID);
     public abstract User getUser(String nickName);
+    public abstract User getCachedUser(String nickName);
     public abstract String getUserPrefix(String nickName);
     public abstract String getUserSuffix(String nickName);
     //////User operations//////
@@ -85,13 +89,13 @@ public abstract class Storage implements AutoCloseable {
         Group group = this.getGroup(groupId);
         if (group == null) return false;
         User user = this.getUser(playerName.toLowerCase());
-        if (user == null) return this.getDefaultGroup().getGroupID().equalsIgnoreCase(groupId);
+        if (user == null) return this.getDefaultGroup().getGroupId().equalsIgnoreCase(groupId);
         return user.hasGroup(groupId);
     }
 
     public String getUserGroup(String playerName) {
         User user = this.getUser(playerName.toLowerCase());
-        if (user == null) return this.getDefaultGroup().getGroupID();
+        if (user == null) return this.getDefaultGroup().getGroupId();
         return user.getGroupId();
     }
 

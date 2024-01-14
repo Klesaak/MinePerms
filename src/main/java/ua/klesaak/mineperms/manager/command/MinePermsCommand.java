@@ -352,7 +352,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                             commandSource.sendMessage("&cGroup not found!");
                             return;
                         }
-                        if (groupId.equalsIgnoreCase(storage.getDefaultGroup().getGroupID())) {
+                        if (groupId.equalsIgnoreCase(storage.getDefaultGroup().getGroupId())) {
                             commandSource.sendMessage("&cYou can't delete default group!");
                             return;
                         }
@@ -510,7 +510,7 @@ public final class MinePermsCommand extends MPTabCompleter {
             storageType = StorageType.parseWithException(backend);
         } catch (RuntimeException e) {
             commandSource.sendMessage("&cBackend &6" + backend + " &cis not exists! Available backends: &6FILE, MYSQL, MARIADB, POSTGRESQL");
-            commandSource.sendMessage("&cCurrent backend: &6" + this.manager.getConfigFile().getStorageType());
+            commandSource.sendMessage("&cCurrent backend: &6" + this.manager.getStorageType());
             return;
         }
         if (storageType == this.manager.getStorageType()) {
@@ -564,13 +564,13 @@ public final class MinePermsCommand extends MPTabCompleter {
                     switch (args[2].toLowerCase()) {
                         case "permission": {
                             for (val group : groups) {
-                                if (group.hasOwnPermission(identifier)) found.add(group.getGroupID());
+                                if (group.hasOwnPermission(identifier)) found.add(group.getGroupId());
                             }
                             break;
                         }
                         case "parent-group": {
                             for (val group : groups) {
-                                if (group.hasGroup(identifier)) found.add(group.getGroupID());
+                                if (group.hasGroup(identifier)) found.add(group.getGroupId());
                             }
                             break;
                         }
@@ -617,7 +617,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                                 if (user.hasOwnPermission(identifier)) usersFound.add(user.getPlayerName());
                             }
                             for (val group : groups) {
-                                if (group.hasOwnPermission(identifier)) groupsFound.add(group.getGroupID());
+                                if (group.hasOwnPermission(identifier)) groupsFound.add(group.getGroupId());
                             }
                         }
                         case "parent-group": {
@@ -625,7 +625,7 @@ public final class MinePermsCommand extends MPTabCompleter {
                                 if (user.hasGroup(identifier)) usersFound.add(user.getPlayerName());
                             }
                             for (val group : groups) {
-                                if (group.hasGroup(identifier)) groupsFound.add(group.getGroupID());
+                                if (group.hasGroup(identifier)) groupsFound.add(group.getGroupId());
                             }
                         }
                     }

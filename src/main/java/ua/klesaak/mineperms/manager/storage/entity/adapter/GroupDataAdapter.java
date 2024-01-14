@@ -31,7 +31,7 @@ public final class GroupDataAdapter implements JsonDeserializer<Group>, JsonSeri
     @Override
     public JsonElement serialize(Group group, Type type, JsonSerializationContext jsonSerializationContext) {
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("groupId", group.getGroupID());
+        jsonObject.addProperty("groupId", group.getGroupId());
         jsonObject.addProperty("prefix", group.getPrefix());
         jsonObject.addProperty("suffix", group.getSuffix());
         JsonArray inheritanceGroups = new JsonArray();

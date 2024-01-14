@@ -5,11 +5,9 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.Storage;
-import ua.klesaak.mineperms.manager.storage.StorageType;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
@@ -95,18 +93,14 @@ public class RedisMessenger implements AutoCloseable {
             val userCache = storage.getUsers();
             val groupsCache = storage.getGroups();
             val temporalUserCache = storage.getTemporalUsersCache();
-            val defaultGroupId = storage.getDefaultGroup().getGroupID();
+            val defaultGroupId = storage.getDefaultGroup().getGroupId();
             String subChannel = config.getSQLSettings().getGroupsPermissionsTableSuffix();
-            if (Objects.requireNonNull(RedisMessenger.this.minePermsManager.getStorageType()) == StorageType.FILE) {
+            if (RedisMessenger.this.minePermsManager.getStorageType().isFile()) {
                 throw new UnsupportedOperationException("Don't update data by redis pub-sub, because used FileStorage! You must change field 'useRedisPubSub' to 'false' in plugin config!");
             }
             if (messageData.getMessageType().isUserUpdate()) {
                 val userId = messageData.getEntityId();
-                User user = null;
-                User temporalUser = temporalUserCache.getIfPresent(userId);
-                if (temporalUser != null) user = temporalUser;
-                User cachedUser = userCache.get(userId);
-                if (cachedUser != null) user = cachedUser;
+                User user = storage.getCachedUser(userId);
                 if (user == null) return;
                 switch (messageData.getMessageType()) {
                     case USER_PREFIX_UPDATE: {

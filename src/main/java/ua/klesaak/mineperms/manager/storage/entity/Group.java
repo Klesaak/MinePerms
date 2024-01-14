@@ -68,7 +68,7 @@ public class Group extends AbstractEntity {
         this.inheritanceGroups = groups;
     }
 
-    public String getGroupID() {
+    public String getGroupId() {
         return this.entityId;
     }
 

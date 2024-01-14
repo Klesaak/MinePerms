@@ -30,7 +30,7 @@ public final class MinePermsManager {
 
     public void init(File pluginDataFolder, IMPEventManager eventManager) {
         this.configFile = JsonData.load(new File(pluginDataFolder, "config.json"), ConfigFile.class);
-        this.storageType = StorageType.parse(this.configFile.getStorageType(), StorageType.FILE);
+        this.storageType = this.configFile.getStorageType();
         switch (this.storageType) {
             case FILE: {
                 this.storage = new FileStorage(this);
