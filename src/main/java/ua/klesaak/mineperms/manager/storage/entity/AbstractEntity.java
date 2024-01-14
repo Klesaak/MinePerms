@@ -17,7 +17,7 @@ public abstract class AbstractEntity {
     protected transient volatile PermissionsMatcher permissionsMatcher = new PermissionsMatcher();
 
     protected AbstractEntity(String entityId) {
-        this.entityId = entityId;
+        this.entityId = entityId.toLowerCase();
     }
 
     public abstract boolean hasPermission(String permission);

@@ -29,9 +29,7 @@ public class PEXMigration implements IMigrationPlugin {
             String group = this.getGroupWithMaxWeight(pexUser.getParents()).toLowerCase();
             val mpUser = new User(pexUser.getName(), group);
             for (List<String> perms : pexUser.getAllPermissions().values()) {
-                for (String perm : perms) {
-                    mpUser.addOwnPermission(perm);
-                }
+                perms.forEach(mpUser::addOwnPermission);
             }
             mpUser.setPrefix(pexUser.getOwnPrefix());
             mpUser.setSuffix(pexUser.getOwnSuffix());
@@ -63,9 +61,7 @@ public class PEXMigration implements IMigrationPlugin {
             val mpGroup = new Group(pexGroup.getIdentifier());
             mpGroup.setInheritanceGroups(new HashSet<>(pexGroup.getOwnParentIdentifiers()));
             for (List<String> perms : pexGroup.getAllPermissions().values()) {
-                for (String perm : perms) {
-                    mpGroup.addPermission(perm);
-                }
+                perms.forEach(mpGroup::addOwnPermission);
             }
             mpGroup.setPrefix(pexGroup.getOwnPrefix());
             mpGroup.setSuffix(pexGroup.getOwnSuffix());
