@@ -31,7 +31,7 @@ public abstract class Storage implements AutoCloseable {
         if (manager.getStorageType().isSQL()) {
             this.loaderPool = new ForkJoinPool();
             //this.temporalUsersCache = Caffeine.newBuilder().executor(this.loaderPool).maximumSize(10_000).expireAfterWrite(Duration.ofMinutes(1)).build();
-            this.temporalUsersCache = ScheduledCache.<String, User>builder().clearExpiredInterval(1L).setExpireTime(Duration.ofMinutes(1L)).build();
+            this.temporalUsersCache = ScheduledCache.<String, User>builder().clearExpiredInterval(10L).setExpireTime(Duration.ofMinutes(1L)).build();
             if (manager.getConfigFile().isUseRedisPubSub() && this.redisMessenger == null) {
                 this.redisMessenger = new RedisMessenger(manager, this);
             }
