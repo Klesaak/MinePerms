@@ -41,9 +41,8 @@ public final class MPVelocityListener {
 
     @Subscribe
     public void onPlayerPostLogin(LoginEvent event) {
-        final Player player = event.getPlayer();
-
         if (!event.getResult().isAllowed()) return;
+        final Player player = event.getPlayer();
         this.storage.cacheUser(player.getUsername());
     }
 

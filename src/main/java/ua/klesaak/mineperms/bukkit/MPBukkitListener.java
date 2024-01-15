@@ -1,6 +1,5 @@
 package ua.klesaak.mineperms.bukkit;
 
-import lombok.val;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,8 +20,9 @@ public class MPBukkitListener implements Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public final void onLogin(PlayerLoginEvent event) {
+        if (!(event.getResult() == PlayerLoginEvent.Result.ALLOWED)) return;
         Player player = event.getPlayer();
         String playerName = player.getName();
         this.storage.cacheUser(playerName);
@@ -35,7 +35,7 @@ public class MPBukkitListener implements Listener {
     public final void onJoin(PlayerJoinEvent event) {
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onLeave(PlayerQuitEvent event) {
         this.storage.unCacheUser(event.getPlayer().getName());
     }

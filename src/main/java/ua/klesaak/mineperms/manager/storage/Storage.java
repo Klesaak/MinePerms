@@ -1,13 +1,12 @@
 package ua.klesaak.mineperms.manager.storage;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.val;
 import ua.klesaak.mineperms.MinePermsManager;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redismessenger.MessageData;
 import ua.klesaak.mineperms.manager.storage.redismessenger.RedisMessenger;
+import ua.klesaak.mineperms.manager.utils.cache.ScheduledCache;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -22,7 +21,8 @@ public abstract class Storage implements AutoCloseable {
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
     protected final ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
 
-    protected Cache<String, User> temporalUsersCache; //Временный кеш, чтобы уменьшить кол-во запросов в бд.
+    //protected Cache<String, User> temporalUsersCache; //Временный кеш, чтобы уменьшить кол-во запросов в бд.
+    protected ScheduledCache<String, User> temporalUsersCache; //Временный кеш, чтобы уменьшить кол-во запросов в бд.(Тест режим, в случае технических шоколадок вернуть кафеин)
     protected RedisMessenger redisMessenger;
     protected ForkJoinPool loaderPool = null;
 
@@ -30,7 +30,8 @@ public abstract class Storage implements AutoCloseable {
         this.manager = manager;
         if (manager.getStorageType().isSQL()) {
             this.loaderPool = new ForkJoinPool();
-            this.temporalUsersCache = Caffeine.newBuilder().executor(this.loaderPool).maximumSize(10_000).expireAfterWrite(Duration.ofMinutes(1)).build();
+            //this.temporalUsersCache = Caffeine.newBuilder().executor(this.loaderPool).maximumSize(10_000).expireAfterWrite(Duration.ofMinutes(1)).build();
+            this.temporalUsersCache = ScheduledCache.<String, User>builder().clearExpiredInterval(1L).setExpireTime(Duration.ofMinutes(1L)).build();
             if (manager.getConfigFile().isUseRedisPubSub() && this.redisMessenger == null) {
                 this.redisMessenger = new RedisMessenger(manager, this);
             }
@@ -134,7 +135,7 @@ public abstract class Storage implements AutoCloseable {
         return users;
     }
 
-    public Cache<String, User> getTemporalUsersCache() {
+    public ScheduledCache<String, User> getTemporalUsersCache() {
         return temporalUsersCache;
     }
 

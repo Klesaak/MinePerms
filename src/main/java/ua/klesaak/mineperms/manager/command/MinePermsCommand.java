@@ -40,6 +40,10 @@ public final class MinePermsCommand extends MPTabCompleter {
             commandSource.sendMessage("&6/" + label + " export <backend> - export data from current backend to another backend.");
             commandSource.sendMessage("&6/" + label + " migrate <simpleperms|pex|luckperms> - migrate data from another perm-plugin to current backend.");
             commandSource.sendMessage("&6/" + label + " test-perm <permission> - show info of permission which you have.");
+          //  commandSource.sendMessage("");
+           // commandSource.sendMessage("&6Temporal cache size: &c" + this.manager.getStorage().getTemporalUsersCache().size());
+           // commandSource.sendMessage("&6Temporal cache keys: &c" + new HashSet<>(this.manager.getStorage().getTemporalUsersCache().asMap().keySet()));
+           // commandSource.sendMessage("&6Cache size: &c" + this.manager.getStorage().getUsers().size());
             return;
         }
         Storage storage = this.manager.getStorage();

@@ -31,13 +31,15 @@ public class MPBungeeListener implements Listener {
         event.setHasPermission(this.storage.hasPermission(sender.getName(), permission));
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerLogin(LoginEvent event) {
+        if (event.isCancelled()) return;
         this.storage.cacheUser(event.getConnection().getName());
     }
 
     @EventHandler
     public void onPlayerPostLogin(PostLoginEvent event) {
+        this.storage.cacheUser(event.getPlayer().getName());
     }
 
     // Подождите, пока выгрузится последний приоритет, чтобы плагины все еще могли выполнять проверки разрешений для этого события.
