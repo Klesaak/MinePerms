@@ -22,7 +22,7 @@ public class MPBukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public final void onLogin(PlayerLoginEvent event) {
-        if (!(event.getResult() == PlayerLoginEvent.Result.ALLOWED)) return;
+        if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) return;
         Player player = event.getPlayer();
         String playerName = player.getName();
         this.storage.cacheUser(playerName);

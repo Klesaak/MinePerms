@@ -1,43 +1,50 @@
 package ua.klesaak.mineperms.manager.utils.cache;
 
+import lombok.SneakyThrows;
 import lombok.val;
 import ua.klesaak.mineperms.manager.log.MPLogger;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
+
+/**
+ *
+ * @author Klesaak
+ * @version 0.0.1
+ *
+ * Асинхронный кеш, который при надобности очищает устаревшие ключи шедулером.
+ * Работает в тестовом режиме, юзать на свой страх и риск.
+ */
 public class ScheduledCache<K, V> implements AutoCloseable {
     private final Map<K, Pair<Long, V>> data = new ConcurrentHashMap<>();
     private final BiConsumer<K, V> afterRemoving;
     private final BiPredicate<K, V> cancelRemovingIf;
     private final long expireTime;
+    private final Executor executor;
     private ScheduledExecutorService executorService;
 
     public ScheduledCache(Builder<K, V> builder) {
         this.afterRemoving = builder.afterRemoving;
         this.cancelRemovingIf = builder.cancelRemovingIf;
         this.expireTime = builder.expireTime;
+        this.executor = builder.executor;
         long clearExpiredInterval = builder.clearExpiredInterval;
-        if (clearExpiredInterval > 0) {
+        if (clearExpiredInterval > 0L) {
             this.executorService = new ScheduledThreadPoolExecutor(2, runnable -> {
                 Thread schedulerThread = new Thread(runnable, "ScheduledCache Thread");
                 schedulerThread.setDaemon(false);
                 return schedulerThread;
             });
-            this.executorService.scheduleWithFixedDelay(this::invalidateData, clearExpiredInterval, clearExpiredInterval, TimeUnit.MINUTES);
+            this.executorService.scheduleWithFixedDelay(this::invalidateData, clearExpiredInterval, clearExpiredInterval, TimeUnit.MILLISECONDS);
         }
     }
 
     public void clear() {
-        for (K key : this.data.keySet()) {
-            this.invalidate(key);
-        }
+        this.executor.execute(()-> this.data.keySet().forEach(this::invalidate));
     }
 
     public void invalidate(K key) {
@@ -46,18 +53,22 @@ public class ScheduledCache<K, V> implements AutoCloseable {
     }
 
     public void put(K key, V value) {
-        this.invalidateData();
-        this.data.put(key, Pair.of(System.nanoTime() + this.expireTime, value));
+        this.executor.execute(()-> {
+            this.invalidateData();
+            this.data.put(key, Pair.of(System.nanoTime() + this.expireTime, value));
+        });
     }
 
     public void putIfAbsent(K key, V value) {
-        this.invalidateData();
-        this.data.putIfAbsent(key, Pair.of(System.nanoTime() + this.expireTime, value));
+        this.executor.execute(() -> {
+            this.invalidateData();
+            this.data.putIfAbsent(key, Pair.of(System.nanoTime() + this.expireTime, value));
+        });
     }
 
-    public boolean contains(K key) {
-        this.invalidateData();
-        return this.data.containsKey(key);
+    @SneakyThrows({InterruptedException.class, ExecutionException.class})
+    public boolean containsKey(K key) {
+        return CompletableFuture.runAsync(this::invalidateData, this.executor).thenApply(unused -> this.getIfPresent(key) != null).get();
     }
 
     public V getIfPresent(K key) {
@@ -113,15 +124,13 @@ public class ScheduledCache<K, V> implements AutoCloseable {
     }
 
     public static class Builder<K, V> {
-        private BiConsumer<K, V> afterRemoving;
-        private BiPredicate<K, V> cancelRemovingIf;
-        private long expireTime;
-        private long clearExpiredInterval;
+        private BiConsumer<K, V> afterRemoving = ((k, v) -> {});
+        private BiPredicate<K, V> cancelRemovingIf = ((k, v) -> false);
+        private long expireTime = TimeUnit.MINUTES.toMillis(10L);
+        private long clearExpiredInterval = 0L;
+        private Executor executor = ForkJoinPool.commonPool();
 
         public Builder() {
-            this.afterRemoving = ((k, v) -> {});
-            this.cancelRemovingIf = ((k, v) -> false);
-            this.expireTime = TimeUnit.MINUTES.toMillis(10L);
         }
 
         public Builder<K, V> setAfterRemoving(BiConsumer<K, V> afterRemoving) {
@@ -139,8 +148,13 @@ public class ScheduledCache<K, V> implements AutoCloseable {
             return this;
         }
 
-        public Builder<K, V> clearExpiredInterval(long minutes) {
-            this.clearExpiredInterval = minutes;
+        public Builder<K, V> clearExpiredInterval(Duration duration) {
+            this.clearExpiredInterval = duration.toMillis();
+            return this;
+        }
+
+        public Builder<K, V> executor(Executor executor) {
+            this.executor = executor;
             return this;
         }
 
