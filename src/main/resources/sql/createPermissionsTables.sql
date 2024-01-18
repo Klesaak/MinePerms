@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `mp_groups` (
         PRIMARY KEY(group_id)) ENGINE = INNODB;
 
 CREATE TABLE IF NOT EXISTS `mp_users` (
-        user_name VARCHAR(128) NOT NULL,
+        user_name VARCHAR(16) NOT NULL,
         group_id VARCHAR(128),
         prefix TEXT,
         suffix TEXT,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `mp_groups_permissions_%suffix%` (
 CREATE TABLE IF NOT EXISTS `mp_groups_parents` (
         i BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
         group_id VARCHAR(128) NOT NULL,
-        parent VARCHAR(255) NOT NULL,
+        parent VARCHAR(128) NOT NULL,
         -- Indexes
         UNIQUE (group_id, parent),
         INDEX (group_id),
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `mp_groups_parents` (
 
 CREATE TABLE IF NOT EXISTS `mp_users_permissions` (
         i BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        user_name VARCHAR(128) NOT NULL,
+        user_name VARCHAR(16) NOT NULL,
         permission VARCHAR(255) NOT NULL,
         -- Indexes
         UNIQUE (user_name, permission),
