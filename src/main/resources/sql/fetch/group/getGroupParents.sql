@@ -1,1 +1,1 @@
-SELECT parent FROM `mp_groups_parents` WHERE group_id = ?
+SELECT parent FROM `mp_groups_parents` WHERE group_id = ?;

@@ -1,1 +1,1 @@
-INSERT IGNORE INTO `mp_users` (user_name, group_id, prefix, suffix) VALUES (?, ?, ?, ?)
+INSERT IGNORE INTO `mp_users` (user_name, group_id, prefix, suffix) VALUES (?, ?, ?, ?);

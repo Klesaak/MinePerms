@@ -1,1 +1,1 @@
-INSERT INTO `mp_groups` (group_id, suffix) VALUES (?, ?) ON DUPLICATE KEY UPDATE suffix = ?
+INSERT INTO `mp_groups` (group_id, suffix) VALUES (?, ?) ON DUPLICATE KEY UPDATE suffix = ?;

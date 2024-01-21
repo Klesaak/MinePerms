@@ -1,1 +1,1 @@
-DELETE FROM `mp_users` WHERE user_name = ?
+DELETE FROM `mp_users` WHERE user_name = ?;

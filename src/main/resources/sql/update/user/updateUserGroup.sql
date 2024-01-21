@@ -1,1 +1,1 @@
-INSERT INTO `mp_users` (user_name, group_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE group_id = ?
+INSERT INTO `mp_users` (user_name, group_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE group_id = ?;

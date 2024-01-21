@@ -1,1 +1,1 @@
-INSERT IGNORE INTO `mp_users_permissions` (user_name, permission) VALUES (?, ?)
+INSERT IGNORE INTO `mp_users_permissions` (user_name, permission) VALUES (?, ?);

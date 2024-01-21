@@ -1,1 +1,1 @@
-SELECT group_id, parent FROM `mp_groups_parents`
+SELECT group_id, parent FROM `mp_groups_parents`;

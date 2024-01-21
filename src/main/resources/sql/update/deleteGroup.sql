@@ -1,1 +1,1 @@
-DELETE FROM `mp_groups` WHERE group_id = ?
+DELETE FROM `mp_groups` WHERE group_id = ?;

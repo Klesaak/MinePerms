@@ -1,1 +1,1 @@
-DELETE FROM `mp_groups_permissions_%suffix%` WHERE group_id = ? AND permission = ? LIMIT 1
+DELETE FROM `mp_groups_permissions_%suffix%` WHERE group_id = ? AND permission = ? LIMIT 1;

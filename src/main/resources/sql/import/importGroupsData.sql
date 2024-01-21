@@ -1,1 +1,1 @@
-INSERT IGNORE INTO `mp_groups` (group_id, prefix, suffix) VALUES (?, ?, ?)
+INSERT IGNORE INTO `mp_groups` (group_id, prefix, suffix) VALUES (?, ?, ?);
