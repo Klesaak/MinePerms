@@ -12,20 +12,17 @@ import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redismessenger.MessageData;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Getter
-public class SQLStorage extends Storage {
+public class SQLStorage extends Storage implements SQLLoader {
     //create tables
     private final String createPermissionsTablesSql;
     //fetching
@@ -77,7 +74,7 @@ public class SQLStorage extends Storage {
         this.deleteUserSql = this.loadSQL("update/deleteUser");
         this.importUsersDataSql = this.loadSQL("import/importUsersData");
         this.importGroupsDataSql = this.loadSQL("import/importGroupsData");
-        this.executeSQL(this.createPermissionsTablesSql);//creating Tables
+        this.executeSQL(this.hikariDataSource, this.createPermissionsTablesSql);//creating Tables
     }
 
     @Override
@@ -727,42 +724,6 @@ public class SQLStorage extends Storage {
         } catch (SQLException e) {
             throw new RuntimeException("Error while importing groups data", e);
         }
-    }
-
-    private void executeSQL(String sql) {
-        Collection<String> sqlList = new ArrayList<>(16);
-        if (!sql.contains(";")) throw new IllegalArgumentException("Missed ';' in sql line: '" + sql + "'");
-        sqlList.addAll(Arrays.asList(sql.split(";")));
-        sqlList.forEach(sqlLine -> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(sqlLine)) {
-                statement.execute();
-            } catch (SQLException e) {
-                MPLogger.logError(new RuntimeException("Error while executeSQL data", e));
-            }
-        });
-    }
-
-    private String loadSQL(String name, String... placeholders) {
-        String sqlFile = "sql/" + name + ".sql";
-        try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(sqlFile)) {
-            if (inputStream == null) {
-                throw new IllegalArgumentException("Could not find " + sqlFile);
-            }
-            val bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-            String sqlLine = bufferedReader.lines().filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("--")).collect(Collectors.joining(" "));
-            if (placeholders.length == 0) return sqlLine;
-            int i = 0;
-            for (String placeholder : placeholders) {
-                if (i % 2 == 0) {
-                    sqlLine = sqlLine.replace(placeholder, placeholders[i + 1]);
-                }
-                ++i;
-            }
-            return sqlLine;
-        } catch (IOException e) {
-            MPLogger.logError(new RuntimeException("Error while load SQL file!"));
-        }
-        return "";
     }
 
     @Override

@@ -47,8 +47,4 @@ public final class MinePermsManager {
         this.eventManager = eventManager;
         MinePermsAPI.register(this.storage);
     }
-
-    public boolean hasPermission(String nickName, String permission) {
-        return this.storage.hasPermission(nickName, permission);
-    }
 }
