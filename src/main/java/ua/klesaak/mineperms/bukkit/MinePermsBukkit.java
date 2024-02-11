@@ -10,6 +10,7 @@ import org.bukkit.plugin.java.annotation.dependency.LoadBefore;
 import org.bukkit.plugin.java.annotation.dependency.SoftDependency;
 import org.bukkit.plugin.java.annotation.permission.Permission;
 import org.bukkit.plugin.java.annotation.permission.Permissions;
+import org.bukkit.plugin.java.annotation.plugin.ApiVersion;
 import org.bukkit.plugin.java.annotation.plugin.Description;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
 import org.bukkit.plugin.java.annotation.plugin.Website;
@@ -30,6 +31,7 @@ import java.util.logging.Level;
 @SoftDependency("Vault")
 @LoadBefore("Vault")
 @Website("https://t.me/klesaak")
+@ApiVersion(ApiVersion.Target.v1_16)
 @Commands({
         @Command(name = "mineperms",
                 aliases = {"mp", "mperms", "perms"},
