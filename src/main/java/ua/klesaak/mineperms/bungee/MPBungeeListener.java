@@ -37,11 +37,6 @@ public class MPBungeeListener implements Listener {
         this.storage.cacheUser(event.getConnection().getName());
     }
 
-    @EventHandler
-    public void onPlayerPostLogin(PostLoginEvent event) {
-        this.storage.cacheUser(event.getPlayer().getName());
-    }
-
     // Подождите, пока выгрузится последний приоритет, чтобы плагины все еще могли выполнять проверки разрешений для этого события.
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerQuit(PlayerDisconnectEvent event) {
