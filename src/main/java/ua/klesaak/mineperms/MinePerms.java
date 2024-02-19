@@ -15,7 +15,7 @@ import ua.klesaak.mineperms.manager.utils.Platform;
 import java.io.File;
 
 @Getter
-public final class MinePermsManager {
+public final class MinePerms {
     private final MinePermsCommand minePermsCommand;
     private IMPEventManager eventManager;
     private volatile ConfigFile configFile;
@@ -23,7 +23,7 @@ public final class MinePermsManager {
     private final Platform platform;
     private StorageType storageType;
 
-    public MinePermsManager(Platform platform) {
+    public MinePerms(Platform platform) {
         this.platform = platform;
         this.minePermsCommand = new MinePermsCommand(this);
     }

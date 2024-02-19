@@ -15,7 +15,7 @@ import org.bukkit.plugin.java.annotation.plugin.Description;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
 import org.bukkit.plugin.java.annotation.plugin.Website;
 import org.bukkit.plugin.java.annotation.plugin.author.Author;
-import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.MinePerms;
 import ua.klesaak.mineperms.bukkit.integration.PermissibleOverride;
 import ua.klesaak.mineperms.bukkit.integration.vault.VaultIntegration;
 import ua.klesaak.mineperms.manager.command.MinePermsCommand;
@@ -44,14 +44,14 @@ import java.util.logging.Level;
 })
 @Getter
 public class MinePermsBukkit extends JavaPlugin {
-    private volatile MinePermsManager minePermsManager;
+    private volatile MinePerms minePerms;
     private VaultIntegration vaultIntegration;
 
     @Override
     public void onEnable() {
         long time = System.currentTimeMillis();
-        this.minePermsManager = new MinePermsManager(Platform.BUKKIT);
-        this.minePermsManager.init(this.getDataFolder(), new BukkitEventManager());
+        this.minePerms = new MinePerms(Platform.BUKKIT);
+        this.minePerms.init(this.getDataFolder(), new BukkitEventManager());
         this.getServer().getOperators().forEach(offlinePlayer -> offlinePlayer.setOp(false));
         if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
             this.vaultIntegration = new VaultIntegration(this);
@@ -60,7 +60,7 @@ public class MinePermsBukkit extends JavaPlugin {
         CompletableFuture.runAsync(()-> {
             // TODO: 06.06.2023  так же если есть игроки онлайн - загрузить их в кеш из бд
             this.getServer().getOnlinePlayers().forEach(player ->
-                    PermissibleOverride.injectPlayer(player, new PermissibleOverride(player.getName(), this.minePermsManager.getStorage())));
+                    PermissibleOverride.injectPlayer(player, new PermissibleOverride(player.getName(), this.minePerms.getStorage())));
         }).exceptionally(throwable -> {
             throw new RuntimeException("Error while inject online players ", throwable);
         });
@@ -73,7 +73,7 @@ public class MinePermsBukkit extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        this.minePermsManager.getStorage().close();
+        this.minePerms.getStorage().close();
         PermissibleOverride.unInjectPlayers(); //возвращаем дефолтный оператор прав игрокам, дабы избежать NullPointer и сервер продолжил функционировать.
         if (this.vaultIntegration != null)this.vaultIntegration.unload();
     }

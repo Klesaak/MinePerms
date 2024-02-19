@@ -18,7 +18,7 @@ public final class MPVelocityCommand implements SimpleCommand {
 
     public MPVelocityCommand(MinePermsVelocity minePermsVelocity) {
         this.minePermsVelocity = minePermsVelocity;
-        this.minePermsCommand = minePermsVelocity.getMinePermsManager().getMinePermsCommand();
+        this.minePermsCommand = minePermsVelocity.getMinePerms().getMinePermsCommand();
         CommandManager commandManager = minePermsVelocity.getServer().getCommandManager();
         CommandMeta commandMeta = commandManager.metaBuilder("vmineperms")
                 .aliases("vmp", "vmperms", "vperms")

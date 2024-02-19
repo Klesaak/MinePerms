@@ -15,7 +15,7 @@ public class MPBungeeCommand extends Command implements TabExecutor {
 
     public MPBungeeCommand(MinePermsBungee plugin) {
         super("bmineperms", MinePermsCommand.MAIN_PERMISSION, "bmp", "bmperms", "bperms");
-        this.minePermsCommand = plugin.getMinePermsManager().getMinePermsCommand();
+        this.minePermsCommand = plugin.getMinePerms().getMinePermsCommand();
         plugin.getProxy().getPluginManager().registerCommand(plugin, this);
     }
 

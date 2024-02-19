@@ -19,7 +19,7 @@ public class MPBukkitCommand implements CommandExecutor, TabCompleter {
     private final MinePermsCommand minePermsCommand;
 
     public MPBukkitCommand(MinePermsBukkit plugin) {
-        this.minePermsCommand = plugin.getMinePermsManager().getMinePermsCommand();
+        this.minePermsCommand = plugin.getMinePerms().getMinePermsCommand();
         Objects.requireNonNull(plugin.getCommand("mineperms")).setExecutor(this);
         Objects.requireNonNull(plugin.getCommand("mineperms")).setTabCompleter(this);
     }

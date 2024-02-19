@@ -1,7 +1,7 @@
 package ua.klesaak.mineperms.manager.storage;
 
 import lombok.val;
-import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.MinePerms;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redismessenger.MessageData;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 
 public abstract class Storage implements AutoCloseable {
-    protected final MinePermsManager manager;
+    protected final MinePerms manager;
     protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
     protected final ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
 
@@ -26,7 +26,7 @@ public abstract class Storage implements AutoCloseable {
     protected RedisMessenger redisMessenger;
     protected ForkJoinPool loaderPool = null;
 
-    protected Storage(MinePermsManager manager) {
+    protected Storage(MinePerms manager) {
         this.manager = manager;
         if (manager.getStorageType().isSQL()) {
             this.loaderPool = new ForkJoinPool();

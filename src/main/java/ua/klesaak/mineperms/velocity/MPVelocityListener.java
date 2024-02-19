@@ -15,7 +15,7 @@ public final class MPVelocityListener {
     private final MinePermsVelocity plugin;
 
     public MPVelocityListener(MinePermsVelocity plugin) {
-        this.storage = plugin.getMinePermsManager().getStorage();
+        this.storage = plugin.getMinePerms().getStorage();
         this.plugin = plugin;
         plugin.getServer().getEventManager().register(plugin, this);
     }

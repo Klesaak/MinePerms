@@ -16,7 +16,7 @@ public class MPBukkitListener implements Listener {
     private final Storage storage;
 
     public MPBukkitListener(MinePermsBukkit plugin) {
-        this.storage = plugin.getMinePermsManager().getStorage();
+        this.storage = plugin.getMinePerms().getStorage();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 

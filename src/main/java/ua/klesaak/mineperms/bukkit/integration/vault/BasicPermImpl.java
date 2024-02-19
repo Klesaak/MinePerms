@@ -10,7 +10,7 @@ public abstract class BasicPermImpl extends Permission {
 
 	protected BasicPermImpl(MinePermsBukkit plugin) {
 		this.plugin = plugin;
-		this.storage = plugin.getMinePermsManager().getStorage();
+		this.storage = plugin.getMinePerms().getStorage();
 	}
 
 	@Override

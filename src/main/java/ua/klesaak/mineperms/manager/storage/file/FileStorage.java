@@ -3,7 +3,7 @@ package ua.klesaak.mineperms.manager.storage.file;
 import com.google.gson.reflect.TypeToken;
 import lombok.Synchronized;
 import lombok.val;
-import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.MinePerms;
 import ua.klesaak.mineperms.manager.log.MPLogger;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
@@ -20,7 +20,7 @@ public final class FileStorage extends Storage {
     private static final TypeToken<Collection<User>> USER_TOKEN = new TypeToken<Collection<User>>() {};
     private final JsonData groupsFile, usersFile;
 
-    public FileStorage(MinePermsManager manager) {
+    public FileStorage(MinePerms manager) {
         super(manager);
         val configFile = manager.getConfigFile();
         val pluginDataFolder = configFile.getPluginDataFolder();

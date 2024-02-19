@@ -5,7 +5,6 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PermissionCheckEvent;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
-import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
@@ -17,7 +16,7 @@ public class MPBungeeListener implements Listener {
     private final Storage storage;
 
     public MPBungeeListener(MinePermsBungee plugin) {
-        this.storage = plugin.getMinePermsManager().getStorage();
+        this.storage = plugin.getMinePerms().getStorage();
         plugin.getProxy().getPluginManager().registerListener(plugin, this);
     }
 

@@ -8,7 +8,7 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.Getter;
 import org.slf4j.Logger;
-import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.MinePerms;
 import ua.klesaak.mineperms.manager.event.velocity.VelocityEventManager;
 import ua.klesaak.mineperms.manager.log.MPLogger;
 import ua.klesaak.mineperms.manager.utils.Platform;
@@ -26,15 +26,15 @@ import java.nio.file.Path;
 public final class MinePermsVelocity {
     private final ProxyServer server;
     private final Logger logger;
-    private final MinePermsManager minePermsManager;
+    private final MinePerms minePerms;
 
     @Inject
     public MinePermsVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
         long time = System.currentTimeMillis();
         this.server = server;
         this.logger = logger;
-        this.minePermsManager = new MinePermsManager(Platform.VELOCITY);
-        this.minePermsManager.init(dataDirectory.toFile(), new VelocityEventManager(this));
+        this.minePerms = new MinePerms(Platform.VELOCITY);
+        this.minePerms.init(dataDirectory.toFile(), new VelocityEventManager(this));
         MPLogger.register(this.logger);
         this.logger.info("Plugin successfully loaded (" + (System.currentTimeMillis() - time) + "ms) ");
     }

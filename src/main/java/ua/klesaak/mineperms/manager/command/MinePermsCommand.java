@@ -2,7 +2,7 @@ package ua.klesaak.mineperms.manager.command;
 
 import com.google.common.base.Joiner;
 import lombok.val;
-import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.MinePerms;
 import ua.klesaak.mineperms.manager.migration.IMigrationPlugin;
 import ua.klesaak.mineperms.manager.migration.LPMigration;
 import ua.klesaak.mineperms.manager.migration.PEXMigration;
@@ -23,10 +23,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class MinePermsCommand extends MPTabCompleter {
     public static final String MAIN_PERMISSION = "mineperms.admin";
-    private final MinePermsManager manager;
+    private final MinePerms manager;
     private final ReadWriteLock highOperationsLock = new ReentrantReadWriteLock();
 
-    public MinePermsCommand(MinePermsManager manager) {
+    public MinePermsCommand(MinePerms manager) {
         this.manager = manager;
     }
 

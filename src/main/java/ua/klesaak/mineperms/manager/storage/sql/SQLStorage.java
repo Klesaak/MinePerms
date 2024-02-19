@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
 import lombok.Synchronized;
 import lombok.val;
-import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.MinePerms;
 import ua.klesaak.mineperms.manager.log.MPLogger;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.StorageType;
@@ -39,7 +39,7 @@ public class SQLStorage extends Storage implements SQLLoader {
 
     private final HikariDataSource hikariDataSource;
 
-    public SQLStorage(MinePermsManager manager, StorageType storageType) {
+    public SQLStorage(MinePerms manager, StorageType storageType) {
         super(manager);
         val config = this.manager.getConfigFile().getSQLSettings();
         this.hikariDataSource = config.getSource(storageType);

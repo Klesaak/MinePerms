@@ -3,7 +3,7 @@ package ua.klesaak.mineperms.manager.storage.redismessenger;
 import lombok.val;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
-import ua.klesaak.mineperms.MinePermsManager;
+import ua.klesaak.mineperms.MinePerms;
 import ua.klesaak.mineperms.manager.storage.Storage;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
@@ -14,17 +14,17 @@ import java.util.stream.Stream;
 
 public class RedisMessenger implements AutoCloseable {
     public static UUID SERVER_UUID = UUID.randomUUID(); //Уникальный идентификатор сервера для корректного обмена сообщениями через Redis-pub-sub
-    private final MinePermsManager minePermsManager;
+    private final MinePerms minePerms;
     private final Storage storage;
     private final RedisPool redisPool;
     private final ForkJoinPool loaderPool = new ForkJoinPool();
     private final Subscription sub;
     private boolean closing = false;
 
-    public RedisMessenger(MinePermsManager minePermsManager, Storage storage) {
-        this.minePermsManager = minePermsManager;
+    public RedisMessenger(MinePerms minePerms, Storage storage) {
+        this.minePerms = minePerms;
         this.storage = storage;
-        this.redisPool = new RedisPool(minePermsManager.getConfigFile().getRedisSettings());
+        this.redisPool = new RedisPool(minePerms.getConfigFile().getRedisSettings());
         this.sub = new Subscription();
         this.loaderPool.execute(this.sub);
     }
@@ -89,13 +89,13 @@ public class RedisMessenger implements AutoCloseable {
             val messageData = MessageData.fromJson(msg);
             if (messageData.getUuid().equals(SERVER_UUID)) return;
             val storage = RedisMessenger.this.storage;
-            val config = RedisMessenger.this.minePermsManager.getConfigFile();
+            val config = RedisMessenger.this.minePerms.getConfigFile();
             val userCache = storage.getUsers();
             val groupsCache = storage.getGroups();
             val temporalUserCache = storage.getTemporalUsersCache();
             val defaultGroupId = storage.getDefaultGroup().getGroupId();
             String subChannel = config.getSQLSettings().getGroupsPermissionsTableSuffix();
-            if (RedisMessenger.this.minePermsManager.getStorageType().isFile()) {
+            if (RedisMessenger.this.minePerms.getStorageType().isFile()) {
                 throw new UnsupportedOperationException("Don't update data by redis pub-sub, because used FileStorage! You must change field 'useRedisPubSub' to 'false' in plugin config!");
             }
             if (messageData.getMessageType().isUserUpdate()) {
@@ -117,7 +117,7 @@ public class RedisMessenger implements AutoCloseable {
                         val groupId = messageData.getObject();
                         user.setGroupId(groupId);
                         user.recalculatePermissions(groupsCache);
-                        RedisMessenger.this.minePermsManager.getEventManager().callGroupChangeEvent(user);
+                        RedisMessenger.this.minePerms.getEventManager().callGroupChangeEvent(user);
                         break;
                     }
                     case USER_PERMISSION_ADD: {
@@ -205,7 +205,7 @@ public class RedisMessenger implements AutoCloseable {
                         Stream.concat(storage.getUsers().values().stream(), storage.getTemporalUsersCache().asMap().values().stream())
                                 .filter(user -> user.hasGroup(groupId)).forEach(user -> {
                                     user.setGroupId(defaultGroupId);
-                                    RedisMessenger.this.minePermsManager.getEventManager().callGroupChangeEvent(user);
+                                    RedisMessenger.this.minePerms.getEventManager().callGroupChangeEvent(user);
                                 });
                         groupsCache.values().stream().filter(cachedGroup -> cachedGroup.hasGroup(groupId)).forEach(cachedGroup -> cachedGroup.removeInheritanceGroup(groupId));
                         storage.recalculateUsersPermissions();

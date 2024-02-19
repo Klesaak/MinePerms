@@ -12,7 +12,7 @@ public abstract class BaseChatImpl extends Chat {
 	protected BaseChatImpl(MinePermsBukkit plugin, Permission perms) {
 		super(perms);
 		this.plugin = plugin;
-		this.storage = plugin.getMinePermsManager().getStorage();
+		this.storage = plugin.getMinePerms().getStorage();
 	}
 
 	@Override
