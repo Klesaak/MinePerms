@@ -44,12 +44,12 @@ public class JsonData {
 
     @SneakyThrows
     public <T> T readAll(TypeToken<? extends T> typeToken) {
-        return GSON.fromJson(new String(Files.readAllBytes(this.file.toPath())), typeToken.getType());
+        return GSON.fromJson(new String(Files.readAllBytes(this.file.toPath()), StandardCharsets.UTF_8), typeToken.getType());
     }
 
     @SneakyThrows
     public <T> T readAll(Class<? extends T> clazz) {
-        return GSON.fromJson(new String(Files.readAllBytes(this.file.toPath())), clazz);
+        return GSON.fromJson(new String(Files.readAllBytes(this.file.toPath()), StandardCharsets.UTF_8), clazz);
     }
 
     @SafeVarargs
