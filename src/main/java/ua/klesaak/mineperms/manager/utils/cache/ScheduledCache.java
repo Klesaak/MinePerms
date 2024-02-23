@@ -20,7 +20,7 @@ import java.util.function.BiPredicate;
  * Работает в тестовом режиме, юзать на свой страх и риск.
  */
 public class ScheduledCache<K, V> implements AutoCloseable {
-    private final Map<K, Pair<Long, V>> data = new ConcurrentHashMap<>();
+    private final Map<K, Pair<Long, V>> data = new ConcurrentHashMap<>(1024, 0.75f, Runtime.getRuntime().availableProcessors());
     private final BiConsumer<K, V> afterRemoving;
     private final BiPredicate<K, V> cancelRemovingIf;
     private final long expireTime;
