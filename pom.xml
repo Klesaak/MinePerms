@@ -52,10 +52,10 @@
                                     <pattern>org.postgresql</pattern>
                                     <shadedPattern>ua.klesaak.minelibs.org.postgresql</shadedPattern>
                                 </relocation>
-                                <!-- <relocation>
-                                    <pattern>com.github.ben-manes</pattern>
-                                    <shadedPattern>ua.klesaak.minelibs.com.github.ben-manes</shadedPattern>
-                                </relocation> -->
+                                <relocation>
+                                    <pattern>gnu.trove</pattern>
+                                    <shadedPattern>ua.klesaak.minelibs.gnu.trove</shadedPattern>
+                                </relocation>
                                 <relocation>
                                     <pattern>waffle</pattern>
                                     <shadedPattern>ua.klesaak.minelibs.waffle</shadedPattern>
@@ -268,6 +268,13 @@
              <artifactId>caffeine</artifactId>
              <version>2.9.3</version>
          </dependency>-->
+
+        <!-- https://mvnrepository.com/artifact/net.sf.trove4j/core -->
+        <dependency>
+            <groupId>net.sf.trove4j</groupId>
+            <artifactId>core</artifactId>
+            <version>3.1.0</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
         <dependency>

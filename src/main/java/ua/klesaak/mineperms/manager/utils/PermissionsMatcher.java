@@ -1,15 +1,16 @@
 package ua.klesaak.mineperms.manager.utils;
 
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
+
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 /**
  * Это класс обработки кешированного древа прав.
  * Использовать его только как обработчик а не как основной контейнер для хранения данных.
  *
- * @author sashok724 from s724Lib
+ * @author sashok724 and Klesaak
  */
 public final class PermissionsMatcher implements Cloneable {
     public static final String DASH_WILDCARD = "-";
@@ -18,8 +19,8 @@ public final class PermissionsMatcher implements Cloneable {
     public static final char DOT_CHAR_WILDCARD = '.';
 
     private boolean allowed;
-    private final HashSet<String> exclusions = new HashSet<>(100);
-    private final HashMap<String, PermissionsMatcher> exclusionsChild = new HashMap<>(100);
+    private final THashSet<String> exclusions = new THashSet<>(100);
+    private final THashMap<String, PermissionsMatcher> exclusionsChild = new THashMap<>(100);
 
 
     /**
