@@ -44,7 +44,7 @@ import java.util.logging.Level;
 })
 @Getter
 public class MinePermsBukkit extends JavaPlugin {
-    private volatile MinePerms minePerms;
+    private MinePerms minePerms;
     private VaultIntegration vaultIntegration;
 
     @Override

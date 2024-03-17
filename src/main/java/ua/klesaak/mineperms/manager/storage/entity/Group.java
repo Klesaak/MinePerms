@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 public class Group extends AbstractEntity {
-    private Set<String> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private volatile Set<String> inheritanceGroups = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public Group(String groupId) {
         super(groupId);

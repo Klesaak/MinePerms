@@ -10,7 +10,7 @@ import ua.klesaak.mineperms.manager.utils.Platform;
 
 @Getter
 public class MinePermsBungee extends Plugin {
-    private volatile MinePerms minePerms;
+    private MinePerms minePerms;
 
     @Override
     public void onEnable() {

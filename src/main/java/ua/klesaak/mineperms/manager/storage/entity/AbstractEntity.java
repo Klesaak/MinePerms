@@ -13,7 +13,7 @@ public abstract class AbstractEntity {
     protected final String entityId;
     protected volatile String prefix = "";
     protected volatile String suffix = "";
-    protected Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    protected volatile Set<String> permissions = Collections.newSetFromMap(new ConcurrentHashMap<>());
     protected transient volatile PermissionsMatcher permissionsMatcher = new PermissionsMatcher();
 
     protected AbstractEntity(String entityId) {

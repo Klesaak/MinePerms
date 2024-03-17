@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @Getter
 public class User extends AbstractEntity {
-    private String groupId;
+    private volatile String groupId;
 
     public User(String playerName, String groupId) {
         super(playerName);
