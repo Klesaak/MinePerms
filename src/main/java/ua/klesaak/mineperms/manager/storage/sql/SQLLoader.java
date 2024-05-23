@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,5 +62,33 @@ public interface SQLLoader {
                 MPLogger.logError(new RuntimeException("Error while executeSQL data", e));
             }
         });
+    }
+
+    default void executeQuery(Callback callback, HikariDataSource hikariDataSource, String request, Object... args) {
+        try (val con = hikariDataSource.getConnection(); val statement = con.prepareStatement(request)) {
+            for(int i = 0; i < args.length; ++i) {
+                statement.setObject(i + 1, args[i]);
+            }
+            try (ResultSet resultSet = statement.executeQuery()) {
+                callback.call(resultSet);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while load data from sql ", e);
+        }
+    }
+
+    default void executeUpdate(HikariDataSource hikariDataSource, String request, Object... args) {
+        try (val con = hikariDataSource.getConnection(); val statement = con.prepareStatement(request)) {
+            for(int i = 0; i < args.length; ++i) {
+                statement.setObject(i + 1, args[i]);
+            }
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error while update data ", e);
+        }
+    }
+
+    interface Callback {
+        void call(ResultSet resultSet) throws SQLException;
     }
 }

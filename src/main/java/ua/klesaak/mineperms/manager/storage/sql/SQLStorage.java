@@ -12,13 +12,13 @@ import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.redismessenger.MessageData;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 @Getter
@@ -161,16 +161,11 @@ public class SQLStorage extends Storage implements SQLLoader {
         return CompletableFuture.supplyAsync(() -> {
             User user = this.loadUserData(nickNameLC);
             if (user == null) return null;
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getUserPermissionsSql)) {
-                statement.setString(1, nickNameLC);
-                try (ResultSet rs = statement.executeQuery()) {
-                    while (rs.next()) {
-                        user.addPermission(rs.getString("permission"));
-                    }
+            this.executeQuery(resultSet -> {
+                while (resultSet.next()) {
+                    user.addPermission(resultSet.getString("permission"));
                 }
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while load user perms from sql " + nickNameLC, e);
-            }
+            }, this.hikariDataSource, this.getUserPermissionsSql, nickNameLC);
             return user;
         }).exceptionally(throwable -> {
             MPLogger.logError(throwable);
@@ -179,24 +174,20 @@ public class SQLStorage extends Storage implements SQLLoader {
     }
 
     private User loadUserData(String nickName) {
-        User user = null;
-        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getUserDataSql)) {
-            statement.setString(1, nickName);
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    String group = rs.getString("group_id");
-                    String prefix = rs.getString("prefix");
-                    String suffix = rs.getString("suffix");
-                    user = new User(nickName, group);
-                    if (group == null) user.setGroupId(this.manager.getConfigFile().getDefaultGroup());
-                    user.setPrefix(prefix);
-                    user.setSuffix(suffix);
-                }
+        AtomicReference<User> user = new AtomicReference<>(null);
+        this.executeQuery(resultSet -> {
+            while (resultSet.next()) {
+                String group = resultSet.getString("group_id");
+                String prefix = resultSet.getString("prefix");
+                String suffix = resultSet.getString("suffix");
+                user.set(new User(nickName, group));
+                if (group == null) user.get().setGroupId(this.manager.getConfigFile().getDefaultGroup());
+                user.get().setPrefix(prefix);
+                user.get().setSuffix(suffix);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while load user data from sql " + nickName, e);
-        }
-        return user;
+        }, this.hikariDataSource, this.getUserDataSql, nickName);
+        
+        return user.get();
     }
 
     @Override
@@ -223,25 +214,12 @@ public class SQLStorage extends Storage implements SQLLoader {
             this.temporalUsersCache.put(nickNameLC, user);
         }
         user.addPermission(permission);
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertUserDefaultSql)) {
-                statement.setString(1, nickNameLC);
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while add perm data", e);
-            }
-        }).thenRunAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertUserPermissionSql)) {
-                statement.setString(1, nickNameLC);
-                statement.setString(2, permission.toLowerCase());
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while add perm data", e);
-            }
-        }).exceptionally(throwable -> {
-            MPLogger.logError(throwable);
-            return null;
-        });
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.insertUserDefaultSql, nickNameLC))
+                .thenRunAsync(()-> this.executeUpdate(this.hikariDataSource, this.insertUserPermissionSql, nickNameLC, permission.toLowerCase()))
+                .exceptionally(throwable -> {
+                    MPLogger.logError(throwable);
+                    return null;
+                });
         this.broadcastPacket(MessageData.goUpdateUserPermAddPacket(nickNameLC, permission));
     }
 
@@ -252,18 +230,11 @@ public class SQLStorage extends Storage implements SQLLoader {
         if (user == null) return;
         user.removePermission(permission);
         user.recalculatePermissions(this.groups);
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.removeUserPermissionSql)) {
-                statement.setString(1, nickNameLC);
-                statement.setString(2, permission.toLowerCase());
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while remove perm data", e);
-            }
-        }).exceptionally(throwable -> {
-            MPLogger.logError(throwable);
-            return null;
-        });
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.removeUserPermissionSql, nickNameLC, permission.toLowerCase()))
+                .exceptionally(throwable -> {
+                    MPLogger.logError(throwable);
+                    return null;
+                });
         this.broadcastPacket(MessageData.goUpdateUserPermRemovePacket(nickNameLC, permission));
     }
 
@@ -278,14 +249,8 @@ public class SQLStorage extends Storage implements SQLLoader {
         }
         user.setPrefix(prefix);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateUserPrefixSql)) {
-                statement.setString(1, nickNameLC);
-                statement.setString(2, prefix.isEmpty() ? null : prefix);
-                statement.setString(3, prefix.isEmpty() ? null : prefix);
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while set user prefix", e);
-            }
+            String pref = prefix.isEmpty() ? null : prefix;
+            this.executeUpdate(this.hikariDataSource, this.updateUserPrefixSql, nickNameLC, pref, pref);
         }).exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
@@ -304,14 +269,8 @@ public class SQLStorage extends Storage implements SQLLoader {
         }
         user.setSuffix(suffix);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateUserSuffixSql)) {
-                statement.setString(1, nickNameLC);
-                statement.setString(2, suffix.isEmpty() ? null : suffix);
-                statement.setString(3, suffix.isEmpty() ? null : suffix);
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while set user suffix", e);
-            }
+            String suf = suffix.isEmpty() ? null : suffix;
+            this.executeUpdate(this.hikariDataSource, this.updateUserSuffixSql, nickNameLC, suf, suf);
         }).exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
@@ -333,16 +292,7 @@ public class SQLStorage extends Storage implements SQLLoader {
             user.recalculatePermissions(this.groups);
             this.manager.getEventManager().callGroupChangeEvent(user);
         }
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateUserGroupSql)) {
-                statement.setString(1, nickNameLC);
-                statement.setString(2, groupID);
-                statement.setString(3, groupID);
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while set user group", e);
-            }
-        }).exceptionally(throwable -> {
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.updateUserGroupSql, nickNameLC, groupID, groupID)).exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
         });
@@ -360,14 +310,7 @@ public class SQLStorage extends Storage implements SQLLoader {
         if (this.temporalUsersCache.getIfPresent(nickNameLC) != null) {
             this.temporalUsersCache.put(nickNameLC, newUser);
         }
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.deleteUserSql)) {
-                statement.setString(1, nickNameLC);
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while delete user", e);
-            }
-        }).exceptionally(throwable -> {
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.deleteUserSql, nickNameLC)).exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
         });
@@ -379,15 +322,8 @@ public class SQLStorage extends Storage implements SQLLoader {
         val group = this.getGroup(groupID);
         group.addPermission(permission);
         this.recalculateUsersPermissions();
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertGroupPermissionSql)) {
-                statement.setString(1, groupID);
-                statement.setString(2, permission.toLowerCase());
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while add group permission", e);
-            }
-        }).exceptionally(throwable -> {
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.insertGroupPermissionSql, groupID, permission.toLowerCase()))
+                .exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
         });
@@ -399,15 +335,8 @@ public class SQLStorage extends Storage implements SQLLoader {
         val group = this.getGroup(groupID);
         group.removePermission(permission);
         this.recalculateUsersPermissions();
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.removeGroupPermissionSql)) {
-                statement.setString(1, groupID);
-                statement.setString(2, permission.toLowerCase());
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while remove group permission", e);
-            }
-        }).exceptionally(throwable -> {
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.removeGroupPermissionSql, groupID, permission.toLowerCase()))
+                .exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
         });
@@ -419,15 +348,8 @@ public class SQLStorage extends Storage implements SQLLoader {
         val group = this.getGroup(groupID);
         group.addInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertGroupParentSql)) {
-                statement.setString(1, groupID);
-                statement.setString(2, parentID.toLowerCase());
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while add group parent", e);
-            }
-        }).exceptionally(throwable -> {
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.insertGroupParentSql, groupID, parentID.toLowerCase()))
+                .exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
         });
@@ -439,15 +361,8 @@ public class SQLStorage extends Storage implements SQLLoader {
         val group = this.getGroup(groupID);
         group.removeInheritanceGroup(parentID);
         this.recalculateUsersPermissions();
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.removeGroupParentSql)) {
-                statement.setString(1, groupID);
-                statement.setString(2, parentID.toLowerCase());
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while remove group parent", e);
-            }
-        }).exceptionally(throwable -> {
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.removeGroupParentSql, groupID, parentID.toLowerCase()))
+                .exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
         });
@@ -459,14 +374,8 @@ public class SQLStorage extends Storage implements SQLLoader {
         val group = this.getGroup(groupID);
         group.setPrefix(prefix);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateGroupPrefixSql)) {
-                statement.setString(1, groupID);
-                statement.setString(2, prefix.isEmpty() ? null : prefix);
-                statement.setString(3, prefix.isEmpty() ? null : prefix);
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while set group prefix", e);
-            }
+            String pref = prefix.isEmpty() ? null : prefix;
+            this.executeUpdate(this.hikariDataSource, this.updateGroupPrefixSql, groupID, pref, pref);
         }).exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
@@ -479,14 +388,8 @@ public class SQLStorage extends Storage implements SQLLoader {
         val group = this.getGroup(groupID);
         group.setSuffix(suffix);
         CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.updateGroupSuffixSql)) {
-                statement.setString(1, groupID);
-                statement.setString(2, suffix.isEmpty() ? null : suffix);
-                statement.setString(3, suffix.isEmpty() ? null : suffix);
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while set group suffix", e);
-            }
+            String suf = suffix.isEmpty() ? null : suffix;
+            this.executeUpdate(this.hikariDataSource, this.updateGroupSuffixSql, groupID, suf, suf);
         }).exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
@@ -507,14 +410,7 @@ public class SQLStorage extends Storage implements SQLLoader {
                 });
         this.groups.values().stream().filter(group -> group.hasGroup(groupID)).forEach(group -> group.removeInheritanceGroup(groupID));
         this.recalculateUsersPermissions();
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.deleteGroupSql)) {
-                statement.setString(1, groupID);
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while delete group " + groupID + " data", e);
-            }
-        }).exceptionally(throwable -> {
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.deleteGroupSql, groupID)).exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
         });
@@ -525,14 +421,7 @@ public class SQLStorage extends Storage implements SQLLoader {
     public void createGroup(String groupId) {
         val newGroup = new Group(groupId);
         this.groups.put(groupId, newGroup);
-        CompletableFuture.runAsync(()-> {
-            try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.insertGroupDefaultSql)) {
-                statement.setString(1, groupId);
-                statement.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException("Error while create group ", e);
-            }
-        }).exceptionally(throwable -> {
+        CompletableFuture.runAsync(()-> this.executeUpdate(this.hikariDataSource, this.insertGroupDefaultSql, groupId)).exceptionally(throwable -> {
             MPLogger.logError(throwable);
             return null;
         });
@@ -543,37 +432,29 @@ public class SQLStorage extends Storage implements SQLLoader {
     public Collection<User> getAllUsersData() {
         val list = new ArrayList<User>();
         Map<String, Collection<String>> usersPerms = new HashMap<>();
-        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllUsersDataSql)) {
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    String userName = rs.getString("user_name");
-                    String groupId = rs.getString("group_id");
-                    String prefix = rs.getString("prefix");
-                    String suffix = rs.getString("suffix");
-                    String group = groupId == null ? this.manager.getConfigFile().getDefaultGroup() : groupId;
-                    User user = new User(userName, group);
-                    user.setPrefix(prefix);
-                    user.setSuffix(suffix);
-                    list.add(user);
-                    usersPerms.put(userName, new ArrayList<>());
-                }
+        this.executeQuery(resultSet -> {
+            while (resultSet.next()) {
+                String userName = resultSet.getString("user_name");
+                String groupId = resultSet.getString("group_id");
+                String prefix = resultSet.getString("prefix");
+                String suffix = resultSet.getString("suffix");
+                String group = groupId == null ? this.manager.getConfigFile().getDefaultGroup() : groupId;
+                User user = new User(userName, group);
+                user.setPrefix(prefix);
+                user.setSuffix(suffix);
+                list.add(user);
+                usersPerms.put(userName, new ArrayList<>());
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while load users data from SQL ", e);
-        }
+        }, this.hikariDataSource, this.getAllUsersDataSql);
 
         //загружаем пермишены для юзеров
-        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllUsersPermissionsSql)) {
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    String groupId = rs.getString("user_name");
-                    String permission = rs.getString("permission");
-                    usersPerms.get(groupId).add(permission);
-                }
+        this.executeQuery(resultSet -> {
+            while (resultSet.next()) {
+                String groupId = resultSet.getString("user_name");
+                String permission = resultSet.getString("permission");
+                usersPerms.get(groupId).add(permission);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while load users data from SQL ", e);
-        }
+        }, this.hikariDataSource, this.getAllUsersPermissionsSql);
 
         //складываем всё в кучу
         list.forEach(usersData -> {
@@ -589,49 +470,37 @@ public class SQLStorage extends Storage implements SQLLoader {
         val list = new ArrayList<Group>();
         Map<String, Collection<String>> groupsPerms = new HashMap<>();
         Map<String, Collection<String>> groupsParents = new HashMap<>();
-        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllGroupsDataSql)) {
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    String groupId = rs.getString("group_id");
-                    String prefix = rs.getString("prefix");
-                    String suffix = rs.getString("suffix");
-                    Group group = new Group(groupId);
-                    group.setPrefix(prefix);
-                    group.setSuffix(suffix);
-                    list.add(group);
-                    groupsPerms.put(groupId, new ArrayList<>());
-                    groupsParents.put(groupId, new ArrayList<>());
-                }
+        this.executeQuery(resultSet -> {
+            while (resultSet.next()) {
+                String groupId = resultSet.getString("group_id");
+                String prefix = resultSet.getString("prefix");
+                String suffix = resultSet.getString("suffix");
+                Group group = new Group(groupId);
+                group.setPrefix(prefix);
+                group.setSuffix(suffix);
+                list.add(group);
+                groupsPerms.put(groupId, new ArrayList<>());
+                groupsParents.put(groupId, new ArrayList<>());
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while load groups data from SQL ", e);
-        }
+        }, this.hikariDataSource, this.getAllGroupsDataSql);
 
         //загружаем пермишены для групп
-        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllGroupsPermissionsSql)) {
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    String groupId = rs.getString("group_id");
-                    String permission = rs.getString("permission");
-                    groupsPerms.get(groupId).add(permission);
-                }
+        this.executeQuery(resultSet -> {
+            while (resultSet.next()) {
+                String groupId = resultSet.getString("group_id");
+                String permission = resultSet.getString("permission");
+                groupsPerms.get(groupId).add(permission);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while load groups data from SQL ", e);
-        }
+        }, this.hikariDataSource, this.getAllGroupsPermissionsSql);
 
         //загружаем паренты
-        try (val con = this.hikariDataSource.getConnection(); val statement = con.prepareStatement(this.getAllGroupsParentsSql)) {
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    String groupId = rs.getString("group_id");
-                    String parent = rs.getString("parent");
-                    groupsParents.get(groupId).add(parent);
-                }
+        this.executeQuery(resultSet -> {
+            while (resultSet.next()) {
+                String groupId = resultSet.getString("group_id");
+                String parent = resultSet.getString("parent");
+                groupsParents.get(groupId).add(parent);
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while load groups data from SQL ", e);
-        }
+        }, this.hikariDataSource, this.getAllGroupsParentsSql);
 
         //складываем всё в кучу
         list.forEach(groupData -> {
