@@ -61,8 +61,7 @@ public final class PermissionsMatcher implements Cloneable {
             throw new IllegalArgumentException("Permission can't start or end with dot: " + permission);
         }
         if (dotLocation > 0) {
-            String perm = permission.substring(0, dotLocation);
-            String beforeDot = perm.toLowerCase();
+            String beforeDot = permission.substring(0, dotLocation);
             if (beforeDot.contains(ROOT_WILDCARD)) {
                 throw new IllegalArgumentException("Parent permission can't have asterisk: " + permission);
             }

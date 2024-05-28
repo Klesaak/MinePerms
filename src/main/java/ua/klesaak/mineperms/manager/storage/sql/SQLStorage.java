@@ -302,7 +302,7 @@ public class SQLStorage extends Storage implements SQLLoader {
     @Override
     public void deleteUser(String nickName) {
         val nickNameLC = nickName.toLowerCase();
-       val config = this.manager.getConfigFile();
+        val config = this.manager.getConfigFile();
         val newUser = new User(nickNameLC, config.getDefaultGroup());
         if (this.users.get(nickNameLC) != null) {
             this.users.put(nickNameLC, newUser);
