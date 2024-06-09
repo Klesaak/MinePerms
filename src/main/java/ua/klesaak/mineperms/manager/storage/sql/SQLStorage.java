@@ -599,7 +599,6 @@ public class SQLStorage extends Storage implements SQLLoader {
     public void close() {
         if (this.hikariDataSource != null) this.hikariDataSource.close();
         if (this.redisMessenger != null) this.redisMessenger.close();
-        if (this.loaderPool != null) this.loaderPool.shutdown();
         this.temporalUsersCache.close();
     }
 }

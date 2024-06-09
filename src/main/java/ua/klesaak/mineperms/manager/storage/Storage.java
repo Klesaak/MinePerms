@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ForkJoinPool;
 
 public abstract class Storage implements AutoCloseable {
     protected final MinePerms manager;
@@ -24,12 +23,10 @@ public abstract class Storage implements AutoCloseable {
     //protected Cache<String, User> temporalUsersCache; //Временный кеш, чтобы уменьшить кол-во запросов в бд.
     protected ScheduledCache<String, User> temporalUsersCache; //Временный кеш, чтобы уменьшить кол-во запросов в бд.(Тест режим, в случае технических шоколадок вернуть кафеин)
     protected RedisMessenger redisMessenger;
-    protected ForkJoinPool loaderPool = null;
 
     protected Storage(MinePerms manager) {
         this.manager = manager;
         if (manager.getStorageType().isSQL()) {
-            this.loaderPool = new ForkJoinPool();
             //this.temporalUsersCache = Caffeine.newBuilder().executor(this.loaderPool).maximumSize(10_000).expireAfterWrite(Duration.ofMinutes(1)).build();
             this.temporalUsersCache = ScheduledCache.<String, User>builder().clearExpiredInterval(Duration.ofMinutes(10L)).setExpireTime(Duration.ofMinutes(1L)).build();
             if (manager.getConfigFile().isUseRedisPubSub() && this.redisMessenger == null) {
