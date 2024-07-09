@@ -11,6 +11,7 @@ import ua.klesaak.mineperms.manager.storage.entity.Group;
 import ua.klesaak.mineperms.manager.storage.entity.User;
 import ua.klesaak.mineperms.manager.storage.entity.adapter.GroupDataAdapter;
 import ua.klesaak.mineperms.manager.storage.entity.adapter.UserDataAdapter;
+import ua.klesaak.mineperms.manager.utils.cache.Pair;
 
 import java.io.File;
 import java.lang.reflect.Modifier;
@@ -56,7 +57,7 @@ public class JsonData {
     public static <T, V> Map<T, V> mapOf(Pair<T, V>... pairs) {
         val map = new HashMap<T, V>();
         for (Pair<T, V> pair : pairs) {
-            map.putIfAbsent(pair.key, pair.value);
+            map.putIfAbsent(pair.getKey(), pair.getValue());
         }
         return map;
     }
@@ -96,16 +97,5 @@ public class JsonData {
     public <T> void write(T source, boolean needTypeToken) {
         String json = needTypeToken ? GSON.toJson(source, new TypeToken<T>(){}.getType()) : GSON.toJson(source);
         Files.write(this.file.toPath(), json.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-    }
-
-    @Getter
-    public static class Pair<T, V> {
-        private final T key;
-        private final V value;
-
-        public Pair(T key, V value) {
-            this.key = key;
-            this.value = value;
-        }
     }
 }
