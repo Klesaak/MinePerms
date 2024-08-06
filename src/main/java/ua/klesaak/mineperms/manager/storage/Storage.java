@@ -1,5 +1,6 @@
 package ua.klesaak.mineperms.manager.storage;
 
+import lombok.Getter;
 import lombok.val;
 import ua.klesaak.mineperms.MinePerms;
 import ua.klesaak.mineperms.manager.storage.entity.Group;
@@ -9,16 +10,14 @@ import ua.klesaak.mineperms.manager.storage.redismessenger.RedisMessenger;
 import ua.klesaak.mineperms.manager.utils.cache.ScheduledCache;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Getter
 public abstract class Storage implements AutoCloseable {
     protected final MinePerms manager;
-    protected final ConcurrentHashMap<String, Group> groups = new ConcurrentHashMap<>(100);
-    protected final ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
+    protected final Map<String, Group> groups = new ConcurrentHashMap<>(100);
+    protected final Map<String, User> users = new ConcurrentHashMap<>();
 
     //protected Cache<String, User> temporalUsersCache; //Временный кеш, чтобы уменьшить кол-во запросов в бд.
     protected ScheduledCache<String, User> temporalUsersCache; //Временный кеш, чтобы уменьшить кол-во запросов в бд.(Тест режим, в случае технических шоколадок вернуть кафеин)
@@ -73,8 +72,8 @@ public abstract class Storage implements AutoCloseable {
     @Override
     public abstract void close();
 
-    public List<String> getGroupNames() {
-        return Collections.list(this.groups.keys());
+    public Collection<String> getGroupNames() {
+        return this.groups.keySet();
     }
 
     public boolean hasPermission(String nickName, String permission) {
@@ -122,22 +121,6 @@ public abstract class Storage implements AutoCloseable {
             list.addAll(this.getGroup(playerMainGroupID).getInheritanceGroups());
         }
         return Collections.unmodifiableCollection(list);
-    }
-
-    public ConcurrentHashMap<String, Group> getGroups() {
-        return groups;
-    }
-
-    public ConcurrentHashMap<String, User> getUsers() {
-        return users;
-    }
-
-    public ScheduledCache<String, User> getTemporalUsersCache() {
-        return temporalUsersCache;
-    }
-
-    public RedisMessenger getRedisMessenger() {
-        return redisMessenger;
     }
 
     public void recalculateUsersPermissions() {

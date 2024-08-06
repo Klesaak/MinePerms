@@ -22,7 +22,7 @@ abstract class MPTabCompleter {
         return this.copyPartialMatches(args[0].toLowerCase(), SUB_COMMANDS_0, new ArrayList<>());
     }
 
-    public List<String> suggestUserCommand(Collection<String> onlinePlayers, List<String> groupNames, String[] args) {
+    public List<String> suggestUserCommand(Collection<String> onlinePlayers, Collection<String> groupNames, String[] args) {
         switch (args.length) {
             case 2: {
                 return this.copyPartialMatches(args[1].toLowerCase(), onlinePlayers, new ArrayList<>());
@@ -39,7 +39,7 @@ abstract class MPTabCompleter {
         return Collections.emptyList();
     }
 
-    public List<String> suggestGroupCommand(List<String> groupNames, String[] args) {
+    public List<String> suggestGroupCommand(Collection<String> groupNames, String[] args) {
         switch (args.length) {
             case 2: {
                 return this.copyPartialMatches(args[1].toLowerCase(), groupNames, new ArrayList<>());
